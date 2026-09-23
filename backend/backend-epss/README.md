@@ -7,53 +7,141 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+# Backend EPSS
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Backend aplikasi EPSS menggunakan Laravel 12, PostgreSQL,
+dan autentikasi sesi melalui Laravel Sanctum.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Persyaratan lokal
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP yang memenuhi persyaratan composer.json; minimum PHP 8.2.
+- Composer 2.
+- PostgreSQL.
+- Extension PHP pdo_pgsql aktif.
 
-## Learning Laravel
+Seluruh command berikut dijalankan dari root Laravel:
+folder yang memiliki artisan dan composer.json.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Database
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Siapkan dua database PostgreSQL melalui pgAdmin:
 
-## Laravel Sponsors
+- epss_db untuk pengembangan.
+- epss_testing khusus pengujian otomatis.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Database epss_testing harus boleh dibangun ulang.
+Jangan menyimpan data penting di dalamnya.
 
-### Premium Partners
+## Setup pengembangan pada instalasi baru
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+1. Pasang dependensi sesuai composer.lock:
 
-## Contributing
+```powershell
+composer install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+2. Jika file .env belum ada, salin template:
 
-## Code of Conduct
+```powershell
+Copy-Item .env.example .env
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+3. Isi DB_HOST, DB_PORT, DB_USERNAME, dan DB_PASSWORD pada .env.
+   Pastikan DB_DATABASE=epss_db.
 
-## Security Vulnerabilities
+4. Bersihkan cache konfigurasi dan buat application key:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```powershell
+php artisan config:clear
+php artisan key:generate
+```
 
-## License
+Jangan membuat ulang application key pada instalasi yang sudah
+memiliki data terenkripsi tanpa memahami dampaknya.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+5. Jalankan migration dan server lokal:
+
+```powershell
+php artisan migrate
+php artisan serve
+```
+
+Gunakan http://127.0.0.1:8000 secara konsisten.
+Sesuaikan port pada konfigurasi jika server memakai port berbeda.
+
+## Setup pengujian pada instalasi baru
+
+1. Jika .env.testing belum ada, salin template:
+
+```powershell
+Copy-Item .env.testing.example .env.testing
+```
+
+2. Isi kredensial PostgreSQL pada .env.testing.
+   Pastikan DB_DATABASE=epss_testing.
+
+3. Siapkan application key khusus testing:
+
+```powershell
+php artisan config:clear
+php artisan key:generate --env=testing
+```
+
+4. Verifikasi koneksi sebelum menjalankan test:
+
+```powershell
+php artisan tinker --env=testing
+```
+
+Di dalam Tinker:
+
+```php
+app()->environment();
+config('database.default');
+DB::selectOne('SELECT current_database() AS database')->database;
+exit
+```
+
+Hasil harus berurutan: testing, pgsql, epss_testing.
+Jika berbeda, perbaiki konfigurasi sebelum menjalankan test.
+
+phpunit.xml juga menetapkan koneksi pgsql dan database epss_testing
+ketika PHPUnit dijalankan.
+
+5. Jalankan pengujian autentikasi:
+
+```powershell
+php artisan test tests/Feature/Auth
+```
+
+Tidak perlu menjalankan php artisan serve untuk Feature Test.
+
+Test menggunakan RefreshDatabase dan dapat membangun ulang tabel
+database testing. Session driver array digunakan selama test;
+pertukaran cookie browser dan penyimpanan sesi database juga perlu
+diverifikasi melalui pengujian HTTP manual.
+
+## Endpoint autentikasi saat ini
+
+| Metode | Path | Fungsi |
+|---|---|---|
+| GET | /sanctum/csrf-cookie | Menyiapkan cookie CSRF |
+| POST | /login | Login akun aktif melalui sesi |
+| GET | /api/user | Membaca pengguna yang terautentikasi dan aktif |
+| POST | /logout | Mengakhiri sesi login saat ini |
+
+Frontend mengirim cookie sesi dan header Accept: application/json.
+Request POST juga memerlukan token CSRF yang sesuai.
+
+Konfigurasi lintas origin untuk frontend React belum disiapkan.
+Akun awal pengembangan belum dibuat melalui seeder.
+
+## Konfigurasi lokal
+
+.env dan .env.testing berisi konfigurasi lokal dan tidak masuk Git.
+File .example tidak boleh berisi password, token, atau application key.
+
+Konfigurasi HTTP dan APP_DEBUG=true pada template ditujukan untuk
+pengembangan lokal, bukan konfigurasi production.
+
+---
