@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Str;
 use App\Enums\UserRole;
 
 class User extends Authenticatable
@@ -22,6 +24,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
     ];
@@ -49,5 +52,12 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'status_aktif' => 'boolean',
         ];
+    }
+
+    protected function username(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value): string => Str::lower($value),
+        );
     }
 }

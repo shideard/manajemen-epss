@@ -15,14 +15,14 @@ class LoginController extends Controller
         $validated = $request->validated();
 
         $authenticated = Auth::guard('web')->attempt([
-            'email' => $validated['email'],
+            'username' => $validated['username'],
             'password' => $validated['password'],
             'status_aktif' => true,
         ]);
 
         if (!$authenticated) {
             throw ValidationException::withMessages([
-                'email' => ['Email atau password salah, atau akun tidak aktif.'],
+                'username' => ['Username atau password salah, atau akun tidak aktif.'],
             ]);
         }
 
