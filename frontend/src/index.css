@@ -4,8 +4,34 @@
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
+  --color-grey-50: #e8e8e8;
+  --color-grey-75: #a0a0a2;
   --color-grey-100: #78797b;
+  --color-grey-200: #3e3f43;
   --color-grey-300: #17181c;
+  --color-grey-500: #0e0f11;
+  --color-grey2-75: #f6f8f6;
+  --color-lime-100: #f5fcc1;
+  --color-lime-200: #f1fba6;
+  --color-lime-300: #eefa94;
+  --color-lime-500: #878f52;
+  --color-green-50: #effdec;
+  --color-heading: #545454;
+  --color-agenda: #e9eeea;
   --color-on-dark: #f3f3f3;
   --color-nav-active: rgb(160 160 162 / 0.5);
+
+  /* Animasi masuk konten halaman saat pindah route */
+  --animate-page-in: page-in 300ms ease-out;
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
