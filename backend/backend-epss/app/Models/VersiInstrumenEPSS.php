@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use App\Enums\StatusVersiInstrumen;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
 class VersiInstrumenEPSS extends Model
@@ -28,5 +29,12 @@ class VersiInstrumenEPSS extends Model
             'berlaku_sampai' => 'date',
             'status' => StatusVersiInstrumen::class,
         ];
+    }
+
+    public function domains(): HasMany
+    {
+        return $this->hasMany(
+            DomainEPSS::class, 
+            'versi_instrumen_id');
     }
 }
