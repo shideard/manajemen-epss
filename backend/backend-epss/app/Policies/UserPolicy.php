@@ -17,4 +17,10 @@ class UserPolicy
                 UserRole::VERIFIKATOR,
             ], true);
     }
+
+    public function create(User $actor):bool 
+    {
+        return $actor->status_aktif
+        && $actor->role === UserRole::SUPER_ADMIN_BIDANG;
+    }
 }
