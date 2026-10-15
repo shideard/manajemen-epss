@@ -99,13 +99,15 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
   }
 
   // AI Prediction Trigger
-  const applyPrediction = (preset) => {
+  const applyPrediction = (preset, setSampleTitle = false) => {
     const { predictions, confidence } = preset
     setFormData((prev) => ({
       ...prev,
       halamanAwal: {
         ...prev.halamanAwal,
-        judulKegiatan: preset.sampleTitle || prev.halamanAwal.judulKegiatan,
+        judulKegiatan: setSampleTitle
+          ? (preset.sampleTitle || prev.halamanAwal.judulKegiatan)
+          : (prev.halamanAwal.judulKegiatan || preset.sampleTitle),
         caraPengumpulan: predictions.caraPengumpulan || prev.halamanAwal.caraPengumpulan,
         sektorKegiatan: predictions.sektorKegiatan || prev.halamanAwal.sektorKegiatan,
       },

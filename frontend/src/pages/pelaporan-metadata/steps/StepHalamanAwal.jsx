@@ -29,13 +29,13 @@ function StepHalamanAwal({ formData, updateHalamanAwal, applyPrediction }) {
             type="button"
             onClick={() => {
               if (!data.judulKegiatan) {
-                applyPrediction(AI_PREDICTION_PRESETS[0])
+                applyPrediction(AI_PREDICTION_PRESETS[0], true)
               } else {
                 // Cari match terdekat atau default preset
                 const match = AI_PREDICTION_PRESETS.find((p) =>
                   p.keywordMatch.some((k) => data.judulKegiatan.toLowerCase().includes(k))
                 ) ?? AI_PREDICTION_PRESETS[0]
-                applyPrediction(match)
+                applyPrediction(match, false)
               }
             }}
             className="flex shrink-0 items-center gap-2 self-start rounded-full bg-grey-300 px-5 py-2.5 text-[13px] font-bold text-lime-300 shadow-md transition hover:bg-grey-500 hover:scale-[1.02] active:scale-[0.98]"
@@ -55,7 +55,7 @@ function StepHalamanAwal({ formData, updateHalamanAwal, applyPrediction }) {
               <button
                 key={idx}
                 type="button"
-                onClick={() => applyPrediction(preset)}
+                onClick={() => applyPrediction(preset, true)}
                 className="flex items-center gap-1.5 rounded-lg border border-lime-300 bg-white/90 px-3 py-1.5 text-left text-[12px] font-medium text-grey-200 shadow-xs hover:border-grey-300 hover:bg-white"
               >
                 <span>{preset.sampleTitle}</span>
