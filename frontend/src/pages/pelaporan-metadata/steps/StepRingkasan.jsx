@@ -152,7 +152,7 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
           <SummaryItem
             label="Tahapan Pengolahan"
             value={Object.entries(blok7.tahapanPengolahan || {})
-              .filter(([_, v]) => v === 'Ya')
+              .filter(([, v]) => v === 'Ya')
               .map(([k]) => k.toUpperCase())}
           />
           <SummaryItem label="Metode Analisis" value={blok7.metodeAnalisis} />

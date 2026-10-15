@@ -6,8 +6,6 @@ import {
   Send,
   Sparkles,
   Check,
-  CheckCircle2,
-  AlertCircle,
 } from 'lucide-react'
 import StepHalamanAwal from './steps/StepHalamanAwal'
 import StepBlok1Penyelenggara from './steps/StepBlok1Penyelenggara'

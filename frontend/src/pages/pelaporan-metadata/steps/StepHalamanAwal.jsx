@@ -1,4 +1,4 @@
-import { Sparkles, HelpCircle, Check, ArrowRight } from 'lucide-react'
+import { Sparkles, Check } from 'lucide-react'
 import { AI_PREDICTION_PRESETS } from '../metadataData'
 
 function StepHalamanAwal({ formData, updateHalamanAwal, applyPrediction }) {
