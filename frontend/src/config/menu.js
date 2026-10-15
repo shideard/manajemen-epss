@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react'
+import { Users, FileSpreadsheet } from 'lucide-react'
 import dashboardIcon from '../assets/sidebar/dashboard-fill.svg'
 import bookIcon from '../assets/sidebar/book-2-fill.svg'
 import calendarIcon from '../assets/sidebar/calendar-fill.svg'
@@ -31,6 +31,7 @@ export const menuSections = [
       { label: 'Dashboard', path: '/dashboard', icon: dashboardIcon, roles: ALL_ROLES },
       { label: 'Pedoman Indikator', path: '/pedoman-indikator', icon: bookIcon, roles: [OPERATOR, VERIFIKATOR] },
       { label: 'Rencana Kegiatan', path: '/rencana-kegiatan', icon: calendarIcon, roles: [OPERATOR, VERIFIKATOR] },
+      { label: 'Pelaporan Metadata', path: '/pelaporan-metadata', icon: FileSpreadsheet, roles: ALL_ROLES },
       { label: 'Repositori Bukti Dukung', path: '/repositori-bukti-dukung', icon: folderIcon, roles: [OPERATOR] },
       { label: 'Verifikasi Bukti Dukung', path: '/verifikasi-bukti-dukung', icon: scalesIcon, roles: [VERIFIKATOR] },
     ],
