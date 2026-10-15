@@ -190,11 +190,16 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Toast Notification */}
+      {/* Toast Notification with Progress Bar */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl bg-grey-300 px-5 py-3.5 text-white shadow-2xl border border-lime-300 animate-bounce">
-          <Sparkles size={20} className="text-lime-300 shrink-0" />
-          <span className="text-[13px] font-medium leading-snug">{toastMessage.msg}</span>
+        <div className="fixed top-6 right-6 z-50 overflow-hidden rounded-2xl bg-grey-300 text-white shadow-2xl border border-lime-300/80 max-w-md">
+          <div className="flex items-start gap-3 px-5 py-3.5">
+            <Sparkles size={19} className="text-lime-300 shrink-0 mt-0.5" />
+            <span className="text-[13px] font-medium leading-snug">{toastMessage.msg}</span>
+          </div>
+          <div className="h-1 w-full bg-grey-200/80">
+            <div className="h-full bg-lime-300 animate-[toast-progress_3500ms_linear_forwards]" />
+          </div>
         </div>
       )}
 

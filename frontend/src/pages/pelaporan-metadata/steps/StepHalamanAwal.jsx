@@ -18,12 +18,9 @@ function StepHalamanAwal({ formData, updateHalamanAwal, applyPrediction }) {
                 <h3 className="text-[16px] font-bold text-grey-300">
                   Fitur Rekomendasi Prediksi Otomatis (AI Metadata Assistant)
                 </h3>
-                <span className="rounded-full bg-lime-300 px-2.5 py-0.5 text-[11px] font-bold text-grey-500">
-                  Tim Statistik Sektoral
-                </span>
               </div>
               <p className="mt-1 text-[13px] text-grey-100">
-                Ketikkan judul kegiatan atau pilih sampel di bawah. Model prediksi akan merekomendasikan opsi kategorikal pada Blok IV, VI, VII, dan VIII secara otomatis.
+                Ketikkan judul kegiatan atau pilih sampel di bawah. Model prediksi akan merekomendasikan opsi tertentu secara otomatis.
               </p>
             </div>
           </div>
