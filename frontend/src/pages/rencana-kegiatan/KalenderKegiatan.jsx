@@ -23,8 +23,8 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
   const agenda = agendaTerdekat(kegiatan, today)
 
   return (
-    <div className="flex flex-wrap items-start justify-center gap-[14px]">
-      <div className="w-full max-w-[800px] rounded-[14px] bg-grey-300 px-[10.5px] pb-[10.5px]">
+    <div className="flex flex-col items-start gap-[14px] lg:flex-row">
+      <div className="w-full min-w-0 flex-1 rounded-[14px] bg-grey-300 px-[10.5px] pb-[10.5px]">
         <div className="flex items-start justify-between px-4 pt-[17px] pb-[9px]">
           <div className="leading-[1.2]">
             <p className="text-[31px] font-semibold text-lime-300">{cursor.toLocaleDateString('id-ID', { month: 'long' })}</p>
@@ -47,7 +47,7 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
             </p>
           ))}
           {monthCells(year, month).map((day, i) => {
-            if (!day) return <div key={i} className="aspect-square rounded-[14px] border-2 border-grey-200/10 bg-[#c2c2c2]/10" />
+            if (!day) return <div key={i} className="aspect-square xl:aspect-[3/2] rounded-[14px] border-2 border-grey-200/10 bg-[#c2c2c2]/10" />
 
             const date = toISODate(new Date(year, month, day))
             const weekend = i % 7 === 0 || i % 7 === 6
@@ -55,7 +55,7 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
             return (
               <div
                 key={i}
-                className={`relative aspect-square overflow-hidden rounded-[10px] border-2 border-grey-200 ${
+                className={`relative aspect-square xl:aspect-[3/2] overflow-hidden rounded-[10px] border-2 border-grey-200 ${
                   date === today ? 'bg-lime-300' : weekend ? 'bg-grey-50' : 'bg-green-50'
                 }`}
               >
@@ -82,7 +82,7 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
         </div>
       </div>
 
-      <div className="flex w-[275px] flex-col gap-[7px]">
+      <div className="flex w-full flex-col gap-[7px] lg:w-[275px] xl:w-[340px]">
         <div className="flex flex-col gap-[6px] rounded-[14px] bg-agenda px-7 py-4">
           <img src={calendarHeader} alt="" width={39} height={39} className="rounded-[5px] bg-white" />
           <p className="text-[25px] leading-[1.2] font-semibold text-grey-200">Agenda Terdekat</p>

@@ -1,14 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
 import { matches, statusOf, STORAGE_KEY, WARNA } from './kegiatan'
+import { usePeriode, useStore } from '../../lib/store'
+import { EMPTY_LIST, EMPTY_OBJECT, KEYS, paginate, sinkronPemetaan } from '../../lib/epss'
+import { bolehUbah } from '../../config/menu'
+import { Pagination, SearchBox } from '../../components/ui'
+import { useConfirm } from '../../components/useConfirm'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
-import searchIcon from '../../assets/rencana/search-2-line.svg'
 import arrowDown from '../../assets/rencana/arrow-down-s-line.svg'
 import userIcon from '../../assets/rencana/user-3-fill.svg'
 import editIcon from '../../assets/rencana/edit-2-fill.svg'
-import arrowLeft from '../../assets/rencana/arrow-drop-left-line.svg'
-import activeDot from '../../assets/rencana/pagination-dot.svg'
+import eyeIcon from '../../assets/icons/eye-line.svg'
+import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 
 const PAGE_SIZE = 5
 
@@ -16,14 +21,6 @@ const STATUS_CLASS = {
   'Belum Mulai': 'bg-grey-50 text-grey-200',
   Berjalan: 'bg-lime-300 text-grey-300',
   Selesai: 'bg-grey-200 text-white',
-}
-
-function loadKegiatan() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? []
-  } catch {
-    return []
-  }
 }
 
 function SectionHeading({ title, subtitle, children }) {
@@ -39,66 +36,81 @@ function SectionHeading({ title, subtitle, children }) {
 }
 
 function RencanaKegiatan() {
-  const [kegiatan, setKegiatan] = useState(loadKegiatan)
+  const { user } = useOutletContext()
+  const navigate = useNavigate()
+  const { aktif } = usePeriode()
+  const [kegiatan, setKegiatan] = useStore(STORAGE_KEY, EMPTY_LIST)
+  const [bukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
+  const [, setBerkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
+  // Hanya verifikator yang mengelola rencana; operator melihat & membuka repositori buktinya
+  const kelola = bolehUbah(user, 'kelolaRencana', aktif)
   const [query, setQuery] = useState('')
   const [tahun, setTahun] = useState('')
   const [page, setPage] = useState(1)
   const [editing, setEditing] = useState(null) // null = form tertutup, {} = tambah baru
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(kegiatan))
-  }, [kegiatan])
+  const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const years = [...new Set(kegiatan.map((k) => k.tahun))].sort()
   const filtered = kegiatan.filter((k) => matches(k, query) && (!tahun || k.tahun === tahun))
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(page, pageCount)
-  const rows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
-  // Tampilkan maksimal 3 nomor halaman di sekitar halaman aktif, seperti di desain
-  const firstPage = Math.max(1, Math.min(currentPage - 1, pageCount - 2))
-  const pageNumbers = Array.from({ length: Math.min(3, pageCount) }, (_, i) => firstPage + i)
+  const { rows, page: currentPage, pageCount } = paginate(filtered, page, PAGE_SIZE)
 
-  function save(data) {
+  function save({ indikator, ...data }) {
+    const id = editing.id ?? crypto.randomUUID()
     setKegiatan((list) =>
-      editing.id
-        ? list.map((k) => (k.id === editing.id ? { ...k, ...data } : k))
-        : [...list, { ...data, id: crypto.randomUUID(), warna: list.length % WARNA.length }],
+      editing.id ? list.map((k) => (k.id === id ? { ...k, ...data } : k)) : [...list, { ...data, id, warna: list.length % WARNA.length }],
     )
+    setBukti((all) => sinkronPemetaan(all, id, indikator))
     setEditing(null)
   }
 
+  // Sama dengan aturan lepas indikator: kegiatan yang buktinya sudah diajukan tidak bisa dihapus
+  const sudahDiajukan = (k) => Object.values(bukti).some((b) => b.kegiatanId === k.id && b.status !== 'draft')
+
+  function hapus(k) {
+    konfirmasi({
+      title: 'Hapus Rencana Kegiatan',
+      message: `Hapus "${k.nama}"? Pemetaan indikator dan berkas bukti dukungnya ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
+      confirmLabel: 'Hapus',
+      danger: true,
+      onConfirm: () => {
+        setKegiatan((list) => list.filter((x) => x.id !== k.id))
+        setBukti((all) => Object.fromEntries(Object.entries(all).filter(([, b]) => b.kegiatanId !== k.id)))
+        setBerkas((all) => Object.fromEntries(Object.entries(all).filter(([id]) => id !== k.id)))
+      },
+    })
+  }
+
+  const buka = (k) => (kelola ? setEditing(k) : navigate(`/repositori-bukti-dukung/${k.id}`))
+
   return (
-    <div className="mx-auto flex max-w-[1098px] flex-col gap-[33px] font-sans">
+    <div className="flex w-full flex-col gap-[33px] font-sans">
       <SectionHeading
         title="Rencana Kegiatan Statistik Sektoral"
-        subtitle="Kelola agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan."
+        subtitle={kelola ? 'Kelola agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.' : 'Agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.'}
       >
-        <button
-          type="button"
-          onClick={() => setEditing({})}
-          className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300"
-        >
-          <img src={addIcon} alt="" width={19} height={19} />
-          Tambah Rencana Kegiatan
-        </button>
+        {kelola && (
+          <button
+            type="button"
+            onClick={() => setEditing({})}
+            className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300"
+          >
+            <img src={addIcon} alt="" width={19} height={19} />
+            Tambah Rencana Kegiatan
+          </button>
+        )}
       </SectionHeading>
 
       <section className="rounded-[20px] border-5 border-dashed border-lime-500 bg-lime-300 px-[10px] pt-[23px] pb-[10px]">
         <div className="mb-[29px] flex flex-wrap items-center justify-between gap-3 px-5">
-          <label className="relative flex h-[45px] w-[330px] items-center">
-            <span className="sr-only">Cari rencana kegiatan</span>
-            <img src={searchIcon} alt="" width={31} height={31} className="pointer-events-none absolute left-2 rounded-[10px] bg-grey-300" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-                setPage(1)
-              }}
-              placeholder="Cari Rencana Kegiatan..."
-              className="size-full rounded-[16px] bg-grey2-75 pr-4 pl-[53px] text-base placeholder:font-light placeholder:text-grey-75 placeholder:italic focus:outline-2 focus:outline-grey-300"
-            />
-          </label>
+          <SearchBox
+            variant="grey"
+            value={query}
+            onChange={(value) => {
+              setQuery(value)
+              setPage(1)
+            }}
+            placeholder="Cari Rencana Kegiatan..."
+          />
           <label className="relative flex h-[45px] w-[280px] items-center">
             <span className="sr-only">Tahun kegiatan</span>
             <select
@@ -136,7 +148,9 @@ function RencanaKegiatan() {
                 <tr>
                   <td colSpan={5} className="py-16 text-center text-grey-100">
                     {kegiatan.length === 0
-                      ? 'Belum ada rencana kegiatan. Klik "Tambah Rencana Kegiatan" untuk menambahkan.'
+                      ? kelola
+                        ? 'Belum ada rencana kegiatan. Klik "Tambah Rencana Kegiatan" untuk menambahkan.'
+                        : 'Belum ada rencana kegiatan dari verifikator.'
                       : 'Tidak ada rencana kegiatan yang cocok dengan pencarian.'}
                   </td>
                 </tr>
@@ -172,9 +186,27 @@ function RencanaKegiatan() {
                       </span>
                     </td>
                     <td className="py-5 text-center">
-                      <button type="button" onClick={() => setEditing(k)} aria-label={`Edit ${k.nama}`} className="rounded-[5px] bg-lime-300">
-                        <img src={editIcon} alt="" width={24} height={24} />
-                      </button>
+                      {kelola ? (
+                        <span className="flex justify-center gap-[7px]">
+                          <button type="button" onClick={() => setEditing(k)} aria-label={`Edit ${k.nama}`} className="rounded-[5px] bg-lime-300">
+                            <img src={editIcon} alt="" width={24} height={24} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => hapus(k)}
+                            disabled={sudahDiajukan(k)}
+                            title={sudahDiajukan(k) ? 'Tidak bisa dihapus: bukti dukung kegiatan ini sudah diajukan' : undefined}
+                            aria-label={`Hapus ${k.nama}`}
+                            className="grid size-6 place-items-center rounded-[5px] bg-red-200 disabled:opacity-40"
+                          >
+                            <img src={deleteIcon} alt="" width={18} height={18} />
+                          </button>
+                        </span>
+                      ) : (
+                        <Link to={`/repositori-bukti-dukung/${k.id}`} aria-label={`Lihat bukti dukung ${k.nama}`} className="inline-block rounded-[5px] bg-lime-300 align-middle">
+                          <img src={eyeIcon} alt="" width={24} height={24} />
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 )
@@ -184,39 +216,22 @@ function RencanaKegiatan() {
         </div>
       </section>
 
-      {filtered.length > 0 && (
-        <nav aria-label="Halaman" className="mx-auto flex h-[51px] w-[331px] items-center justify-between overflow-hidden rounded-[20px] bg-grey-300">
-          <button type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1} aria-label="Halaman sebelumnya" className="disabled:opacity-40">
-            <img src={arrowLeft} alt="" width={53} height={53} />
-          </button>
-          <div className="flex items-center">
-            {pageNumbers.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setPage(n)}
-                aria-current={n === currentPage ? 'page' : undefined}
-                className={`relative grid size-[37px] place-items-center text-[20px] leading-[1.2] font-semibold ${
-                  n === currentPage ? 'text-grey-300' : 'text-lime-300'
-                }`}
-              >
-                {n === currentPage && <img src={activeDot} alt="" width={37} height={37} className="absolute inset-0" />}
-                <span className="relative">{n}</span>
-              </button>
-            ))}
-          </div>
-          <button type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage === pageCount} aria-label="Halaman berikutnya" className="disabled:opacity-40">
-            <img src={arrowLeft} alt="" width={53} height={53} className="-scale-x-100" />
-          </button>
-        </nav>
-      )}
+      {filtered.length > 0 && <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />}
 
       <hr className="border-grey-75" />
 
       <SectionHeading title="Kalender Kegiatan" subtitle="Pantau dan kelola jadwal kegiatan secara terstruktur dalam satu kalender." />
-      <KalenderKegiatan kegiatan={kegiatan} onOpen={setEditing} />
+      <KalenderKegiatan kegiatan={kegiatan} onOpen={buka} />
 
-      {editing && <KegiatanForm kegiatan={editing} onSave={save} onClose={() => setEditing(null)} />}
+      {editing && (
+        <KegiatanForm
+          kegiatan={editing}
+          indikator={Object.values(bukti).filter((b) => b.kegiatanId === editing.id)}
+          onSave={save}
+          onClose={() => setEditing(null)}
+        />
+      )}
+      {dialogKonfirmasi}
     </div>
   )
 }

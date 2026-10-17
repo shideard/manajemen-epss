@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useStore } from '../../lib/store'
+import { indikatorById, INDIKATOR, KEYS, SEED_USERS } from '../../lib/epss'
+import { ROLES } from '../../config/menu'
 import closeIcon from '../../assets/rencana/close-line.svg'
 import triangle from '../../assets/rencana/dropdown-triangle.svg'
+import bookIcon from '../../assets/icons/book-mark-fill.svg'
+import removeIcon from '../../assets/icons/close-circle-line.svg'
 
 const inputClass =
   'h-[45px] w-full rounded-[15px] border-2 border-dashed border-grey-75 px-5 text-base font-normal text-grey-500 placeholder:font-light placeholder:text-grey-75/50 focus:border-solid focus:border-grey-500 focus:outline-none'
@@ -15,9 +21,13 @@ function Field({ label, children }) {
 }
 
 // Modal pakai <dialog> bawaan browser: Esc, fokus, dan backdrop sudah ditangani
-function KegiatanForm({ kegiatan, onSave, onClose }) {
+// indikator = record bukti kegiatan ini; yang sudah diajukan/diverifikasi tidak bisa dilepas
+function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
   const dialogRef = useRef(null)
   const [error, setError] = useState('')
+  const [users] = useStore(KEYS.users, SEED_USERS)
+  const [dipetakan, setDipetakan] = useState(() => indikator.map((b) => b.indikatorId))
+  const terkunci = indikator.filter((b) => b.status !== 'draft').map((b) => b.indikatorId)
   const tahunIni = new Date().getFullYear()
   const opsiTahun = [tahunIni - 1, tahunIni, tahunIni + 1, tahunIni + 2].map(String)
 
@@ -32,7 +42,7 @@ function KegiatanForm({ kegiatan, onSave, onClose }) {
       setError('Tanggal selesai tidak boleh sebelum tanggal mulai.')
       return
     }
-    onSave(data)
+    onSave({ ...data, indikator: dipetakan })
   }
 
   const close = () => dialogRef.current.close()
@@ -82,11 +92,59 @@ function KegiatanForm({ kegiatan, onSave, onClose }) {
             <input name="opd" required defaultValue={kegiatan.opd} placeholder="Contoh: DINSOS" className={inputClass} />
           </Field>
           <Field label="Penanggung Jawab Teknis (PIC)">
-            <input name="pic" required defaultValue={kegiatan.pic} placeholder="Nama PIC" className={inputClass} />
+            {/* PIC dicocokkan dengan akun operator: hanya PIC yang bisa mengunggah bukti kegiatan ini */}
+            <input name="pic" required list="daftar-operator" defaultValue={kegiatan.pic} placeholder="Cari nama PIC..." className={inputClass} />
+            <datalist id="daftar-operator">
+              {users
+                .filter((u) => u.role === ROLES.OPERATOR && u.status_aktif !== false)
+                .map((u) => (
+                  <option key={u.id} value={u.username} />
+                ))}
+            </datalist>
           </Field>
           <Field label="Deskripsi Kegiatan">
             <textarea name="deskripsi" defaultValue={kegiatan.deskripsi} placeholder="Isi deskripsi..." className={`${inputClass} h-[177px] resize-none py-[17px]`} />
           </Field>
+
+          <div className="flex flex-col gap-[7px]">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label htmlFor="pilih-indikator" className="text-base leading-[1.2] font-semibold text-grey-500">
+                Pemetaan Indikator EPSS (Indikator Tertaut)
+              </label>
+              <Link to="/pedoman-indikator" target="_blank" className="flex items-center gap-[10px] rounded-[10px] bg-lime-300 px-3 py-1 text-[13px] text-grey-500">
+                <img src={bookIcon} alt="" width={15} height={15} />
+                Lihat Pedoman Indikator
+              </Link>
+            </div>
+            <span className="relative">
+              <select
+                id="pilih-indikator"
+                value=""
+                onChange={(e) => setDipetakan((ids) => [...ids, e.target.value])}
+                className={`${inputClass} appearance-none border-[#b4b4b4] font-light text-grey-75`}
+              >
+                <option value="">Pilih indikator yang akan ditambahkan...</option>
+                {INDIKATOR.filter((i) => !dipetakan.includes(i.id)).map((i) => (
+                  <option key={i.id} value={i.id}>
+                    Indikator {i.nomor}: {i.nama}
+                  </option>
+                ))}
+              </select>
+              <img src={triangle} alt="" width={17} height={11} className="pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 -scale-y-100" />
+            </span>
+            {dipetakan.map((id) => (
+              <p key={id} className="flex items-center justify-between gap-3 rounded-[10px] bg-lime-300 px-[10px] py-[6px] text-[13px] leading-[1.2] text-grey-500">
+                Indikator {indikatorById[id].nomor}: {indikatorById[id].nama}
+                {terkunci.includes(id) ? (
+                  <span className="text-grey-200">Sudah diajukan</span>
+                ) : (
+                  <button type="button" onClick={() => setDipetakan((ids) => ids.filter((x) => x !== id))} aria-label={`Lepas indikator ${indikatorById[id].nomor}`}>
+                    <img src={removeIcon} alt="" width={15} height={15} className="grayscale" />
+                  </button>
+                )}
+              </p>
+            ))}
+          </div>
 
           {error && (
             <p role="alert" className="text-sm text-red-600">

@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { motion, MotionConfig } from 'motion/react'
+import { AnimatePresence, motion, MotionConfig } from 'motion/react'
 import { getMenuForRole, ROLE_LABELS } from '../../config/menu'
 import logo from '../../assets/sidebar/logo-kota-bogor.png'
 import logoLine from '../../assets/sidebar/logo-line.svg'
@@ -83,42 +83,48 @@ function Sidebar({ user, onLogout }) {
             </Fragment>
           ))}
         </nav>
-      </MotionConfig>
 
-      {/* Profil user; klik untuk membuka tombol Keluar */}
-      <div className="relative mt-auto mb-[34px] ml-[19px] w-[196px]">
-        {menuOpen && (
+        {/* Profil user; klik untuk membuka tombol Keluar */}
+        <div className="relative mt-auto mb-[34px] ml-[19px] w-[196px]">
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.button
+                type="button"
+                onClick={onLogout}
+                initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute bottom-full mb-2 w-full origin-bottom rounded-[10px] bg-nav-active px-[14px] py-3 text-left text-[13px] font-semibold text-on-dark"
+              >
+                Keluar
+              </motion.button>
+            )}
+          </AnimatePresence>
           <button
             type="button"
-            onClick={onLogout}
-            className="absolute bottom-full mb-2 w-full rounded-[10px] bg-nav-active px-[14px] py-3 text-left text-[13px] font-semibold text-on-dark"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-expanded={menuOpen}
+            aria-label="Menu akun"
+            className="flex w-full items-center rounded-[10px] px-[7px] text-left"
           >
-            Keluar
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => setMenuOpen((open) => !open)}
-          aria-expanded={menuOpen}
-          aria-label="Menu akun"
-          className="flex w-full items-center rounded-[10px] px-[7px] text-left"
-        >
-          <span className="flex items-center gap-[7px]">
-            <img src={accountIcon} alt="" width={53} height={53} className="shrink-0" />
-            <span className="flex flex-col gap-[7px] text-[13px] leading-[1.2] whitespace-nowrap text-on-dark">
-              <span className="font-semibold">{user.name}</span>
-              <span className="font-light">{ROLE_LABELS[user.role]}</span>
+            <span className="flex items-center gap-[7px]">
+              <img src={accountIcon} alt="" width={53} height={53} className="shrink-0" />
+              <span className="flex flex-col gap-[7px] text-[13px] leading-[1.2] whitespace-nowrap text-on-dark">
+                <span className="font-semibold">{user.name}</span>
+                <span className="font-light">{ROLE_LABELS[user.role]}</span>
+              </span>
             </span>
-          </span>
-          <img
-            src={arrowDownIcon}
-            alt=""
-            width={24}
-            height={24}
-            className={`ml-auto shrink-0 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
-          />
-        </button>
-      </div>
+            <img
+              src={arrowDownIcon}
+              alt=""
+              width={24}
+              height={24}
+              className={`ml-auto shrink-0 transition-transform duration-300 ease-out-quint ${menuOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
+      </MotionConfig>
     </aside>
   )
 }

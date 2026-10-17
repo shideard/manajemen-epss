@@ -9,29 +9,133 @@
   --color-grey-100: #78797b;
   --color-grey-200: #3e3f43;
   --color-grey-300: #17181c;
+  --color-grey-400: #101114;
   --color-grey-500: #0e0f11;
   --color-grey2-75: #f6f8f6;
+  --color-lime-50: #fdfff4;
+  --color-lime-75: #f8fdd3;
   --color-lime-100: #f5fcc1;
   --color-lime-200: #f1fba6;
   --color-lime-300: #eefa94;
   --color-lime-500: #878f52;
   --color-green-50: #effdec;
+  --color-green-75: #bdf5b1;
+  --color-green-100: #e5ffdf;
+  --color-green-400: #41a12e;
+  --color-green-500: #398c28;
+  --color-red-50: #fbd8d8;
+  --color-red-200: #ea6161;
+  --color-red-300: #e64141;
+  --color-red-500: #8c2828;
+  --color-yellow-50: #fff7d1;
+  --color-yellow-500: #806104;
+  --color-blue-50: #c8ebfa;
+  --color-blue-500: #2b64b3;
+  --color-blue-600: #2b51bb;
   --color-heading: #545454;
   --color-agenda: #e9eeea;
   --color-on-dark: #f3f3f3;
   --color-nav-active: rgb(160 160 162 / 0.5);
 
-  /* Animasi masuk konten halaman saat pindah route */
-  --animate-page-in: page-in 300ms ease-out;
+  /* Satu kurva untuk semua gerak: cepat di awal, mendarat pelan */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 
-  @keyframes page-in {
+  /* fill-mode backwards: transform hilang setelah selesai, jadi tidak merusak elemen fixed/sticky di dalamnya */
+  --animate-rise: rise 700ms var(--ease-out-quint) backwards;
+  --animate-pop: pop 220ms var(--ease-out-quint);
+  --animate-reveal-x: reveal-x 1100ms var(--ease-out-quint) backwards;
+  --animate-drop: drop 280ms var(--ease-out-quint) backwards;
+  --animate-settle: settle 2400ms var(--ease-out-quint) backwards;
+
+  @keyframes rise {
     from {
       opacity: 0;
-      transform: translateY(8px);
+      translate: 0 12px;
     }
-    to {
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      scale: 0.96;
+      translate: 0 6px;
+    }
+  }
+  @keyframes reveal-x {
+    from {
+      translate: -100% 0;
+    }
+  }
+  @keyframes drop {
+    from {
+      opacity: 0;
+      translate: 0 -6px;
+    }
+  }
+  @keyframes settle {
+    from {
+      opacity: 0;
+      scale: 1.08;
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* Di layer base supaya class utility (animate-*, scale-*, transition-*) tetap bisa menimpa */
+@layer base {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Blok-blok halaman muncul berurutan (anak langsung dari elemen akar halaman) */
+    .stagger > * > * {
+      animation: var(--animate-rise);
+      animation-delay: 350ms;
+    }
+    .stagger > * > :nth-child(1) { animation-delay: 0ms; }
+    .stagger > * > :nth-child(2) { animation-delay: 70ms; }
+    .stagger > * > :nth-child(3) { animation-delay: 140ms; }
+    .stagger > * > :nth-child(4) { animation-delay: 210ms; }
+    .stagger > * > :nth-child(5) { animation-delay: 280ms; }
+
+    dialog[open] {
+      animation: var(--animate-pop);
+    }
+
+    /* Popover: animasi buka DAN tutup (display/overlay allow-discrete menahan elemen sampai transisi selesai) */
+    [popover] {
+      opacity: 0;
+      scale: 0.96;
+      translate: 0 -6px;
+      transition:
+        opacity 180ms ease-out,
+        scale 220ms var(--ease-out-quint),
+        translate 220ms var(--ease-out-quint),
+        display 220ms allow-discrete,
+        overlay 220ms allow-discrete;
+    }
+    [popover]:popover-open {
       opacity: 1;
-      transform: translateY(0);
+      scale: 1;
+      translate: 0;
+    }
+    @starting-style {
+      [popover]:popover-open {
+        opacity: 0;
+        scale: 0.96;
+        translate: 0 -6px;
+      }
+    }
+    dialog[open]::backdrop {
+      animation: fade 220ms ease-out;
+    }
+
+    /* Umpan balik tekan yang halus di semua tombol */
+    button:not(:disabled) {
+      transition: scale 160ms var(--ease-out-quint);
+    }
+    button:not(:disabled):active {
+      scale: 0.97;
     }
   }
 }

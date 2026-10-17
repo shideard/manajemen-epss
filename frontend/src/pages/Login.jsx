@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api } from '../lib/api'
+import { useStore } from '../lib/store'
+import { cariAkun, DEMO_PASSWORD, KEYS, SEED_USERS } from '../lib/epss'
 import background from '../assets/login/login-bg.png'
 import logoLine from '../assets/login/logo-line.svg'
 import logo from '../assets/sidebar/logo-kota-bogor.png'
@@ -11,27 +12,24 @@ const inputClass =
 function Login() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [users] = useStore(KEYS.users, SEED_USERS)
+  const [, setSesi] = useStore(KEYS.sesi, null)
 
-  async function handleSubmit(event) {
+  function handleSubmit(event) {
     event.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      await api('/login', { method: 'POST', body: Object.fromEntries(new FormData(event.currentTarget)) })
-      navigate('/dashboard', { replace: true })
-    } catch (err) {
-      setError(err.errors ? Object.values(err.errors)[0][0] : err.message)
-    } finally {
-      setLoading(false)
-    }
+    const { username, password } = Object.fromEntries(new FormData(event.currentTarget))
+    const akun = cariAkun(users, username.trim())
+    if (!akun || password !== DEMO_PASSWORD) return setError('Username atau password salah.')
+    if (akun.status_aktif === false) return setError('Akun Anda dinonaktifkan. Hubungi Super Admin Bidang.')
+    setSesi(akun.username)
+    navigate('/pilih-periode', { replace: true })
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center gap-4 bg-grey-50 p-4 font-sans">
       {/* Panel foto; disembunyikan di layar kecil */}
-      <div className="relative hidden h-[774px] w-[688px] shrink-0 overflow-hidden rounded-[40px] bg-grey-500 lg:block">
-        <img src={background} alt="" className="absolute top-0 -left-[53px] size-[806px] max-w-none object-cover opacity-21" />
+      <div className="relative hidden h-[774px] w-[688px] shrink-0 overflow-hidden rounded-[40px] bg-grey-500 motion-safe:animate-rise lg:block">
+        <img src={background} alt="" className="absolute top-0 -left-[53px] size-[806px] max-w-none object-cover opacity-21 motion-safe:animate-settle" />
         <div className="absolute inset-x-0 bottom-[50px] flex items-center justify-center gap-[9px]">
           <img src={logo} alt="Logo Kota Bogor" className="size-[45px] object-cover" />
           <span className="flex h-[42px] w-0 items-center justify-center">
@@ -44,7 +42,7 @@ function Login() {
         </div>
       </div>
 
-      <div className="flex h-[774px] w-full max-w-[694px] items-center justify-center rounded-[40px] bg-white px-6">
+      <div className="flex h-[774px] w-full max-w-[694px] items-center justify-center rounded-[40px] bg-white px-6 motion-safe:animate-rise motion-safe:[animation-delay:120ms]">
         <form onSubmit={handleSubmit} className="flex w-full max-w-[414px] flex-col items-center gap-[72px]">
           <h1 className="text-[31px] leading-[1.2] font-bold text-grey-500">Masuk</h1>
           <div className="flex w-full flex-col gap-[50px]">
@@ -65,10 +63,9 @@ function Login() {
             </div>
             <button
               type="submit"
-              disabled={loading}
-              className="w-full rounded-[16px] bg-grey-500 px-5 py-[10px] text-base leading-[1.2] font-semibold text-lime-300 disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-[16px] bg-grey-500 px-5 py-[10px] text-base leading-[1.2] font-semibold text-lime-300"
             >
-              {loading ? 'Memproses...' : 'Masuk'}
+              Masuk
             </button>
           </div>
         </form>
