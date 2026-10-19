@@ -1,111 +1,141 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@import "tailwindcss";
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+/* Token dari design system Figma (Design.md) */
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --color-grey-50: #e8e8e8;
+  --color-grey-75: #a0a0a2;
+  --color-grey-100: #78797b;
+  --color-grey-200: #3e3f43;
+  --color-grey-300: #17181c;
+  --color-grey-400: #101114;
+  --color-grey-500: #0e0f11;
+  --color-grey2-75: #f6f8f6;
+  --color-lime-50: #fdfff4;
+  --color-lime-75: #f8fdd3;
+  --color-lime-100: #f5fcc1;
+  --color-lime-200: #f1fba6;
+  --color-lime-300: #eefa94;
+  --color-lime-500: #878f52;
+  --color-green-50: #effdec;
+  --color-green-75: #bdf5b1;
+  --color-green-100: #e5ffdf;
+  --color-green-400: #41a12e;
+  --color-green-500: #398c28;
+  --color-red-50: #fbd8d8;
+  --color-red-200: #ea6161;
+  --color-red-300: #e64141;
+  --color-red-500: #8c2828;
+  --color-yellow-50: #fff7d1;
+  --color-yellow-500: #806104;
+  --color-blue-50: #c8ebfa;
+  --color-blue-500: #2b64b3;
+  --color-blue-600: #2b51bb;
+  --color-heading: #545454;
+  --color-agenda: #e9eeea;
+  --color-on-dark: #f3f3f3;
+  --color-nav-active: rgb(160 160 162 / 0.5);
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* Satu kurva untuk semua gerak: cepat di awal, mendarat pelan */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* fill-mode backwards: transform hilang setelah selesai, jadi tidak merusak elemen fixed/sticky di dalamnya */
+  --animate-rise: rise 700ms var(--ease-out-quint) backwards;
+  --animate-pop: pop 220ms var(--ease-out-quint);
+  --animate-reveal-x: reveal-x 1100ms var(--ease-out-quint) backwards;
+  --animate-drop: drop 280ms var(--ease-out-quint) backwards;
+  --animate-settle: settle 2400ms var(--ease-out-quint) backwards;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 12px;
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      scale: 0.96;
+      translate: 0 6px;
+    }
+  }
+  @keyframes reveal-x {
+    from {
+      translate: -100% 0;
+    }
+  }
+  @keyframes drop {
+    from {
+      opacity: 0;
+      translate: 0 -6px;
+    }
+  }
+  @keyframes settle {
+    from {
+      opacity: 0;
+      scale: 1.08;
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+/* Di layer base supaya class utility (animate-*, scale-*, transition-*) tetap bisa menimpa */
+@layer base {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Blok-blok halaman muncul berurutan (anak langsung dari elemen akar halaman) */
+    .stagger > * > * {
+      animation: var(--animate-rise);
+      animation-delay: 350ms;
+    }
+    .stagger > * > :nth-child(1) { animation-delay: 0ms; }
+    .stagger > * > :nth-child(2) { animation-delay: 70ms; }
+    .stagger > * > :nth-child(3) { animation-delay: 140ms; }
+    .stagger > * > :nth-child(4) { animation-delay: 210ms; }
+    .stagger > * > :nth-child(5) { animation-delay: 280ms; }
+
+    dialog[open] {
+      animation: var(--animate-pop);
+    }
+
+    /* Popover: animasi buka DAN tutup (display/overlay allow-discrete menahan elemen sampai transisi selesai) */
+    [popover] {
+      opacity: 0;
+      scale: 0.96;
+      translate: 0 -6px;
+      transition:
+        opacity 180ms ease-out,
+        scale 220ms var(--ease-out-quint),
+        translate 220ms var(--ease-out-quint),
+        display 220ms allow-discrete,
+        overlay 220ms allow-discrete;
+    }
+    [popover]:popover-open {
+      opacity: 1;
+      scale: 1;
+      translate: 0;
+    }
+    @starting-style {
+      [popover]:popover-open {
+        opacity: 0;
+        scale: 0.96;
+        translate: 0 -6px;
+      }
+    }
+    dialog[open]::backdrop {
+      animation: fade 220ms ease-out;
+    }
+
+    /* Umpan balik tekan yang halus di semua tombol */
+    button:not(:disabled) {
+      transition: scale 160ms var(--ease-out-quint);
+    }
+    button:not(:disabled):active {
+      scale: 0.97;
+    }
   }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-body {
-  margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }
