@@ -16,11 +16,15 @@ class UpdateUserStatusTest extends TestCase
         $admin = User::factory()->create([
             'role' => UserRole::SUPER_ADMIN_BIDANG,
             'status_aktif' => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $operator = User::factory()->create([
             'role' => UserRole::OPERATOR,
             'status_aktif' => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $response = $this
@@ -39,11 +43,15 @@ class UpdateUserStatusTest extends TestCase
         $admin = User::factory()->create([
             'role' => UserRole::SUPER_ADMIN_BIDANG,
             'status_aktif' => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $verifikator = User::factory()->create([
             'role' => UserRole::VERIFIKATOR,
             'status_aktif' => false,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $response = $this
@@ -62,6 +70,8 @@ class UpdateUserStatusTest extends TestCase
         $admin = User::factory()->create([
             'role' => UserRole::SUPER_ADMIN_BIDANG,
             'status_aktif' => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $response = $this
@@ -80,11 +90,15 @@ class UpdateUserStatusTest extends TestCase
         $operator = User::factory()->create([
             'role' => UserRole::OPERATOR,
             'status_aktif' => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $verifikator = User::factory()->create([
             'role' => UserRole::VERIFIKATOR,
             'status_aktif' => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $response = $this
@@ -103,11 +117,15 @@ class UpdateUserStatusTest extends TestCase
         $admin = User::factory()->create([
             'role' => UserRole::SUPER_ADMIN_BIDANG,
             'status_aktif' => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $operator = User::factory()->create([
             'role' => UserRole::OPERATOR,
             'status_aktif' => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $response = $this

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -50,7 +51,7 @@ class StoreUserRequest extends FormRequest
             'password' => [
                 'required',
                 'string',
-                'min:12',
+                Password::defaults(),
                 'confirmed',
             ],
             'role' => [

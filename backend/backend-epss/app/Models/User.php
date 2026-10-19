@@ -51,6 +51,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'status_aktif' => 'boolean',
+            'must_change_password' => 'boolean',
+            'password_changed_at' => 'immutable_datetime',
         ];
     }
 
@@ -59,5 +61,20 @@ class User extends Authenticatable
         return Attribute::make(
             set: fn (string $value): string => Str::lower($value),
         );
+    }
+
+    public function requiresPasswordChange(): bool
+    {
+        if ($this->must_change_password) {
+            return true;
+        }
+
+        if ($this->password_changed_at === null) {
+            return true;
+        }
+
+        $expiresAt = $this->password_changed_at->addYearNoOverflow();
+
+        return now()->greaterThanOrEqualTo($expiresAt);
     }
 }

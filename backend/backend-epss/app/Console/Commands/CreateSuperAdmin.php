@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Str;
 
 class CreateSuperAdmin extends Command
@@ -57,7 +58,7 @@ class CreateSuperAdmin extends Command
             'password' => [
                 'required',
                 'string',
-                'min:12',
+                Password::defaults(),
                 'confirmed',
             ],
         ]);
