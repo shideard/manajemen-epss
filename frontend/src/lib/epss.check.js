@@ -1,6 +1,7 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan } from './epss.js'
+import { statusOf } from '../pages/rencana-kegiatan/kegiatan.js'
+import { geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -51,6 +52,49 @@ assert.ok(validasiPeriode({ ...form, target: '' }).error)
 const csv = lkeCsv({ i1: 2 }, { 'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1', catatan: 'Lengkapi "SK"' } }, { k1: [{}, {}] }, { k1: 'Survei; SKM' }).split('\r\n')
 assert.equal(csv.length, INDIKATOR.length + 1)
 assert.equal(csv[1], '"1";"Domain 1 - Prinsip Satu Data Indonesia (SDI)";"Penerapan Standar Data Statistik";"3.5";"2";"Terkelola";"2";"Survei; SKM";"Lengkapi ""SK"""')
+
+// Peta relasi: k1 (indikator 1 & 3) di tengahnya, k2 tidak menumpuk k1, k3 tanpa indikator di bawah tanpa edge
+const peta = petaRelasi([{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }], {
+  'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1' },
+  'k1:i3': { kegiatanId: 'k1', indikatorId: 'i3' },
+  'k2:i1': { kegiatanId: 'k2', indikatorId: 'i1' },
+})
+const y = (id) => peta.nodes.find((n) => n.id === id).position.y
+assert.equal(peta.nodes.length, DOMAINS.length + new Set(INDIKATOR.map((i) => i.domain.id + i.aspek)).size + INDIKATOR.length + 3)
+assert.equal(y('k:k1'), y('i:i2'))
+assert.equal(y('k:k2'), y('k:k1') + PETA.baris)
+assert.equal(y('k:k3'), y('k:k2') + PETA.baris)
+assert.equal(peta.edges.filter((e) => e.target.startsWith('k:')).length, 3)
+assert.equal(y('d:d1'), (y('a:d1:Standar Data Statistik') + y('a:d1:Kode Referensi dan/atau Data Induk')) / 2)
+// Hover k1: jalurnya ke kiri saja (i1, i3, aspek, domain), bukan kegiatan lain yang berbagi indikator
+const jalur = terhubung(peta.edges, 'k:k1')
+assert.ok(['i:i1', 'i:i3', 'a:d1:Standar Data Statistik', 'd:d1'].every((id) => jalur.has(id)))
+assert.ok(!jalur.has('k:k2') && !jalur.has('i:i2'))
+assert.ok(terhubung(peta.edges, 'i:i1').has('k:k2'))
+
+// 32 indikator dengan id unik; indikator satu aspek berurutan (kalau tidak, garis peta relasi bersilangan)
+assert.equal(INDIKATOR.length, 32)
+assert.equal(new Set(INDIKATOR.map((i) => i.id)).size, 32)
+const urutanAspek = INDIKATOR.map((i) => i.domain.id + i.aspek).filter((a, n, semua) => a !== semua[n - 1])
+assert.equal(new Set(urutanAspek).size, urutanAspek.length)
+
+// Data contoh: tiap pemetaan menunjuk kegiatan & indikator yang ada, semua indikator tercakup,
+// dan ada kegiatan yang sudah selesai, sedang berjalan, dan belum mulai
+const contoh = contohKegiatan('2026-10-17')
+const idKegiatan = new Set(contoh.kegiatan.map((k) => k.id))
+const pemetaan = Object.values(contoh.bukti)
+assert.ok(pemetaan.every((b) => idKegiatan.has(b.kegiatanId) && INDIKATOR.some((i) => i.id === b.indikatorId)))
+assert.equal(new Set(pemetaan.map((b) => b.indikatorId)).size, INDIKATOR.length)
+assert.deepEqual(new Set(contoh.kegiatan.map((k) => statusOf(k, '2026-10-17'))), new Set(['Selesai', 'Berjalan', 'Belum Mulai']))
+assert.ok(contoh.kegiatan.every((k) => k.mulai <= k.selesai && k.tahun === k.mulai.slice(0, 4)))
+
+// Filter bertingkat: pilih indikator → aspek & domain ikut terisi; kosongkan aspek → indikator ikut kosong, domain tetap
+const kosong = { domain: '', aspek: '', indikator: '' }
+const lengkap = pilihTingkat(peta.edges, kosong, 'indikator', 'i:i2')
+assert.deepEqual(lengkap, { domain: 'd:d1', aspek: 'a:d1:Metadata Statistik', indikator: 'i:i2' })
+assert.deepEqual(pilihTingkat(peta.edges, lengkap, 'aspek', ''), { domain: 'd:d1', aspek: '', indikator: '' })
+assert.deepEqual(pilihTingkat(peta.edges, lengkap, 'domain', ''), kosong)
+assert.deepEqual(pilihTingkat(peta.edges, lengkap, 'domain', 'd:d2'), { domain: 'd:d2', aspek: '', indikator: '' })
 
 console.log('epss.check: OK')
 

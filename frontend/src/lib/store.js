@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import { EMPTY_LIST, KEYS, notifikasi, SEED_PENGINGAT, SEED_PERIODE } from './epss'
+import { contohKegiatan, EMPTY_LIST, KEYS, notifikasi, SEED_PENGINGAT, SEED_PERIODE } from './epss'
 import { STORAGE_KEY as KEGIATAN_KEY, toISODate } from '../pages/rencana-kegiatan/kegiatan'
 
 // State yang disimpan di localStorage dan tersinkron antar komponen yang memakai key yang sama
@@ -7,6 +7,11 @@ import { STORAGE_KEY as KEGIATAN_KEY, toISODate } from '../pages/rencana-kegiata
 // ponytail: data hanya ada di browser ini; ganti dengan API Laravel saat endpoint-nya siap
 const cache = new Map()
 const listeners = new Map()
+
+// Data contoh untuk key yang belum pernah disimpan di browser ini; menang atas seed dari pemanggil
+// supaya semua halaman yang membaca kegiatan/bukti melihat data yang sama. Daftar yang sengaja dikosongkan ([]) tetap kosong.
+const contoh = contohKegiatan(toISODate(new Date()))
+const DATA_CONTOH = { [KEGIATAN_KEY]: contoh.kegiatan, [KEYS.bukti]: contoh.bukti }
 
 function read(key, seed) {
   if (!cache.has(key)) {
@@ -16,7 +21,7 @@ function read(key, seed) {
     } catch {
       value = null
     }
-    cache.set(key, value ?? seed)
+    cache.set(key, value ?? DATA_CONTOH[key] ?? seed)
   }
   return cache.get(key)
 }
