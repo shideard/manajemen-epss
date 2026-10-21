@@ -244,7 +244,7 @@ function RepositoriDetail() {
               {[
                 ['OPD', k.opd],
                 ['PIC', k.pic],
-                ['Jadwal', `${k.mulai} s/d ${k.selesai}`],
+                ['Jadwal', `${formatTanggal(k.mulai)} s/d ${formatTanggal(k.selesai)}`],
                 ['Deadline Bukti', formatTanggal(aktif.batas)],
               ].map(([label, value]) => (
                 <div key={label}>
