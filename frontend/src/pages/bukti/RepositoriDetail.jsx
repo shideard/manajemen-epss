@@ -4,7 +4,7 @@ import { berkasUrl, usePeriode, useStore } from '../../lib/store'
 import { STORAGE_KEY as KEGIATAN_KEY, toISODate } from '../rencana-kegiatan/kegiatan'
 import { buktiKey, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, indikatorById, isPic, KEYS, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { ChecklistItem, StatusBukti } from '../../components/ui'
+import { BackButton, ChecklistItem, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 import PedomanModal from '../../components/PedomanModal'
 import searchIcon from '../../assets/rencana/search-2-line.svg'
@@ -187,9 +187,12 @@ function RepositoriDetail() {
 
   return (
     <div className="flex w-full flex-col gap-[33px]">
-      <div className="flex flex-col gap-[7px] leading-[1.2] text-grey-500">
-        <h1 className="text-[25px] font-semibold">Pengumpulan Bukti Dukung</h1>
-        <p className="text-base">Unggah dan kelola berkas bukti fisik terpusat berdasarkan kegiatan statistik dan indikator EPSS yang telah dipetakan.</p>
+      <div className="flex flex-col items-start gap-[7px] leading-[1.2] text-grey-500">
+        <BackButton fallback="/repositori-bukti-dukung" />
+        <div className="flex flex-col gap-[7px]">
+          <h1 className="text-[25px] font-semibold">Pengumpulan Bukti Dukung</h1>
+          <p className="text-base">Unggah dan kelola berkas bukti fisik terpusat berdasarkan kegiatan statistik dan indikator EPSS yang telah dipetakan.</p>
+        </div>
       </div>
 
       {!bolehEdit && (

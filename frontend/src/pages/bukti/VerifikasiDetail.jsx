@@ -4,7 +4,7 @@ import { berkasUrl, usePeriode, useStore } from '../../lib/store'
 import { bolehUbah } from '../../config/menu'
 import { STORAGE_KEY as KEGIATAN_KEY } from '../rencana-kegiatan/kegiatan'
 import { buktiKey, EMPTY_LIST, EMPTY_OBJECT, indikatorById, KEYS, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
-import { ChecklistItem, StatusBukti } from '../../components/ui'
+import { BackButton, ChecklistItem, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 import PedomanModal from '../../components/PedomanModal'
 import fileIcon from '../../assets/icons/file-3-fill.svg'
@@ -79,7 +79,10 @@ function VerifikasiDetail() {
 
   return (
     <div className="flex w-full flex-col gap-[18px]">
-      <h1 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Verifikasi Bukti Dukung Kegiatan</h1>
+      <div className="flex flex-col items-start gap-[7px]">
+        <BackButton fallback="/verifikasi-bukti-dukung" />
+        <h1 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Verifikasi Bukti Dukung Kegiatan</h1>
+      </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(440px,2fr)_3fr]">
         <div className="flex flex-col gap-6 rounded-[20px] bg-white p-6">

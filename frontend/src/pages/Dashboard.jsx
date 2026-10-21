@@ -78,7 +78,7 @@ function Dashboard() {
     <div className="flex w-full flex-col gap-11">
       <div className="flex flex-col gap-2 leading-[1.2] text-grey-400">
         <h1 className="text-[31px] font-bold">Selamat datang, {user.name}!</h1>
-        <p className="text-[25px] font-medium">Pantau capaian {aktif.nama}.</p>
+        <p className="text-lg font-medium">Pantau capaian {aktif.nama}.</p>
       </div>
       <hr className="border-grey-75" />
 
@@ -163,17 +163,17 @@ function Dashboard() {
 
       <section className="flex flex-col gap-9">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Kegiatan Terdekat</h2>
+          <h2 className="text-2xl leading-[1.2] font-semibold text-grey-500">Kegiatan Terdekat</h2>
           <ArrowLink to="/rencana-kegiatan">Lihat Kegiatan</ArrowLink>
         </div>
         <div className="overflow-x-auto rounded-[20px] bg-grey-500 p-[9px]">
           <table className="w-full min-w-[760px] text-left text-base leading-[1.2]">
             <thead className="text-lime-300">
               <tr>
-                <th className="px-5 py-4 font-bold">Nama Kegiatan</th>
-                <th className="w-[220px] px-5 py-4 font-bold">Jadwal Kegiatan</th>
-                <th className="w-[220px] px-5 py-4 font-bold whitespace-nowrap">Kelengkapan Bukti</th>
-                <th className="w-[269px] px-5 py-4 text-center font-bold">Status</th>
+                <th className="px-5 py-4 font-medium">Nama Kegiatan</th>
+                <th className="w-[220px] px-5 py-4 font-medium">Jadwal Kegiatan</th>
+                <th className="w-[220px] px-5 py-4 font-medium whitespace-nowrap">Kelengkapan Bukti</th>
+                <th className="w-[269px] px-5 py-4 text-center font-medium">Status</th>
               </tr>
             </thead>
             {/* Baris putih membulat seperti kartu di desain */}
@@ -191,7 +191,7 @@ function Dashboard() {
                     <td className="px-5 py-4">{formatTanggal(k.mulai)}</td>
                     <td className="px-5 py-4">{berkas[k.id]?.length ?? 0} berkas diunggah</td>
                     <td className="px-5 py-3">
-                      <Badge {...STATUS_KEGIATAN[status]} className="w-[229px] justify-start text-base">
+                      <Badge {...STATUS_KEGIATAN[status]} className="w-full justify-center text-sm">
                         {status}
                       </Badge>
                     </td>
@@ -213,7 +213,7 @@ function Dashboard() {
       <div className="grid gap-10 lg:grid-cols-2">
         <section className="flex flex-col gap-[37px]">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-[25px] leading-[1.2] font-semibold text-grey-500">
+            <h2 className="text-2xl leading-[1.2] font-semibold text-grey-500">
               Capaian Skor
               <br />5 Domain EPSS
             </h2>
