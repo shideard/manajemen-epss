@@ -29,12 +29,21 @@ function SectionTitle({ children }) {
   )
 }
 
-function Sidebar({ user, onLogout }) {
+// open/onClose = laci di layar kecil (di bawah lg); di layar besar sidebar selalu tampil
+function Sidebar({ user, onLogout, open, onClose }) {
   const sections = getMenuForRole(user.role)
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <aside className="sticky top-0 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans">
+    <>
+    {open && <div onClick={onClose} aria-hidden className="fixed inset-0 z-30 bg-black/40 lg:hidden" />}
+    {/* Saat tertutup di layar kecil: geser keluar + invisible, jadi tidak bisa difokus keyboard */}
+    <aside
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility] duration-300 ease-out-quint lg:sticky lg:top-0 lg:translate-x-0 ${
+        open ? 'translate-x-0' : 'max-lg:invisible -translate-x-full'
+      }`}
+    >
       {/* Logo + nama aplikasi */}
       <div className="mt-[30px] flex h-12 items-center justify-center gap-[7px]">
         <img src={logo} alt="Logo Kota Bogor" className="size-[35px] object-cover" />
@@ -58,6 +67,7 @@ function Sidebar({ user, onLogout }) {
                 <MotionNavLink
                   key={item.path}
                   to={item.path}
+                  onClick={onClose}
                   layout="position"
                   // NavLink otomatis memberi class "active" pada menu halaman saat ini
                   className="relative flex h-6 w-[196px] shrink-0 items-center px-[7px] text-[13px] leading-[1.2] font-semibold whitespace-nowrap text-on-dark hover:text-white [&.active]:h-[50px]"
@@ -126,6 +136,7 @@ function Sidebar({ user, onLogout }) {
         </div>
       </MotionConfig>
     </aside>
+    </>
   )
 }
 
