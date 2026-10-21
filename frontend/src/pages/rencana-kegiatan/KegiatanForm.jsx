@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useStore } from '../../lib/store'
-import { indikatorById, INDIKATOR, KEYS, SEED_USERS } from '../../lib/epss'
+import { bobotDomain, DOMAINS, indikatorById, INDIKATOR, KEYS, SEED_USERS } from '../../lib/epss'
 import { ROLES } from '../../config/menu'
 import closeIcon from '../../assets/rencana/close-line.svg'
 import triangle from '../../assets/rencana/dropdown-triangle.svg'
@@ -26,6 +25,41 @@ function Field({ label, children }) {
 
 // Modal pakai <dialog> bawaan browser: Esc, fokus, dan backdrop sudah ditangani
 // indikator = record bukti kegiatan ini; yang sudah diajukan/diverifikasi tidak bisa dilepas
+// Panel samping "Daftar Indikator": semua indikator per domain beserta bobotnya
+function DaftarIndikator({ onClose }) {
+  return (
+    <aside className="flex w-[min(476px,calc(100vw-2rem))] shrink-0 flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_4px_20.9px_rgba(0,0,0,0.25)] xl:max-h-[calc(100vh-2rem)]">
+      <header className="flex h-[73px] shrink-0 items-center justify-between bg-grey-500 px-[29.5px]">
+        <h2 className="text-[20px] leading-[1.2] font-semibold text-white">Daftar Indikator</h2>
+        <button type="button" onClick={onClose} aria-label="Tutup daftar indikator">
+          <img src={closeIcon} alt="" width={24} height={24} />
+        </button>
+      </header>
+      <div className="flex flex-col gap-[25px] overflow-y-auto px-[18.5px] py-[25px] text-grey-500">
+        {DOMAINS.map((domain, d) => (
+          <section key={domain.id} className="flex flex-col gap-[11px]">
+            <p className="flex flex-wrap items-center gap-[11px] text-[13px] leading-[1.2] font-semibold">
+              Domain {d + 1} - {domain.nama}
+              <span className="flex h-[25px] items-center rounded-[20px] border border-grey-400 bg-lime-75 px-3 text-[10px] font-normal">Bobot domain: {bobotDomain(domain)}%</span>
+            </p>
+            <ul className="rounded-[13px] bg-lime-50 py-[10px]">
+              {INDIKATOR.filter((i) => i.domain === domain).map((i) => (
+                <li key={i.id} className="flex flex-col gap-1 border-b border-grey-75/60 px-5 py-[7px] leading-[1.2] last:border-0">
+                  <p className="flex flex-wrap items-center gap-x-[22px] gap-y-1 text-[13px] font-medium">
+                    Indikator {i.nomor}: {i.nama}
+                    <span className="flex h-[25px] items-center rounded-[20px] border border-grey-500 bg-green-50 px-3 text-[10px] font-normal">Bobot: {i.bobot}%</span>
+                  </p>
+                  <p className="text-[10px] font-light">Aspek: {i.aspek}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </aside>
+  )
+}
+
 function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
   const dialogRef = useRef(null)
   const [error, setError] = useState('')
@@ -37,6 +71,7 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
   const [judulOutput, setJudulOutput] = useState('')
   const [jenisOutput, setJenisOutput] = useState('')
   const fileContoh = useRef(null)
+  const [daftarIndikator, setDaftarIndikator] = useState(false)
 
   // Tambah satu target output; file contoh opsional (judul kosong → pakai nama file)
   function tambahOutput(file) {
@@ -69,9 +104,16 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className="m-auto max-h-[calc(100vh-2rem)] w-[min(833px,calc(100vw-2rem))] overflow-y-auto rounded-[20px] bg-white font-sans shadow-[0_4px_20.9px_rgba(0,0,0,0.25)] backdrop:bg-black/40"
+      className="m-auto max-h-[calc(100vh-2rem)] max-w-[calc(100vw-2rem)] overflow-y-auto bg-transparent font-sans backdrop:bg-black/40 xl:overflow-visible"
     >
-      <form onSubmit={handleSubmit}>
+      {/* Layar lebar: form & daftar indikator berdampingan, masing-masing bergulir sendiri; layar kecil: bertumpuk */}
+      <div className="flex flex-col items-start gap-6 xl:flex-row xl:gap-[43px]">
+      <form
+        onSubmit={handleSubmit}
+        className={`w-[min(833px,calc(100vw-2rem))] shrink-0 rounded-[20px] bg-white shadow-[0_4px_20.9px_rgba(0,0,0,0.25)] xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto ${
+          daftarIndikator ? 'xl:w-[min(833px,calc(100vw-2rem-519px))]' : ''
+        }`}
+      >
         <header className="sticky top-0 z-10 flex h-[73px] items-center justify-between bg-grey-500 px-[34px]">
           <h2 className="text-[20px] leading-[1.2] font-semibold text-white">
             {kegiatan.id ? 'Edit' : 'Tambah'} Rencana Kegiatan
@@ -119,10 +161,15 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
               <label htmlFor="pilih-indikator" className="text-base leading-[1.2] font-semibold text-grey-500">
                 Pemetaan Indikator EPSS (Indikator Tertaut)
               </label>
-              <Link to="/pedoman-indikator" target="_blank" className="flex items-center gap-[10px] rounded-[10px] bg-lime-300 px-3 py-1 text-[13px] text-grey-500">
+              <button
+                type="button"
+                onClick={() => setDaftarIndikator((buka) => !buka)}
+                aria-expanded={daftarIndikator}
+                className="flex items-center gap-[10px] rounded-[10px] bg-lime-300 px-3 py-1 text-[13px] text-grey-500"
+              >
                 <img src={bookIcon} alt="" width={15} height={15} />
                 Lihat Pedoman Indikator
-              </Link>
+              </button>
             </div>
             <span className="relative">
               <select
@@ -248,6 +295,8 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
           </div>
         </div>
       </form>
+      {daftarIndikator && <DaftarIndikator onClose={() => setDaftarIndikator(false)} />}
+      </div>
     </dialog>
   )
 }
