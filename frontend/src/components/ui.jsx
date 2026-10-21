@@ -177,7 +177,7 @@ const STATUS_BUKTI = {
   terverifikasi: { tone: 'green', icon: checkCircleIcon, label: 'Terverifikasi' },
 }
 
-export function StatusBukti({ status = 'draft', label, className = 'text-base' }) {
+export function StatusBukti({ status = 'draft', label, className = 'text-sm' }) {
   const { tone, icon, label: defaultLabel } = STATUS_BUKTI[status]
   return (
     <Badge tone={tone} icon={icon} className={className}>
