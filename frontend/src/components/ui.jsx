@@ -2,6 +2,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { animate } from 'motion/react'
+import { ArrowLeft } from 'lucide-react'
 import closeIcon from '../assets/rencana/close-line.svg'
 import triangle from '../assets/rencana/dropdown-triangle.svg'
 import searchDark from '../assets/rencana/search-2-line.svg'
@@ -26,8 +27,9 @@ export function BackButton({ fallback }) {
     <button
       type="button"
       onClick={() => (location.key === 'default' ? navigate(fallback, { replace: true }) : navigate(-1))}
-      className="shrink-0 rounded-[16px] cursor-pointer bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300 hover:bg-grey-500"
+      className="inline-flex shrink-0 items-center gap-2 rounded-[16px] cursor-pointer bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300 hover:scale-102 transition-transform duration-300 ease-out-quint"
     >
+      <ArrowLeft aria-hidden="true" size={18} strokeWidth={2} />
       Kembali
     </button>
   )
@@ -125,14 +127,16 @@ export function ConfirmDialog({ title, message, confirmLabel = 'Ya, lanjutkan', 
   return (
     <Modal title={title} titleClass="text-base text-lime-300" width={520} onClose={tutup}>
       <div className="flex flex-col gap-4 px-[34px] pt-7 pb-8">
-        <p className="text-base leading-[1.4] text-grey-500">{message}</p>
+        <p className="text-sm text-grey-500">
+          {message}
+        </p>
         {error && (
           <p role="alert" className="text-sm text-red-600">
             {error}
           </p>
         )}
         <div className="flex flex-wrap justify-end gap-[18px] pt-4">
-          <button type="button" onClick={tutup} disabled={loading} className="w-[119px] rounded-[16px] bg-lime-300 py-[10px] text-base text-grey-500 disabled:opacity-60">
+          <button type="button" onClick={tutup} disabled={loading} className="w-[119px] rounded-[16px] bg-lime-300 py-[10px] text-sm text-grey-500 disabled:opacity-60">
             Batal
           </button>
           <button

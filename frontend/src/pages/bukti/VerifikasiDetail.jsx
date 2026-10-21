@@ -169,8 +169,8 @@ function VerifikasiDetail() {
           </section>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-base leading-[1.2] font-bold text-grey-400">Level Terpenuhi : {terpenuhi}</p>
-            <button type="button" onClick={() => setPedoman(true)} className="flex items-center gap-[10px] rounded-[16px] bg-lime-300 px-5 py-[10px] text-base leading-[1.2] text-grey-500">
+            <p className="text-sm leading-[1.2] font-semibold text-grey-400">Level Terpenuhi : {terpenuhi}</p>
+            <button type="button" onClick={() => setPedoman(true)} className="flex items-center gap-[10px] rounded-[16px] bg-lime-300 px-5 py-2 text-sm text-grey-500 hover:scale-102 transition-transform duration-300 ease-out-quint">
               <img src={bookIcon} alt="" width={19} height={19} />
               Lihat Pedoman Indikator
             </button>

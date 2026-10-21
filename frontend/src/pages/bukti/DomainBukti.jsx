@@ -103,7 +103,7 @@ function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
                             <li key={b.kegiatanId}>
                               <Link
                                 to={verifikator ? `/verifikasi-bukti-dukung/${b.kegiatanId}/${i.id}` : `/repositori-bukti-dukung/${b.kegiatanId}`}
-                                className={`flex items-center justify-between gap-4 px-[27px] py-2 text-[13px] leading-[1.2] font-medium text-grey-200 hover:underline ${verifikator ? 'bg-lime-75' : 'bg-grey2-75'}`}
+                                className={`flex items-center justify-between gap-4 px-[27px] py-2 text-[13px] leading-[1.2] font-medium text-grey-200 hover:underline bg-lime-75 `}
                               >
                                 {namaKegiatan[b.kegiatanId]}
                                 <StatusBukti status={b.status} label={verifikator && b.status === 'draft' ? 'Belum diajukan' : undefined} className="text-[13px]" />
@@ -116,7 +116,7 @@ function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
                             type="button"
                             disabled={!bolehVerifikasi || !semuaValid || levels[i.id] === levelBaru}
                             onClick={() => onVerifikasi(i, levelBaru)}
-                            className="group mx-[17px] flex w-[239px] items-center justify-between rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300 disabled:bg-grey-75 disabled:text-grey-50"
+                            className="group mx-[17px] flex w-[239px] items-center justify-between rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300 disabled:bg-grey-75 disabled:text-grey-50"
                           >
                             {levels[i.id] && levels[i.id] === levelBaru ? 'Indikator Terverifikasi' : 'Verifikasi Indikator'}
                             <img src={arrowLong} alt="" width={29} height={15} className="group-disabled:hidden" />

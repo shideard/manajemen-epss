@@ -93,7 +93,7 @@ function RencanaKegiatan() {
           <button
             type="button"
             onClick={() => setEditing({})}
-            className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300"
+            className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300 transition-transform duration-300 ease-out-quint hover:scale-102"
           >
             <img src={addIcon} alt="" width={19} height={19} />
             Tambah Rencana Kegiatan

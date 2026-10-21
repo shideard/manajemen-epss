@@ -68,7 +68,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
 
       <div className="flex flex-col gap-3 rounded-[15px] bg-white px-[28px] py-[14px]">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-base leading-[1.2] font-semibold text-heading">Checklist Persyaratan Bukti Dukung (Level {level}) :</p>
+          <p className="text-base leading-[1.2] font-semibold text-grey-500">Checklist Persyaratan Bukti Dukung (Level {level}) :</p>
           <StatusBukti status={bukti.status} className="text-[13px]" />
         </div>
         {bukti.status === 'perbaikan' && bukti.catatan && (
@@ -93,13 +93,13 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
             </button>
           </div>
           <button
-            type="button"
-            onClick={() => setPedoman(true)}
-            className="flex w-[186px] items-center justify-between rounded-[16px] border-[0.7px] border-grey-500 px-[14px] py-[7px] text-[11px] leading-[1.2] text-grey-500"
-          >
-            Lihat Pedoman Indikator
-            <img src={arrowSmall} alt="" width={20} height={10} />
-          </button>
+              type="button"
+              onClick={() => setDibuka(i)}
+              className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 text-sm leading-[1.2] font-medium text-grey-400 hover:scale-102"
+              >
+              <img src={bookIcon} alt="" width={15} height={15} />
+              Pedoman &amp; Syarat
+          </button>  
         </div>
 
         {error && (
@@ -113,7 +113,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
             <p role="status" className="text-[13px] text-grey-200">
               Draft tersimpan otomatis.
             </p>
-            <button type="button" onClick={ajukan} className="rounded-[16px] bg-grey-300 px-[19px] py-[10px] text-base leading-[1.2] text-lime-300">
+            <button type="button" onClick={ajukan} className="rounded-[16px] bg-grey-300 px-[19px] py-[10px] text-sm leading-[1.2] hover:scale-102 transform transition-300 text-lime-300">
               Ajukan Verifikasi
             </button>
           </div>
@@ -340,8 +340,8 @@ function RepositoriDetail() {
       </section>
 
       <div className="flex flex-col items-center gap-[7px]">
-        <h2 className="text-center text-[31px] leading-[1.2] font-bold text-heading">Indikator tertaut :</h2>
-        <span className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-grey-500 px-5 text-base leading-[1.2] font-medium text-lime-300">
+        <h2 className="text-center text-2xl font-semibold">Indikator tertaut :</h2>
+        <span className="flex items-center gap-[10px] rounded-2xl bg-grey-500 px-5 py-2 text-base font-medium text-lime-300">
           <img src={mindMap} alt="" width={21} height={19} />
           {tertaut.length} Indikator Terpetakan
         </span>
