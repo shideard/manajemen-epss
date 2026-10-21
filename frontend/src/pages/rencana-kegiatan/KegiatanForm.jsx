@@ -45,9 +45,11 @@ function DaftarIndikator({ onClose }) {
             <ul className="rounded-[13px] bg-lime-50 py-[10px]">
               {INDIKATOR.filter((i) => i.domain === domain).map((i) => (
                 <li key={i.id} className="flex flex-col gap-1 border-b border-grey-75/60 px-5 py-[7px] leading-[1.2] last:border-0">
-                  <p className="flex flex-wrap items-center gap-x-[22px] gap-y-1 text-[13px] font-medium">
-                    Indikator {i.nomor}: {i.nama}
-                    <span className="flex h-[25px] items-center rounded-[20px] border border-grey-500 bg-green-50 px-3 text-[10px] font-normal">Bobot: {i.bobot}%</span>
+                  <p className="flex items-center justify-between gap-[22px] text-[13px] font-medium">
+                    <span className="min-w-0">
+                      Indikator {i.nomor}: {i.nama}
+                    </span>
+                    <span className="flex h-[25px] shrink-0 items-center rounded-[20px] border border-grey-500 bg-green-50 px-3 text-[10px] font-normal">Bobot: {i.bobot}%</span>
                   </p>
                   <p className="text-[10px] font-light">Aspek: {i.aspek}</p>
                 </li>
