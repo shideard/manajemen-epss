@@ -3,7 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import { usePeriode, useStore } from '../lib/store'
 import { ROLES } from '../config/menu'
 import { agendaTerdekat, STORAGE_KEY as KEGIATAN_KEY, toISODate } from './rencana-kegiatan/kegiatan'
-import { DOMAINS, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, hitungIps, INDIKATOR, indikatorById, KEYS, predikat, selisihHari, statusKegiatan } from '../lib/epss'
+import { DOMAINS, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, hitungIps, INDIKATOR, indikatorById, KEYS, predikat, PREDIKAT_TONE, selisihHari, statusKegiatan } from '../lib/epss'
 import { ArrowLink, Badge, CountUp } from '../components/ui'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
 import arrowBlack from '../assets/icons/arrow-long-black.svg'
@@ -95,7 +95,9 @@ function Dashboard() {
               <p className={`text-[61px] ${GRADIENT}`}>
                 <CountUp value={ips} format={angka} />
               </p>
-              <span className="rounded-[23px] border-[1.5px] border-green-500 bg-green-75 px-5 py-1 text-base font-medium text-grey-500">{predikat(ips)}</span>
+              <Badge tone={PREDIKAT_TONE[predikat(ips)]} className="rounded-[23px] border-[1.5px] px-5 py-1 text-base font-medium">
+                {predikat(ips)}
+              </Badge>
             </div>
           </div>
 
