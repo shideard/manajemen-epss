@@ -19,9 +19,9 @@ import levelArrow from '../../assets/icons/arrow-drop-left-level.svg'
 import arrowSmall from '../../assets/icons/arrow-long-small.svg'
 import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 
-// Checklist satu indikator; perubahan disimpan saat "Simpan Draft" / "Ajukan Verifikasi"
+// Checklist satu indikator; tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
 function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, readOnly, onSave }) {
-  const [checked, setChecked] = useState(bukti.checked ?? {})
+  const checked = bukti.checked ?? {}
   const terpenuhi = levelTerpenuhi(indikator.levels, checked)
   const maksLevel = Math.min(terpenuhi + 1, LEVELS.length)
   const [level, setLevel] = useState(maksLevel)
@@ -33,7 +33,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
   const syarat = indikator.levels[level - 1].syarat
 
   function centang(index, value) {
-    setChecked((c) => ({ ...c, [level]: syarat.map((_, i) => (i === index ? value : Boolean(c[level]?.[i]))) }))
+    onSave({ checked: { ...checked, [level]: syarat.map((_, i) => (i === index ? value : Boolean(checked[level]?.[i]))) } })
   }
 
   function ajukan() {
@@ -109,10 +109,10 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
         )}
 
         {!terkunci && (
-          <div className="flex flex-wrap justify-end gap-[18px]">
-            <button type="button" onClick={() => onSave({ checked })} className="w-[180px] rounded-[16px] bg-lime-300 py-[10px] text-base leading-[1.2] text-grey-500">
-              Simpan Draft
-            </button>
+          <div className="flex flex-wrap items-center justify-end gap-[18px]">
+            <p role="status" className="text-[13px] text-grey-200">
+              Draft tersimpan otomatis.
+            </p>
             <button type="button" onClick={ajukan} className="rounded-[16px] bg-grey-300 px-[19px] py-[10px] text-base leading-[1.2] text-lime-300">
               Ajukan Verifikasi
             </button>
