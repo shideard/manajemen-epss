@@ -28,8 +28,6 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
   const [users] = useStore(KEYS.users, SEED_USERS)
   const [dipetakan, setDipetakan] = useState(() => indikator.map((b) => b.indikatorId))
   const terkunci = indikator.filter((b) => b.status !== 'draft').map((b) => b.indikatorId)
-  const tahunIni = new Date().getFullYear()
-  const opsiTahun = [tahunIni - 1, tahunIni, tahunIni + 1, tahunIni + 2].map(String)
 
   useEffect(() => {
     dialogRef.current.showModal()
@@ -42,7 +40,8 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
       setError('Tanggal selesai tidak boleh sebelum tanggal mulai.')
       return
     }
-    onSave({ ...data, indikator: dipetakan })
+    // Tahun pelaksanaan selalu mengikuti tanggal mulai, jadi tidak bisa berbeda
+    onSave({ ...data, tahun: data.mulai.slice(0, 4), indikator: dipetakan })
   }
 
   const close = () => dialogRef.current.close()
@@ -68,17 +67,7 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
             <input name="nama" required defaultValue={kegiatan.nama} placeholder="Contoh: Survei Kepuasan Masyarakat 2026" className={inputClass} />
           </Field>
 
-          <div className="grid gap-4 sm:grid-cols-3 sm:gap-[13px]">
-            <Field label="Tahun Pelaksanaan">
-              <span className="relative">
-                <select name="tahun" defaultValue={kegiatan.tahun ?? String(tahunIni)} className={`${inputClass} appearance-none border-[#b4b4b4]`}>
-                  {opsiTahun.map((tahun) => (
-                    <option key={tahun}>{tahun}</option>
-                  ))}
-                </select>
-                <img src={triangle} alt="" width={17} height={11} className="pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 -scale-y-100" />
-              </span>
-            </Field>
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-[13px]">
             <Field label="Tanggal Mulai">
               <input type="date" name="mulai" required defaultValue={kegiatan.mulai} className={`${inputClass} border-[#b4b4b4]`} />
             </Field>
