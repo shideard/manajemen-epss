@@ -25,6 +25,8 @@ function VerifikasiDetail() {
   const [catatan, setCatatan] = useState('')
   const [pedoman, setPedoman] = useState(false)
   const [error, setError] = useState('')
+  // Centang verifikator hanya disimpan saat Setujui / Kirim Revisi; null = belum diubah
+  const [draft, setDraft] = useState(null)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const key = buktiKey(kegiatanId, indikatorId)
@@ -37,16 +39,17 @@ function VerifikasiDetail() {
   const bolehPutuskan = bolehUbah(user, 'verifikasiBukti', aktif) && bukti.status === 'menunggu'
   const files = berkas[kegiatanId] ?? []
   const file = files[dipilih]
-  const terpenuhi = levelTerpenuhi(indikator.levels, bukti.checked)
+  const semuaChecked = draft ?? bukti.checked ?? {}
+  const terpenuhi = levelTerpenuhi(indikator.levels, semuaChecked)
   // Berjenjang: hanya boleh membuka level sampai satu di atas level terpenuhi
   const levelAktif = level ?? Math.min(terpenuhi + 1, LEVELS.length)
-  const checked = bukti.checked?.[levelAktif] ?? []
+  const checked = semuaChecked[levelAktif] ?? []
 
-  const simpan = (perubahan) => setBukti((all) => ({ ...all, [key]: { ...all[key], ...perubahan } }))
+  const simpan = (perubahan) => setBukti((all) => ({ ...all, [key]: { ...all[key], ...perubahan, checked: semuaChecked } }))
 
   function centang(index, value) {
     const baris = indikator.levels[levelAktif - 1].syarat.map((_, i) => (i === index ? value : Boolean(checked[i])))
-    simpan({ checked: { ...bukti.checked, [levelAktif]: baris } })
+    setDraft({ ...semuaChecked, [levelAktif]: baris })
   }
 
   function kirimRevisi() {
