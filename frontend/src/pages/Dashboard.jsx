@@ -95,7 +95,7 @@ function Dashboard() {
               <p className={`text-[61px] ${GRADIENT}`}>
                 <CountUp value={ips} format={angka} />
               </p>
-              <Badge tone={PREDIKAT_TONE[predikat(ips)]} className="rounded-[23px] border-[1.5px] px-5 py-1 text-base font-medium">
+              <Badge tone={PREDIKAT_TONE[predikat(ips)]} className="rounded-[23px]! border-[1.5px]! px-5! py-1! text-base font-medium">
                 {predikat(ips)}
               </Badge>
             </div>
