@@ -82,7 +82,7 @@ function RepositoriBukti() {
               }}
               className="size-[18px] accent-grey-500"
             />
-            Tampilkan kegiatan operator lain (referensi)
+            Tampilkan kegiatan operator lain
           </label>
         </div>
         {rows.length === 0 && (

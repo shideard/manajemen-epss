@@ -59,7 +59,7 @@ function PedomanIndikator() {
                   <button
                     type="button"
                     onClick={() => setDibuka(i)}
-                    className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 text-base leading-[1.2] font-medium text-grey-400"
+                    className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 text-sm leading-[1.2] font-medium text-grey-400 hover:scale-102"
                   >
                     <img src={bookIcon} alt="" width={15} height={15} />
                     Pedoman &amp; Syarat

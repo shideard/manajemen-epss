@@ -237,7 +237,7 @@ function RepositoriDetail() {
 
         <div className="flex flex-col items-center gap-[50px] rounded-[20px] bg-[#fdfdfd] px-4 py-9 md:px-[39px]">
           <div className="flex w-full flex-col items-center gap-4">
-            <span className="rounded-[16px] border border-grey-500 px-5 py-[10px] text-base leading-[1.2] text-grey-500">Rencana Kegiatan</span>
+            <span className="rounded-[16px] border border-grey-500 px-5 py-1 text-base leading-[1.2] text-grey-500">Rencana Kegiatan</span>
             <h2 className="text-center text-[31px] leading-[1.2] font-bold text-heading">{k.nama}</h2>
             <hr className="w-full border-grey-500" />
             <dl className="grid w-full grid-cols-2 gap-[10px] px-4 text-center text-base leading-[1.2] text-black md:grid-cols-4 md:px-[60px]">
@@ -257,7 +257,7 @@ function RepositoriDetail() {
 
           <p className="flex flex-wrap items-center gap-4 text-base leading-[1.2] font-semibold text-heading">
             Kelengkapan Bukti Kegiatan :
-            <span className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 font-medium text-grey-400">
+            <span className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 text-sm font-medium text-grey-400">
               <img src={bookIcon} alt="" width={15} height={15} />
               {files.length} Berkas Terunggah
             </span>
@@ -302,11 +302,11 @@ function RepositoriDetail() {
                     <img src={checkBadge} alt="Terunggah" width={30} height={30} />
                     {url ? (
                       <a href={url} target="_blank" rel="noreferrer" aria-label={`Lihat ${f.nama}`} className="grid size-[30px] place-items-center rounded-[10px] bg-lime-200">
-                        <img src={eyeIcon} alt="" width={24} height={24} />
+                        <img src={eyeIcon} alt="" width={20} height={20} />
                       </a>
                     ) : (
                       <span title="Pratinjau hanya tersedia pada sesi saat berkas diunggah" className="grid size-[30px] place-items-center rounded-[10px] bg-lime-200 opacity-40">
-                        <img src={eyeIcon} alt="" width={24} height={24} />
+                        <img src={eyeIcon} alt="" width={20} height={20} />
                       </span>
                     )}
                     {bolehEdit && (
@@ -329,7 +329,7 @@ function RepositoriDetail() {
             {bolehEdit && (
               <>
                 <input ref={fileInput} type="file" multiple onChange={unggah} className="hidden" />
-                <button type="button" onClick={() => fileInput.current.click()} className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300">
+                <button type="button" onClick={() => fileInput.current.click()} className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300">
                   <img src={addIcon} alt="" width={19} height={19} />
                   Unggah Berkas Baru
                 </button>

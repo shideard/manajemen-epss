@@ -177,7 +177,7 @@ const STATUS_BUKTI = {
   terverifikasi: { tone: 'green', icon: checkCircleIcon, label: 'Terverifikasi' },
 }
 
-export function StatusBukti({ status = 'draft', label, className = 'text-base' }) {
+export function StatusBukti({ status = 'draft', label, className = 'text-sm' }) {
   const { tone, icon, label: defaultLabel } = STATUS_BUKTI[status]
   return (
     <Badge tone={tone} icon={icon} className={className}>
@@ -279,9 +279,9 @@ export function CountUp({ value, format = String }) {
 // Tombol gelap "Lihat ..." dengan panah panjang
 export function ArrowLink({ to, children, className = 'w-[211px]' }) {
   return (
-    <Link to={to} className={`group flex shrink-0 items-center justify-between gap-4 rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300 ${className}`}>
+    <Link to={to} className={`group flex shrink-0 items-center justify-between gap-4 rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300 transition-transform duration-300 hover:scale-102 ${className}`}>
       {children}
-      <img src={arrowLime} alt="" width={29} height={15} className="transition-transform duration-300 ease-out-quint group-hover:translate-x-1" />
+      <img src={arrowLime} alt="" width={25} height={15} className="transition-transform duration-300 ease-out-quint group-hover:translate-x-1" />
     </Link>
   )
 }
