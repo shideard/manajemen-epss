@@ -311,10 +311,14 @@ export const includesText = (values, query) => {
   return !q || values.some((v) => String(v ?? '').toLowerCase().includes(q))
 }
 
-// Data form periode (hasil Object.fromEntries(FormData)) → { data } atau { error }
-export function validasiPeriode(form) {
+// Data form periode (hasil Object.fromEntries(FormData)) → { data } atau { error }.
+// periodeLain = periode selain yang sedang diedit; tahunnya tidak boleh beririsan
+export function validasiPeriode(form, periodeLain = []) {
   const target = Number(form.target)
   if (Number(form.tahun2) !== Number(form.tahun1) + 1) return { error: 'Tahun kedua harus satu tahun setelah tahun pertama (siklus 2 tahunan).' }
+  const bentrok = periodeLain.find((p) => form.tahun1 <= p.tahun2 && p.tahun1 <= form.tahun2)
+  if (bentrok) return { error: `Tahun ${form.tahun1}-${form.tahun2} beririsan dengan periode "${bentrok.nama}" (${bentrok.tahun1}-${bentrok.tahun2}).` }
+  if (form.batas < `${form.tahun1}-01-01` || form.batas > `${form.tahun2}-12-31`) return { error: `Batas akhir unggah bukti harus di antara tahun ${form.tahun1} dan ${form.tahun2}.` }
   if (!(target >= 1 && target <= 5)) return { error: 'Target skor harus antara 1.00 dan 5.00.' }
   return { data: { nama: form.nama.trim(), tahun1: form.tahun1, tahun2: form.tahun2, batas: form.batas, target } }
 }

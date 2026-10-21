@@ -48,6 +48,13 @@ assert.deepEqual(validasiPeriode(form).data, { nama: 'Siklus 2027', tahun1: '202
 assert.ok(validasiPeriode({ ...form, tahun2: '2029' }).error)
 assert.ok(validasiPeriode({ ...form, target: '5.5' }).error)
 assert.ok(validasiPeriode({ ...form, target: '' }).error)
+const lain = [{ nama: 'Siklus 2025', tahun1: '2025', tahun2: '2026' }]
+assert.ok(validasiPeriode(form, lain).data) // 2027-2028 bersebelahan, tidak beririsan
+assert.ok(validasiPeriode({ ...form, tahun1: '2026', tahun2: '2027', batas: '2027-05-30' }, lain).error) // 2026 dipakai dua periode
+assert.ok(validasiPeriode({ ...form, tahun1: '2025', tahun2: '2026', batas: '2026-05-30' }, lain).error) // tahun sama
+assert.ok(validasiPeriode({ ...form, batas: '2029-01-01' }).error)
+assert.ok(validasiPeriode({ ...form, batas: '2026-12-31' }).error)
+assert.ok(validasiPeriode({ ...form, batas: '2027-01-01' }).data)
 
 const csv = lkeCsv({ i1: 2 }, { 'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1', catatan: 'Lengkapi "SK"' } }, { k1: [{}, {}] }, { k1: 'Survei; SKM' }).split('\r\n')
 assert.equal(csv.length, INDIKATOR.length + 1)

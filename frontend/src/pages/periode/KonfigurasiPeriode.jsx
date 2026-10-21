@@ -25,7 +25,10 @@ function KonfigurasiPeriode() {
 
   function handleSubmit(event) {
     event.preventDefault()
-    const { data, error } = validasiPeriode(Object.fromEntries(new FormData(event.currentTarget)))
+    const { data, error } = validasiPeriode(
+      Object.fromEntries(new FormData(event.currentTarget)),
+      periode.filter((item) => item.id !== id),
+    )
     if (error) return setPesan(error)
     ubah(data)
     setPesan('Konfigurasi tersimpan.')
