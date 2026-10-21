@@ -264,6 +264,24 @@ function RepositoriDetail() {
           </p>
           <hr className="w-full border-grey-500" />
 
+          {/* Target output diisi verifikator di form Rencana Kegiatan */}
+          {k.output?.length > 0 && (
+            <div className="flex w-full flex-col items-start gap-[14px] md:px-[40px]">
+              <h3 className="text-base leading-[1.2] font-bold text-heading">Output Bukti Dukung yang Ditargetkan :</h3>
+              <ul className="flex w-full flex-col gap-[7px]">
+                {k.output.map((o) => (
+                  <li key={o.id} className="flex min-h-[45px] flex-col justify-center rounded-[15px] bg-lime-300 px-5 py-2 text-base leading-[1.2] text-[#4f4f4f]">
+                    <span>
+                      {o.judul}
+                      {o.jenis && <span className="text-[13px]"> ({o.jenis})</span>}
+                    </span>
+                    {o.contoh && <span className="truncate text-[13px] text-grey-200">Contoh dari verifikator: {o.contoh.nama}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className="flex w-full flex-col items-start gap-[14px] md:px-[40px]">
             <h3 className="text-base leading-[1.2] font-bold text-heading">Dokumen Bukti yang Terlampir :</h3>
             {files.length === 0 && <p className="text-[13px] text-grey-100">Belum ada berkas yang diunggah.</p>}
