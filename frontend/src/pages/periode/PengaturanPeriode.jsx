@@ -57,12 +57,12 @@ export function PeriodeFields({ periode = {}, disabled, namaAside }) {
   )
 }
 
-function TambahPeriode({ onSave, onClose }) {
+function TambahPeriode({ periode, onSave, onClose }) {
   const [error, setError] = useState('')
 
   function handleSubmit(event) {
     event.preventDefault()
-    const { data, error } = validasiPeriode(Object.fromEntries(new FormData(event.currentTarget)))
+    const { data, error } = validasiPeriode(Object.fromEntries(new FormData(event.currentTarget)), periode)
     if (error) return setError(error)
     onSave(data)
   }
@@ -194,6 +194,7 @@ function PengaturanPeriode() {
 
       {tambah && (
         <TambahPeriode
+          periode={periode}
           onSave={(data) => {
             setPeriode((list) => [{ ...data, id: crypto.randomUUID(), actual: null, terkunci: false }, ...list])
             setTambah(false)

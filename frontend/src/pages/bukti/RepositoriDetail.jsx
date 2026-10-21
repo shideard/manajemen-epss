@@ -19,9 +19,9 @@ import levelArrow from '../../assets/icons/arrow-drop-left-level.svg'
 import arrowSmall from '../../assets/icons/arrow-long-small.svg'
 import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 
-// Checklist satu indikator; perubahan disimpan saat "Simpan Draft" / "Ajukan Verifikasi"
+// Checklist satu indikator; tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
 function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, readOnly, onSave }) {
-  const [checked, setChecked] = useState(bukti.checked ?? {})
+  const checked = bukti.checked ?? {}
   const terpenuhi = levelTerpenuhi(indikator.levels, checked)
   const maksLevel = Math.min(terpenuhi + 1, LEVELS.length)
   const [level, setLevel] = useState(maksLevel)
@@ -33,7 +33,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
   const syarat = indikator.levels[level - 1].syarat
 
   function centang(index, value) {
-    setChecked((c) => ({ ...c, [level]: syarat.map((_, i) => (i === index ? value : Boolean(c[level]?.[i]))) }))
+    onSave({ checked: { ...checked, [level]: syarat.map((_, i) => (i === index ? value : Boolean(checked[level]?.[i]))) } })
   }
 
   function ajukan() {
@@ -109,10 +109,10 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
         )}
 
         {!terkunci && (
-          <div className="flex flex-wrap justify-end gap-[18px]">
-            <button type="button" onClick={() => onSave({ checked })} className="w-[180px] rounded-[16px] bg-lime-300 py-[10px] text-base leading-[1.2] text-grey-500">
-              Simpan Draft
-            </button>
+          <div className="flex flex-wrap items-center justify-end gap-[18px]">
+            <p role="status" className="text-[13px] text-grey-200">
+              Draft tersimpan otomatis.
+            </p>
             <button type="button" onClick={ajukan} className="rounded-[16px] bg-grey-300 px-[19px] py-[10px] text-base leading-[1.2] text-lime-300">
               Ajukan Verifikasi
             </button>
@@ -244,7 +244,7 @@ function RepositoriDetail() {
               {[
                 ['OPD', k.opd],
                 ['PIC', k.pic],
-                ['Jadwal', `${k.mulai} s/d ${k.selesai}`],
+                ['Jadwal', `${formatTanggal(k.mulai)} s/d ${formatTanggal(k.selesai)}`],
                 ['Deadline Bukti', formatTanggal(aktif.batas)],
               ].map(([label, value]) => (
                 <div key={label}>
@@ -263,6 +263,24 @@ function RepositoriDetail() {
             </span>
           </p>
           <hr className="w-full border-grey-500" />
+
+          {/* Target output diisi verifikator di form Rencana Kegiatan */}
+          {k.output?.length > 0 && (
+            <div className="flex w-full flex-col items-start gap-[14px] md:px-[40px]">
+              <h3 className="text-base leading-[1.2] font-bold text-heading">Output Bukti Dukung yang Ditargetkan :</h3>
+              <ul className="flex w-full flex-col gap-[7px]">
+                {k.output.map((o) => (
+                  <li key={o.id} className="flex min-h-[45px] flex-col justify-center rounded-[15px] bg-lime-300 px-5 py-2 text-base leading-[1.2] text-[#4f4f4f]">
+                    <span>
+                      {o.judul}
+                      {o.jenis && <span className="text-[13px]"> ({o.jenis})</span>}
+                    </span>
+                    {o.contoh && <span className="truncate text-[13px] text-grey-200">Contoh dari verifikator: {o.contoh.nama}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="flex w-full flex-col items-start gap-[14px] md:px-[40px]">
             <h3 className="text-base leading-[1.2] font-bold text-heading">Dokumen Bukti yang Terlampir :</h3>

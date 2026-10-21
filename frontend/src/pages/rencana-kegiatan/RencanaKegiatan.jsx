@@ -5,7 +5,7 @@ import KalenderKegiatan from './KalenderKegiatan'
 import PetaKegiatan from './PetaKegiatan'
 import { matches, statusOf, STORAGE_KEY, WARNA } from './kegiatan'
 import { usePeriode, useStore } from '../../lib/store'
-import { EMPTY_LIST, EMPTY_OBJECT, KEYS, paginate, sinkronPemetaan } from '../../lib/epss'
+import { EMPTY_LIST, EMPTY_OBJECT, formatTanggal, KEYS, paginate, sinkronPemetaan } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { Pagination, SearchBox } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
@@ -175,10 +175,10 @@ function RencanaKegiatan() {
                     </td>
                     <td className="py-5 pr-4 font-medium">
                       <p>
-                        <span className="font-light">Mulai :</span> {k.mulai}
+                        <span className="font-light">Mulai :</span> {formatTanggal(k.mulai)}
                       </p>
                       <p className="mt-[7px]">
-                        <span className="font-light">Selesai :</span> {k.selesai}
+                        <span className="font-light">Selesai :</span> {formatTanggal(k.selesai)}
                       </p>
                     </td>
                     <td className="py-5 text-center">
