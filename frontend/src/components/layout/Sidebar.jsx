@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
 import { getMenuForRole, ROLE_LABELS } from '../../config/menu'
@@ -33,6 +33,20 @@ function SectionTitle({ children }) {
 function Sidebar({ user, onLogout, open, onClose }) {
   const sections = getMenuForRole(user.role)
   const [menuOpen, setMenuOpen] = useState(false)
+  const akunRef = useRef(null)
+
+  // Menu akun tertutup saat klik di luar atau tekan Esc
+  useEffect(() => {
+    if (!menuOpen) return
+    const tutupLuar = (e) => !akunRef.current.contains(e.target) && setMenuOpen(false)
+    const tutupEsc = (e) => e.key === 'Escape' && setMenuOpen(false)
+    document.addEventListener('pointerdown', tutupLuar)
+    document.addEventListener('keydown', tutupEsc)
+    return () => {
+      document.removeEventListener('pointerdown', tutupLuar)
+      document.removeEventListener('keydown', tutupEsc)
+    }
+  }, [menuOpen])
 
   return (
     <>
@@ -95,7 +109,7 @@ function Sidebar({ user, onLogout, open, onClose }) {
         </nav>
 
         {/* Profil user; klik untuk membuka tombol Keluar */}
-        <div className="relative mt-auto mb-[34px] ml-[19px] w-[196px]">
+        <div ref={akunRef} className="relative mt-auto mb-[34px] ml-[19px] w-[196px]">
           <AnimatePresence>
             {menuOpen && (
               <motion.button
