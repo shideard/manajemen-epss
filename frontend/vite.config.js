@@ -10,6 +10,8 @@ const backend = 'http://127.0.0.1:8000'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    // Sementara: izinkan akses lewat tunnel localhost.run
+    allowedHosts: ['.lhr.life'],
     proxy: {
       '/api': backend,
       '/sanctum': backend,
