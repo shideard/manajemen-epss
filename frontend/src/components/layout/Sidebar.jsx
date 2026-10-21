@@ -42,7 +42,7 @@ function Sidebar({ user, onLogout }) {
           <img src={logoLine} alt="" width={33} height={1} className="max-w-none rotate-90" />
         </span>
         <div className="flex w-[155px] flex-col gap-[7px] leading-[1.2] text-on-dark">
-          <p className="text-[13px] font-bold">Sistem Manajemen EPPS</p>
+          <p className="text-[13px] font-bold">Sistem Manajemen EPSS</p>
           <p className="text-[10px] font-light">Diskominfo Kota Bogor</p>
         </div>
       </div>

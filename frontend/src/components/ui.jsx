@@ -1,6 +1,6 @@
 // Komponen kecil yang dipakai ulang di banyak halaman (sesuai komponen di Figma Design.md)
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { animate } from 'motion/react'
 import closeIcon from '../assets/rencana/close-line.svg'
 import triangle from '../assets/rencana/dropdown-triangle.svg'
@@ -17,6 +17,21 @@ import checkOff from '../assets/icons/check-fill-off.svg'
 
 const inputClass =
   'h-[45px] w-full rounded-[15px] border-2 border-dashed border-grey-75 bg-white px-5 text-base font-normal text-grey-500 placeholder:font-light placeholder:text-grey-75/50 focus:border-solid focus:border-grey-500 focus:outline-none disabled:bg-grey2-75'
+
+export function BackButton({ fallback }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  return (
+    <button
+      type="button"
+      onClick={() => (location.key === 'default' ? navigate(fallback, { replace: true }) : navigate(-1))}
+      className="shrink-0 rounded-[16px] cursor-pointer bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300 hover:bg-grey-500"
+    >
+      Kembali
+    </button>
+  )
+}
 
 export function Field({ label, aside, children, className = '' }) {
   return (
@@ -175,7 +190,7 @@ export function StatusBukti({ status = 'draft', label, className = 'text-base' }
 export function SearchBox({ value, onChange, placeholder, variant = 'white', className = 'w-[330px]' }) {
   const white = variant === 'white'
   return (
-    <label className={`relative flex h-[45px] max-w-full items-center ${className}`}>
+    <label className={`relative flex h-[40px] max-w-full items-center ${className}`}>
       <span className="sr-only">{placeholder}</span>
       <img
         src={white ? searchLight : searchDark}
@@ -189,7 +204,7 @@ export function SearchBox({ value, onChange, placeholder, variant = 'white', cla
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`size-full pr-4 pl-[53px] text-base placeholder:font-light placeholder:italic focus:outline-2 focus:outline-grey-300 ${
+        className={`size-full pr-4 pl-[53px] text-sm placeholder:font-light placeholder:italic focus:outline-2 focus:outline-grey-300 ${
           white ? 'rounded-[15px] bg-white placeholder:text-grey-100' : 'rounded-[16px] bg-grey2-75 placeholder:text-grey-75'
         }`}
       />
@@ -199,29 +214,34 @@ export function SearchBox({ value, onChange, placeholder, variant = 'white', cla
 
 export function Pagination({ page, pageCount, onChange }) {
   // Maksimal 3 nomor halaman di sekitar halaman aktif, seperti di desain
-  const first = Math.max(1, Math.min(page - 1, pageCount - 2))
-  const numbers = Array.from({ length: Math.min(3, pageCount) }, (_, i) => first + i)
+  const visiblePages = 6
+  const first = Math.floor((page - 1) / visiblePages) * visiblePages + 1
+
+  const numbers = Array.from(
+    { length: Math.min(visiblePages, pageCount - first + 1) },
+    (_, i) => first + i
+  )
   return (
-    <nav aria-label="Halaman" className="mx-auto flex h-[51px] w-[331px] items-center justify-between overflow-hidden rounded-[20px] bg-grey-300">
-      <button type="button" onClick={() => onChange(page - 1)} disabled={page === 1} aria-label="Halaman sebelumnya" className="disabled:opacity-40">
-        <img src={arrowLeft} alt="" width={53} height={53} />
+    <nav aria-label="Halaman" className="mx-auto flex h-[40px] w-[331px] items-center justify-between overflow-hidden rounded-[20px] bg-grey-300">
+      <button type="button" onClick={() => onChange(page - 1)} disabled={page === 1} aria-label="Halaman sebelumnya" className="cursor-pointer disabled:opacity-40">
+        <img src={arrowLeft} alt="" width={40} height={40} />
       </button>
-      <div className="flex items-center">
+      <div className="flex items-center gap-1">
         {numbers.map((n) => (
           <button
             key={n}
             type="button"
             onClick={() => onChange(n)}
             aria-current={n === page ? 'page' : undefined}
-            className={`relative grid size-[37px] place-items-center text-[20px] leading-[1.2] font-semibold ${n === page ? 'text-grey-300' : 'text-lime-300'}`}
+            className={`relative grid size-[25px] cursor-pointer place-items-center text-[15px] leading-[1.2] font-medium ${n === page ? 'text-grey-300' : 'text-lime-300'}`}
           >
             {n === page && <img src={activeDot} alt="" width={37} height={37} className="absolute inset-0" />}
             <span className="relative">{n}</span>
           </button>
         ))}
       </div>
-      <button type="button" onClick={() => onChange(page + 1)} disabled={page === pageCount} aria-label="Halaman berikutnya" className="disabled:opacity-40">
-        <img src={arrowLeft} alt="" width={53} height={53} className="-scale-x-100" />
+      <button type="button" onClick={() => onChange(page + 1)} disabled={page === pageCount} aria-label="Halaman berikutnya" className="cursor-pointer disabled:opacity-40">
+        <img src={arrowLeft} alt="" width={40} height={40} className="-scale-x-100" />
       </button>
     </nav>
   )
@@ -299,7 +319,7 @@ export function DomainPanel({ title, aside, children }) {
   return (
     <section className="overflow-hidden rounded-[20px] bg-grey-500">
       <header className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-[17px]">
-        <h2 className="flex flex-wrap items-center gap-[17px] text-[20px] leading-[1.2] font-semibold text-lime-200">{title}</h2>
+        <h2 className="flex flex-wrap items-center gap-[17px] text-lg leading-[1.2] font-medium text-lime-200">{title}</h2>
         {aside}
       </header>
       {children}

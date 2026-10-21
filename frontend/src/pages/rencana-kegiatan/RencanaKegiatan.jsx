@@ -28,8 +28,8 @@ function SectionHeading({ title, subtitle, children }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-col gap-[7px] leading-[1.2] text-heading">
-        <h1 className="text-[31px] font-bold">{title}</h1>
-        <p className="text-[20px] font-medium">{subtitle}</p>
+        <h1 className="font-semibold text-2xl leading-[1.2] text-grey-500">{title}</h1>
+        <p className="font-base text-lg leading-[1.2] text-grey-500">{subtitle}</p>
       </div>
       {children}
     </div>
@@ -84,7 +84,7 @@ function RencanaKegiatan() {
   const buka = (k) => (kelola ? setEditing(k) : navigate(`/repositori-bukti-dukung/${k.id}`))
 
   return (
-    <div className="flex w-full flex-col gap-[33px] font-sans">
+    <div className="flex w-full flex-col gap-[33px]">
       <SectionHeading
         title="Rencana Kegiatan Statistik Sektoral"
         subtitle={kelola ? 'Kelola agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.' : 'Agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.'}
@@ -204,8 +204,8 @@ function RencanaKegiatan() {
                           </button>
                         </span>
                       ) : (
-                        <Link to={`/repositori-bukti-dukung/${k.id}`} aria-label={`Lihat bukti dukung ${k.nama}`} className="inline-block rounded-[5px] bg-lime-300 align-middle">
-                          <img src={eyeIcon} alt="" width={24} height={24} />
+                        <Link to={`/repositori-bukti-dukung/${k.id}`} aria-label={`Lihat bukti dukung ${k.nama}`} className="inline-block rounded-[5px] p-1 bg-lime-300 align-middle">
+                          <img src={eyeIcon} alt="" width={15} height={15} />
                         </Link>
                       )}
                     </td>

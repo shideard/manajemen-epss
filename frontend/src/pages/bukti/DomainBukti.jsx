@@ -44,9 +44,18 @@ function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
     return (
       <DomainPanel
         key={domain.id}
-        title={`Domain ${d + 1} - ${domain.nama}`}
+        title={
+          <button
+            type="button"
+            onClick={() => setDomainTerbuka((s) => toggleSet(s, domain.id))}
+            aria-expanded={open}
+            className="cursor-pointer text-left"
+          >
+            Domain {d + 1} - {domain.nama}
+          </button>
+        }
         aside={
-          <p className="flex items-center gap-[10px] text-base leading-[1.2] font-medium text-lime-300">
+          <p className="flex items-center gap-[10px] text-base leading-[1.2] font-light text-lime-300">
             Indikator Terverifikasi : {indikator.filter((i) => levels[i.id]).length} Indikator
             <Toggle open={open} onClick={() => setDomainTerbuka((s) => toggleSet(s, domain.id))} label={`Domain ${d + 1}`} icon={arrowLime} className="bg-grey-300" />
           </p>
@@ -70,7 +79,7 @@ function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
                             Indikator {i.nomor}: {i.nama}
                           </span>
                           <span
-                            className={`flex h-6 w-[211px] items-center justify-center rounded-[12px] border text-[13px] ${semuaValid ? 'border-green-500 bg-green-100' : 'border-blue-500 bg-blue-50'}`}
+                            className={`flex h-6 w-[211px] items-center justify-center rounded-[12px] border text-xs ${semuaValid ? 'border-green-500 bg-green-100' : 'border-blue-500 bg-blue-50'}`}
                           >
                             {valid.length} dari {daftar.length} Kegiatan Terverifikasi
                           </span>
