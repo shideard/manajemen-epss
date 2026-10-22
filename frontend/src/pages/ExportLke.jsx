@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { usePeriode, useStore } from '../lib/store'
-import { STORAGE_KEY as KEGIATAN_KEY } from './rencana-kegiatan/kegiatan'
 import { EMPTY_LIST, EMPTY_OBJECT, KEYS, lkeCsv } from '../lib/epss'
 
 function unduh(nama, isi) {
@@ -27,7 +26,7 @@ function ExportCard({ title, description, button, onClick }) {
 
 function ExportLke() {
   const { aktif } = usePeriode()
-  const [kegiatan] = useStore(KEGIATAN_KEY, EMPTY_LIST)
+  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
   const [levels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
   const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
   const [berkas] = useStore(KEYS.berkas, EMPTY_OBJECT)

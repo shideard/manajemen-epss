@@ -3,9 +3,9 @@ import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
 import PetaKegiatan from './PetaKegiatan'
-import { matches, statusOf, STORAGE_KEY, WARNA } from './kegiatan'
+import { matches } from './kegiatan'
 import { usePeriode, useStore } from '../../lib/store'
-import { EMPTY_LIST, EMPTY_OBJECT, formatTanggal, KEYS, paginate, sinkronPemetaan } from '../../lib/epss'
+import { EMPTY_LIST, EMPTY_OBJECT, formatTanggal, KEYS, paginate, sinkronPemetaan, statusOf, WARNA } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { Pagination, SearchBox } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
@@ -40,7 +40,7 @@ function RencanaKegiatan() {
   const { user } = useOutletContext()
   const navigate = useNavigate()
   const { aktif } = usePeriode()
-  const [kegiatan, setKegiatan] = useStore(STORAGE_KEY, EMPTY_LIST)
+  const [kegiatan, setKegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
   const [bukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
   const [, setBerkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
   // Hanya verifikator yang mengelola rencana; operator melihat & membuka repositori buktinya

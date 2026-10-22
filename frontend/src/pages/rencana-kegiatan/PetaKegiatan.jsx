@@ -2,8 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Background, Controls, Handle, Panel, Position, ReactFlow, useNodesState } from '@xyflow/react'
 import { animate } from 'motion/react'
 import '@xyflow/react/dist/style.css'
-import { PETA, petaRelasi, pilihTingkat, terhubung } from '../../lib/epss'
-import { WARNA } from './kegiatan'
+import { PETA, petaRelasi, pilihTingkat, terhubung, WARNA } from '../../lib/epss'
 import arrowDown from '../../assets/rencana/arrow-down-s-line.svg'
 
 const JENIS = [

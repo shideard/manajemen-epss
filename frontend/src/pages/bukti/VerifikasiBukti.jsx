@@ -3,7 +3,6 @@ import { Link, useOutletContext } from 'react-router-dom'
 import { bolehUbah } from '../../config/menu'
 import DomainBukti from './DomainBukti'
 import { usePeriode, useStore } from '../../lib/store'
-import { STORAGE_KEY as KEGIATAN_KEY } from '../rencana-kegiatan/kegiatan'
 import { EMPTY_LIST, EMPTY_OBJECT, hitungIps, includesText, INDIKATOR, indikatorById, KEYS, paginate } from '../../lib/epss'
 import { Pagination, SearchBox, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
@@ -13,7 +12,7 @@ const PAGE_SIZE = 5
 function VerifikasiBukti() {
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const [kegiatan] = useStore(KEGIATAN_KEY, EMPTY_LIST)
+  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
   const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
   const [levels, setLevels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
   const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)

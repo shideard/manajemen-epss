@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { agendaTerdekat, isOnDate, monthCells, toISODate, WARNA } from './kegiatan'
+import { isOnDate, monthCells } from './kegiatan'
+import { agendaTerdekat, toISODate, WARNA } from '../../lib/epss'
 import arrowFill from '../../assets/rencana/arrow-down-s-fill.svg'
 import arrowRightUp from '../../assets/rencana/arrow-right-up-line.svg'
 import calendarHeader from '../../assets/rencana/calendar-2-fill-header.svg'

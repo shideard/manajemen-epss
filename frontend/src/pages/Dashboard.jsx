@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { usePeriode, useStore } from '../lib/store'
 import { ROLES } from '../config/menu'
-import { agendaTerdekat, STORAGE_KEY as KEGIATAN_KEY, toISODate } from './rencana-kegiatan/kegiatan'
-import { DOMAINS, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, hitungIps, INDIKATOR, indikatorById, KEYS, predikat, PREDIKAT_TONE, selisihHari, statusKegiatan } from '../lib/epss'
+import { agendaTerdekat, DOMAINS, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, hitungIps, INDIKATOR, indikatorById, KEYS, predikat, PREDIKAT_TONE, selisihHari, statusKegiatan, toISODate } from '../lib/epss'
 import { ArrowLink, Badge, CountUp } from '../components/ui'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
 import arrowBlack from '../assets/icons/arrow-long-black.svg'
@@ -55,7 +54,7 @@ function Dashboard() {
   const [levels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
   const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
   const [berkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
-  const [kegiatan] = useStore(KEGIATAN_KEY, EMPTY_LIST)
+  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
   const [simulasi, setSimulasi] = useState([{ indikatorId: '', level: 1 }])
   const today = toISODate(new Date())
 

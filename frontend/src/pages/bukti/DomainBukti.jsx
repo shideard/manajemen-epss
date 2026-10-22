@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../../lib/store'
-import { STORAGE_KEY as KEGIATAN_KEY } from '../rencana-kegiatan/kegiatan'
 import { DOMAINS, EMPTY_LIST, EMPTY_OBJECT, includesText, INDIKATOR, jumlahBukti, KEYS, levelLabel } from '../../lib/epss'
 import { Collapse, DomainPanel, StatusBukti } from '../../components/ui'
 import arrowLime from '../../assets/icons/arrow-down-s-line-lime.svg'
@@ -28,7 +27,7 @@ const toggleSet = (set, id) => {
 // Domain → indikator → kegiatan yang dipetakan beserta status buktinya.
 // onVerifikasi ada = tampilan verifikator (tombol Verifikasi Indikator + link ke detail verifikasi)
 function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
-  const [kegiatan] = useStore(KEGIATAN_KEY, EMPTY_LIST)
+  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
   const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
   const [berkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
   const [levels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)

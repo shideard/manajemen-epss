@@ -1,6 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import { contohKegiatan, EMPTY_LIST, KEYS, notifikasi, SEED_PENGINGAT, SEED_PERIODE } from './epss'
-import { STORAGE_KEY as KEGIATAN_KEY, toISODate } from '../pages/rencana-kegiatan/kegiatan'
+import { contohKegiatan, EMPTY_LIST, KEYS, notifikasi, SEED_PENGINGAT, SEED_PERIODE, toISODate } from './epss'
 
 // State yang disimpan di localStorage dan tersinkron antar komponen yang memakai key yang sama
 // (mis. notifikasi dibaca di halaman Notifikasi → titik merah di topbar ikut hilang).
@@ -11,7 +10,7 @@ const listeners = new Map()
 // Data contoh untuk key yang belum pernah disimpan di browser ini; menang atas seed dari pemanggil
 // supaya semua halaman yang membaca kegiatan/bukti melihat data yang sama. Daftar yang sengaja dikosongkan ([]) tetap kosong.
 const contoh = contohKegiatan(toISODate(new Date()))
-const DATA_CONTOH = { [KEGIATAN_KEY]: contoh.kegiatan, [KEYS.bukti]: contoh.bukti }
+const DATA_CONTOH = { [KEYS.kegiatan]: contoh.kegiatan, [KEYS.bukti]: contoh.bukti }
 
 function read(key, seed) {
   if (!cache.has(key)) {
@@ -62,7 +61,7 @@ export function usePeriode() {
 
 // Notifikasi pengingat diturunkan dari rencana kegiatan + pengaturan H-n
 export function useNotifikasi() {
-  const [kegiatan] = useStore(KEGIATAN_KEY, EMPTY_LIST)
+  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
   const [hariPengingat, setHariPengingat] = useStore(KEYS.pengingat, SEED_PENGINGAT)
   const [dibaca, setDibaca] = useStore(KEYS.notifDibaca, EMPTY_LIST)
   const list = notifikasi(kegiatan, hariPengingat, toISODate(new Date()))

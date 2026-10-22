@@ -1,8 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { berkasUrl, usePeriode, useStore } from '../../lib/store'
-import { STORAGE_KEY as KEGIATAN_KEY, toISODate } from '../rencana-kegiatan/kegiatan'
-import { buktiKey, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, indikatorById, isPic, KEYS, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
+import { buktiKey, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, indikatorById, isPic, KEYS, LEVELS, levelTerpenuhi, metaBerkas, toISODate } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { BackButton, ChecklistItem, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
@@ -131,7 +130,7 @@ function RepositoriDetail() {
   const { user } = useOutletContext()
   const navigate = useNavigate()
   const { aktif } = usePeriode()
-  const [kegiatan] = useStore(KEGIATAN_KEY, EMPTY_LIST)
+  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
   const [semuaBukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
   const [berkas, setBerkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
   const [levels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { berkasUrl, usePeriode, useStore } from '../../lib/store'
 import { bolehUbah } from '../../config/menu'
-import { STORAGE_KEY as KEGIATAN_KEY } from '../rencana-kegiatan/kegiatan'
 import { buktiKey, EMPTY_LIST, EMPTY_OBJECT, indikatorById, KEYS, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { BackButton, ChecklistItem, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
@@ -17,7 +16,7 @@ function VerifikasiDetail() {
   const navigate = useNavigate()
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const [kegiatan] = useStore(KEGIATAN_KEY, EMPTY_LIST)
+  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
   const [semuaBukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
   const [berkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
   const [dipilih, setDipilih] = useState(0)

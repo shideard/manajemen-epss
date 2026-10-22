@@ -1,7 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { statusOf } from '../pages/rencana-kegiatan/kegiatan.js'
-import { geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -121,5 +120,14 @@ const hasil = sinkronPemetaan(awal, 'k1', ['i2'])
 assert.deepEqual(Object.keys(hasil).sort(), ['k1:i2', 'k1:i3', 'k2:i1'])
 assert.equal(hasil['k1:i2'].status, 'draft')
 assert.equal(sinkronPemetaan(awal, 'k1', ['i1', 'i3'])['k1:i1'], awal['k1:i1']) // yang sudah ada tidak di-reset
+
+assert.equal(statusOf(k, '2026-09-09'), 'Belum Mulai')
+assert.equal(statusOf(k, '2026-09-10'), 'Berjalan')
+assert.equal(statusOf(k, '2026-09-20'), 'Berjalan')
+assert.equal(statusOf(k, '2026-09-21'), 'Selesai')
+
+const lama = { ...k, mulai: '2026-01-01', selesai: '2026-01-31' }
+const nanti = { ...k, mulai: '2026-12-01', selesai: '2026-12-05' }
+assert.deepEqual(agendaTerdekat([nanti, lama, k], '2026-09-15'), [k, nanti])
 
 console.log('epss.check (akses): OK')

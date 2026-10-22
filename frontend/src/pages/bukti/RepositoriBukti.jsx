@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
 import { useStore } from '../../lib/store'
-import { STORAGE_KEY as KEGIATAN_KEY } from '../rencana-kegiatan/kegiatan'
 import { EMPTY_LIST, EMPTY_OBJECT, includesText, indikatorById, isPic, KEYS, paginate } from '../../lib/epss'
 import { Pagination, SearchBox, StatusBukti } from '../../components/ui'
 
@@ -17,7 +16,7 @@ const FILTER = [
 
 function RepositoriBukti() {
   const { user } = useOutletContext()
-  const [kegiatan] = useStore(KEGIATAN_KEY, EMPTY_LIST)
+  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
   const [semua, setSemua] = useState(false) // false = hanya kegiatan yang user ini PIC-nya
   const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
   const [filter, setFilter] = useState(null)

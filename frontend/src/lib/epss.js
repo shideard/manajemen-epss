@@ -1,8 +1,29 @@
 // Data referensi & logika murni EPSS (tanpa React), dicek oleh epss.check.js
-import { statusOf, toISODate, WARNA } from '../pages/rencana-kegiatan/kegiatan.js'
+
+// Warna bar kalender & ikon agenda, urutannya sama dengan ikon calendar-2-fill-{1..4}.svg
+export const WARNA = ['#b57fd4', '#d47f81', '#7fa7d4', '#eef281']
+
+// Tanggal lokal 'YYYY-MM-DD' (format sv-SE = ISO); string ISO aman dibandingkan dengan < dan >
+export const toISODate = (date) => date.toLocaleDateString('sv-SE')
+
+export function statusOf(kegiatan, today = toISODate(new Date())) {
+  if (today < kegiatan.mulai) return 'Belum Mulai'
+  if (today > kegiatan.selesai) return 'Selesai'
+  return 'Berjalan'
+}
+
+// Kegiatan yang belum selesai, diurutkan dari yang paling dekat mulainya
+export function agendaTerdekat(list, today, limit = 4) {
+  return list
+    .filter((k) => k.selesai >= today)
+    .sort((a, b) => a.mulai.localeCompare(b.mulai))
+    .slice(0, limit)
+}
 
 // Key localStorage untuk useStore
+// ponytail: data disimpan di localStorage browser; pindahkan ke API Laravel saat endpoint-nya siap
 export const KEYS = {
+  kegiatan: 'epss.rencana-kegiatan',
   periode: 'epss.periode',
   periodeAktif: 'epss.periode-aktif',
   bukti: 'epss.bukti', // { 'kegiatanId:indikatorId': { checked, status, level, catatan } }
