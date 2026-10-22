@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { usePeriode, useStore } from '../lib/store'
+import { useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../lib/store'
 import { ROLES } from '../config/menu'
-import { agendaTerdekat, DOMAINS, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, hitungIps, INDIKATOR, indikatorById, KEYS, predikat, PREDIKAT_TONE, selisihHari, statusKegiatan, toISODate } from '../lib/epss'
-import { ArrowLink, Badge, CountUp } from '../components/ui'
+import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, indikatorById, predikat, PREDIKAT_TONE, selisihHari, statusKegiatan, toISODate } from '../lib/epss'
+import { ArrowLink, Badge, CountUp, Memuat } from '../components/ui'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
 import arrowBlack from '../assets/icons/arrow-long-black.svg'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
@@ -51,10 +51,8 @@ function Dashboard() {
   const { user } = useOutletContext()
   const verifikator = user.role === ROLES.VERIFIKATOR
   const { periode, aktif } = usePeriode()
-  const [levels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
-  const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
-  const [berkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
-  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
+  const muat = [useSkor(), useBukti(), useBerkas(), useKegiatan()]
+  const [{ levels }, { bukti }, { berkas }, { kegiatan }] = muat
   const [simulasi, setSimulasi] = useState([{ indikatorId: '', level: 1 }])
   const today = toISODate(new Date())
 
@@ -75,6 +73,7 @@ function Dashboard() {
 
   return (
     <div className="flex w-full flex-col gap-11">
+      <Memuat dari={muat} />
       <div className="flex flex-col gap-2 leading-[1.2] text-grey-400">
         <h1 className="text-[31px] font-bold">Selamat datang, {user.name}!</h1>
         <p className="text-lg font-medium">Pantau capaian {aktif.nama}.</p>

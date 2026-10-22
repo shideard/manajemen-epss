@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { bolehUbah } from '../../config/menu'
 import DomainBukti from './DomainBukti'
-import { usePeriode, useStore } from '../../lib/store'
-import { EMPTY_LIST, EMPTY_OBJECT, hitungIps, includesText, INDIKATOR, indikatorById, KEYS, paginate } from '../../lib/epss'
-import { Pagination, SearchBox, StatusBukti } from '../../components/ui'
+import { useBukti, useKegiatan, usePeriode, useSkor } from '../../lib/store'
+import { includesText, indikatorById, paginate } from '../../lib/epss'
+import { Memuat, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 
 const PAGE_SIZE = 5
@@ -12,10 +12,8 @@ const PAGE_SIZE = 5
 function VerifikasiBukti() {
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
-  const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
-  const [levels, setLevels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
-  const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
+  const muat = [useKegiatan(), useBukti(), useSkor()]
+  const [{ kegiatan }, { bukti }, { tetapkanLevel }] = muat
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
@@ -33,25 +31,13 @@ function VerifikasiBukti() {
       title: 'Verifikasi Indikator',
       message: `Tetapkan Indikator ${indikator.nomor} (${indikator.nama}) pada Level ${level}? Skor IPS dihitung ulang dan tercatat di riwayat snapshot.`,
       confirmLabel: 'Verifikasi',
-      onConfirm: () => {
-        const baru = { ...levels, [indikator.id]: level }
-        setLevels(baru)
-        setSnapshot((list) => [
-          {
-            id: crypto.randomUUID(),
-            periodeId: aktif.id,
-            waktu: new Date().toISOString(),
-            nilai: hitungIps(INDIKATOR, baru),
-            perubahan: `Verifikasi Indikator ${indikator.nomor} (Level ${level})`,
-          },
-          ...list,
-        ])
-      },
+      onConfirm: () => tetapkanLevel(aktif.id, indikator, level),
     })
   }
 
   return (
     <div className="flex w-full flex-col gap-[25px]">
+      <Memuat dari={muat} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Ajuan Terbaru</h1>
         <SearchBox

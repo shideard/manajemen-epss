@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
-import { useStore } from '../../lib/store'
-import { EMPTY_LIST, EMPTY_OBJECT, includesText, indikatorById, isPic, KEYS, paginate } from '../../lib/epss'
-import { Pagination, SearchBox, StatusBukti } from '../../components/ui'
+import { useBukti, useKegiatan } from '../../lib/store'
+import { includesText, indikatorById, isPic, paginate } from '../../lib/epss'
+import { Memuat, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 
 const PAGE_SIZE = 5
 const FILTER = [
@@ -16,9 +16,9 @@ const FILTER = [
 
 function RepositoriBukti() {
   const { user } = useOutletContext()
-  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
+  const muat = [useKegiatan(), useBukti()]
+  const [{ kegiatan }, { bukti }] = muat
   const [semua, setSemua] = useState(false) // false = hanya kegiatan yang user ini PIC-nya
-  const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
   const [filter, setFilter] = useState(null)
   const [query, setQuery] = useState('')
   const [queryIndikator, setQueryIndikator] = useState('')
@@ -37,6 +37,7 @@ function RepositoriBukti() {
 
   return (
     <div className="flex w-full flex-col gap-[30px]">
+      <Memuat dari={muat} />
       <h1 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Upload Bukti Dukung</h1>
 
       <div className="flex flex-wrap items-center justify-between gap-4">

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useStore } from '../../lib/store'
-import { bobotDomain, DOMAINS, indikatorById, INDIKATOR, KEYS, SEED_USERS } from '../../lib/epss'
+import { useUsers } from '../../lib/store'
+import { bobotDomain, DOMAINS, indikatorById, INDIKATOR } from '../../lib/epss'
 import { ROLES } from '../../config/menu'
 import closeIcon from '../../assets/rencana/close-line.svg'
 import triangle from '../../assets/rencana/dropdown-triangle.svg'
@@ -65,7 +65,7 @@ function DaftarIndikator({ onClose }) {
 function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
   const dialogRef = useRef(null)
   const [error, setError] = useState('')
-  const [users] = useStore(KEYS.users, SEED_USERS)
+  const { users } = useUsers()
   const [dipetakan, setDipetakan] = useState(() => indikator.map((b) => b.indikatorId))
   const terkunci = indikator.filter((b) => b.status !== 'draft').map((b) => b.indikatorId)
   // Output bukti dukung yang ditargetkan: [{ id, judul, jenis, contoh?: { nama, ukuran } }]

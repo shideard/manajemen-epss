@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { usePeriode, useStore } from '../../lib/store'
-import { EMPTY_LIST, formatTanggal, includesText, KEYS, paginate, validasiPeriode } from '../../lib/epss'
-import { Field, Input, Modal, ModalActions, Pagination, SearchBox, Select } from '../../components/ui'
+import { usePeriode } from '../../lib/store'
+import { formatTanggal, includesText, paginate, validasiPeriode } from '../../lib/epss'
+import { Field, Input, Memuat, Modal, ModalActions, Pagination, SearchBox, Select } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import listIcon from '../../assets/icons/list-unordered.svg'
@@ -83,11 +83,11 @@ function TambahPeriode({ periode, onSave, onClose }) {
 }
 
 function PengaturanPeriode() {
-  const { periode, setPeriode } = usePeriode()
+  const muat = [usePeriode()]
+  const [{ periode, tambah: tambahPeriode, hapus: hapusPeriode }] = muat
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [tambah, setTambah] = useState(false)
-  const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   // Periode terkunci = arsip skor resmi, jadi hanya periode yang belum dikunci yang bisa dihapus
@@ -97,10 +97,7 @@ function PengaturanPeriode() {
       message: `Hapus periode "${p.nama}"? Riwayat snapshot skor periode ini ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
       confirmLabel: 'Hapus',
       danger: true,
-      onConfirm: () => {
-        setPeriode((list) => list.filter((x) => x.id !== p.id))
-        setSnapshot((list) => list.filter((s) => s.periodeId !== p.id))
-      },
+      onConfirm: () => hapusPeriode(p.id),
     })
   }
 
@@ -109,6 +106,7 @@ function PengaturanPeriode() {
 
   return (
     <div className="flex w-full flex-col gap-[33px]">
+      <Memuat dari={muat} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col gap-[7px] leading-[1.2] text-grey-500">
           <h1 className="text-[31px] font-bold">Pengaturan Periode EPSS Biennial</h1>
@@ -196,7 +194,7 @@ function PengaturanPeriode() {
         <TambahPeriode
           periode={periode}
           onSave={(data) => {
-            setPeriode((list) => [{ ...data, id: crypto.randomUUID(), actual: null, terkunci: false }, ...list])
+            tambahPeriode(data)
             setTambah(false)
           }}
           onClose={() => setTambah(false)}

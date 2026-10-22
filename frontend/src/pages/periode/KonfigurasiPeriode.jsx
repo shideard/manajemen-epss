@@ -1,27 +1,27 @@
 import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { PeriodeFields } from './PengaturanPeriode'
-import { usePeriode, useStore } from '../../lib/store'
-import { EMPTY_LIST, EMPTY_OBJECT, hitungIps, INDIKATOR, KEYS, predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
-import { BackButton, Badge } from '../../components/ui'
+import { usePeriode, useSkor } from '../../lib/store'
+import { hitungIps, INDIKATOR, predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
+import { BackButton, Badge, Memuat } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 
 const formatWaktu = (iso) => new Date(iso).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' }).replace(' ', '   ')
 
 function KonfigurasiPeriode() {
   const { id } = useParams()
-  const { periode, setPeriode } = usePeriode()
-  const [levels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
-  const [snapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
+  const muat = [usePeriode(), useSkor()]
+  const [{ periode, ubah: ubahPeriode }, { levels, snapshot }] = muat
   const [pesan, setPesan] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const p = periode.find((item) => item.id === id)
+  if (!p && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} />
   if (!p) return <Navigate to="/pengaturan-periode" replace />
 
   const lainnya = periode.filter((item) => item.id !== id && item.actual != null)
   const riwayat = snapshot.filter((s) => s.periodeId === id)
-  const ubah = (perubahan) => setPeriode((list) => list.map((item) => (item.id === id ? { ...item, ...perubahan } : item)))
+  const ubah = (perubahan) => ubahPeriode(id, perubahan)
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -49,6 +49,7 @@ function KonfigurasiPeriode() {
 
   return (
     <div className="flex w-full flex-col gap-[33px]">
+      <Memuat dari={muat} />
       <div className="flex flex-col items-start gap-[7px] leading-[1.2] text-grey-500">
         <BackButton fallback="/pengaturan-periode" />
         <div className="flex flex-col gap-[7px]">

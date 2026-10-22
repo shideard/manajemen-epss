@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { usePeriode, useStore } from '../lib/store'
-import { EMPTY_LIST, EMPTY_OBJECT, KEYS, lkeCsv } from '../lib/epss'
+import { useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../lib/store'
+import { lkeCsv } from '../lib/epss'
+import { Memuat } from '../components/ui'
 
 function unduh(nama, isi) {
   // BOM agar Excel membaca UTF-8 dengan benar
@@ -26,10 +27,8 @@ function ExportCard({ title, description, button, onClick }) {
 
 function ExportLke() {
   const { aktif } = usePeriode()
-  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
-  const [levels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
-  const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
-  const [berkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
+  const muat = [useKegiatan(), useSkor(), useBukti(), useBerkas()]
+  const [{ kegiatan }, { levels }, { bukti }, { berkas }] = muat
   const [pesan, setPesan] = useState('')
 
   function unduhLke() {
@@ -39,6 +38,7 @@ function ExportLke() {
 
   return (
     <div className="flex w-full flex-col gap-[33px]">
+      <Memuat dari={muat} />
       <div className="flex flex-col gap-[7px] leading-[1.2] text-grey-500">
         <h1 className="text-[25px] font-bold">Ekspor Lembar Kerja Evaluasi dan Bukti Dukung yang Terstruktur</h1>
         <p className="text-base font-light">

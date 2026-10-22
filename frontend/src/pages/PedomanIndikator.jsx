@@ -1,19 +1,19 @@
 import { useState } from 'react'
-import { useStore } from '../lib/store'
-import { bobotDomain, DOMAINS, EMPTY_OBJECT, hitungIps, includesText, INDIKATOR, jumlahBukti, KEYS, levelLabel } from '../lib/epss'
-import { DomainPanel, SearchBox } from '../components/ui'
+import { useBerkas, useBukti, useSkor } from '../lib/store'
+import { bobotDomain, DOMAINS, hitungIps, includesText, INDIKATOR, jumlahBukti, levelLabel } from '../lib/epss'
+import { DomainPanel, Memuat, SearchBox } from '../components/ui'
 import PedomanModal from '../components/PedomanModal'
 import bookIcon from '../assets/icons/book-mark-fill-sm.svg'
 
 function PedomanIndikator() {
-  const [levels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
-  const [bukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
-  const [berkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
+  const muat = [useSkor(), useBukti(), useBerkas()]
+  const [{ levels }, { bukti }, { berkas }] = muat
   const [query, setQuery] = useState('')
   const [dibuka, setDibuka] = useState(null)
 
   return (
     <div className="flex w-full flex-col gap-11">
+      <Memuat dari={muat} />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-[7px] leading-[1.2] text-grey-500">
           <h1 className="text-[25px] font-semibold">Daftar Indikator dan Pedoman Bukti Dukung EPSS</h1>

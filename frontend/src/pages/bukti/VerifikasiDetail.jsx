@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { berkasUrl, usePeriode, useStore } from '../../lib/store'
+import { berkasUrl, useBerkas, useBukti, useKegiatan, usePeriode } from '../../lib/store'
 import { bolehUbah } from '../../config/menu'
-import { buktiKey, EMPTY_LIST, EMPTY_OBJECT, indikatorById, KEYS, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
-import { BackButton, ChecklistItem, StatusBukti } from '../../components/ui'
+import { buktiKey, indikatorById, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
+import { BackButton, ChecklistItem, Memuat, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 import PedomanModal from '../../components/PedomanModal'
 import fileIcon from '../../assets/icons/file-3-fill.svg'
@@ -16,9 +16,8 @@ function VerifikasiDetail() {
   const navigate = useNavigate()
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
-  const [semuaBukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
-  const [berkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
+  const muat = [useKegiatan(), useBukti(), useBerkas()]
+  const [{ kegiatan }, { bukti: semuaBukti, ubah: ubahBukti }, { berkas }] = muat
   const [dipilih, setDipilih] = useState(0)
   const [level, setLevel] = useState(null)
   const [catatan, setCatatan] = useState('')
@@ -32,6 +31,7 @@ function VerifikasiDetail() {
   const bukti = semuaBukti[key]
   const k = kegiatan.find((item) => item.id === kegiatanId)
   const indikator = indikatorById[indikatorId]
+  if ((!bukti || !k) && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} />
   if (!bukti || !k || !indikator) return <Navigate to="/verifikasi-bukti-dukung" replace />
 
   // Hanya ajuan berstatus "menunggu" yang bisa diputuskan, dan tidak saat periode dikunci
@@ -44,7 +44,7 @@ function VerifikasiDetail() {
   const levelAktif = level ?? Math.min(terpenuhi + 1, LEVELS.length)
   const checked = semuaChecked[levelAktif] ?? []
 
-  const simpan = (perubahan) => setBukti((all) => ({ ...all, [key]: { ...all[key], ...perubahan, checked: semuaChecked } }))
+  const simpan = (perubahan) => ubahBukti(key, { ...perubahan, checked: semuaChecked })
 
   function centang(index, value) {
     const baris = indikator.levels[levelAktif - 1].syarat.map((_, i) => (i === index ? value : Boolean(checked[i])))
@@ -81,6 +81,7 @@ function VerifikasiDetail() {
 
   return (
     <div className="flex w-full flex-col gap-[18px]">
+      <Memuat dari={muat} />
       <div className="flex flex-col items-start gap-[7px]">
         <BackButton fallback="/verifikasi-bukti-dukung" />
         <h1 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Verifikasi Bukti Dukung Kegiatan</h1>

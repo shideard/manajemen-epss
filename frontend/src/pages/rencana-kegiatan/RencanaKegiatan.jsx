@@ -4,10 +4,10 @@ import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
 import PetaKegiatan from './PetaKegiatan'
 import { matches } from './kegiatan'
-import { usePeriode, useStore } from '../../lib/store'
-import { EMPTY_LIST, EMPTY_OBJECT, formatTanggal, KEYS, paginate, sinkronPemetaan, statusOf, WARNA } from '../../lib/epss'
+import { useBukti, useKegiatan, usePeriode } from '../../lib/store'
+import { formatTanggal, paginate, statusOf } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { Pagination, SearchBox } from '../../components/ui'
+import { Memuat, Pagination, SearchBox } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import arrowDown from '../../assets/rencana/arrow-down-s-line.svg'
@@ -40,9 +40,8 @@ function RencanaKegiatan() {
   const { user } = useOutletContext()
   const navigate = useNavigate()
   const { aktif } = usePeriode()
-  const [kegiatan, setKegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
-  const [bukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
-  const [, setBerkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
+  const muat = [useKegiatan(), useBukti()]
+  const [{ kegiatan, simpan, hapus: hapusKegiatan }, { bukti }] = muat
   // Hanya verifikator yang mengelola rencana; operator melihat & membuka repositori buktinya
   const kelola = bolehUbah(user, 'kelolaRencana', aktif)
   const [query, setQuery] = useState('')
@@ -55,12 +54,8 @@ function RencanaKegiatan() {
   const filtered = kegiatan.filter((k) => matches(k, query) && (!tahun || k.tahun === tahun))
   const { rows, page: currentPage, pageCount } = paginate(filtered, page, PAGE_SIZE)
 
-  function save({ indikator, ...data }) {
-    const id = editing.id ?? crypto.randomUUID()
-    setKegiatan((list) =>
-      editing.id ? list.map((k) => (k.id === id ? { ...k, ...data } : k)) : [...list, { ...data, id, warna: list.length % WARNA.length }],
-    )
-    setBukti((all) => sinkronPemetaan(all, id, indikator))
+  function save(data) {
+    simpan(editing.id, data)
     setEditing(null)
   }
 
@@ -73,11 +68,7 @@ function RencanaKegiatan() {
       message: `Hapus "${k.nama}"? Pemetaan indikator dan berkas bukti dukungnya ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
       confirmLabel: 'Hapus',
       danger: true,
-      onConfirm: () => {
-        setKegiatan((list) => list.filter((x) => x.id !== k.id))
-        setBukti((all) => Object.fromEntries(Object.entries(all).filter(([, b]) => b.kegiatanId !== k.id)))
-        setBerkas((all) => Object.fromEntries(Object.entries(all).filter(([id]) => id !== k.id)))
-      },
+      onConfirm: () => hapusKegiatan(k.id),
     })
   }
 
@@ -85,6 +76,7 @@ function RencanaKegiatan() {
 
   return (
     <div className="flex w-full flex-col gap-[33px]">
+      <Memuat dari={muat} />
       <SectionHeading
         title="Rencana Kegiatan Statistik Sektoral"
         subtitle={kelola ? 'Kelola agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.' : 'Agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.'}

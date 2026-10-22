@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { useStore } from '../lib/store'
-import { KEYS, SEED_USERS } from '../lib/epss'
+import { useUsers } from '../lib/store'
 import { ROLE_LABELS, ROLES } from '../config/menu'
-import { Badge, Field, Input, Modal, ModalActions, Select } from '../components/ui'
+import { Badge, Field, Input, Memuat, Modal, ModalActions, Select } from '../components/ui'
 import { useConfirm } from '../components/useConfirm'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
 import editIcon from '../assets/rencana/edit-2-fill.svg'
@@ -65,12 +64,13 @@ function AkunForm({ akun, users, onSave, onClose }) {
 }
 
 function Users() {
-  const [users, setUsers] = useStore(KEYS.users, SEED_USERS)
+  const muat = [useUsers()]
+  const [{ users, simpan, hapus: hapusAkun, setStatus: setStatusAkun }] = muat
   const [editing, setEditing] = useState(null) // null = tertutup, {} = akun baru
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   function save(data) {
-    setUsers((list) => (editing.id ? list.map((u) => (u.id === editing.id ? { ...u, ...data } : u)) : [...list, { ...data, id: crypto.randomUUID() }]))
+    simpan(editing.id, data)
     setEditing(null)
   }
 
@@ -80,15 +80,13 @@ function Users() {
       message: `Hapus akun ${user.username}? Pengguna ini tidak bisa masuk lagi. Tindakan ini tidak bisa dibatalkan.`,
       confirmLabel: 'Hapus',
       danger: true,
-      onConfirm: () => setUsers((list) => list.filter((u) => u.id !== user.id)),
+      onConfirm: () => hapusAkun(user.id),
     })
   }
 
-  // Sama dengan status_aktif di backend (PATCH /api/users/{user}/status): akun nonaktif tidak bisa login.
-  // Akun lama tanpa field ini dianggap aktif
-  // ponytail: hanya di localStorage; panggil endpoint tsb saat daftar user sudah diambil dari API
+  // Akun lama tanpa field status_aktif dianggap aktif
   const aktif = (u) => u.status_aktif !== false
-  const setStatus = (user, status_aktif) => setUsers((list) => list.map((u) => (u.id === user.id ? { ...u, status_aktif } : u)))
+  const setStatus = (user, status_aktif) => setStatusAkun(user.id, status_aktif)
 
   // Menonaktifkan perlu konfirmasi; mengaktifkan kembali langsung
   function ubahStatus(user) {
@@ -104,6 +102,7 @@ function Users() {
 
   return (
     <div className="flex w-full flex-col gap-[25px]">
+      <Memuat dari={muat} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col gap-[7px] leading-[1.2] text-grey-500">
           <h1 className="text-[31px] font-bold">Kelola Pengguna</h1>

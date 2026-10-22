@@ -4,8 +4,8 @@ import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import { getMenuForRole } from '../../config/menu'
-import { useStore } from '../../lib/store'
-import { cariAkun, KEYS, SEED_USERS } from '../../lib/epss'
+import { useAuth } from '../../lib/store'
+import { Memuat } from '../ui'
 import { useConfirm } from '../useConfirm'
 import accountIcon from '../../assets/sidebar/account-circle-fill.svg'
 
@@ -15,11 +15,10 @@ const COMMON_PATHS = ['/notifikasi', '/pilih-periode']
 // bare = tanpa sidebar & topbar (halaman Pilih Periode)
 function AppLayout({ bare = false }) {
   const location = useLocation()
-  const [sesi, setSesi] = useStore(KEYS.sesi, null)
-  const [users] = useStore(KEYS.users, SEED_USERS)
+  const auth = useAuth()
+  const { user } = auth
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
   const [menuMobile, setMenuMobile] = useState(false)
-  const user = cariAkun(users, sesi)
 
   // Sesi dihapus → render ulang → <Navigate> ke halaman login di bawah
   const logout = () =>
@@ -27,8 +26,11 @@ function AppLayout({ bare = false }) {
       title: 'Keluar',
       message: 'Keluar dari Sistem Manajemen EPSS?',
       confirmLabel: 'Keluar',
-      onConfirm: () => setSesi(null),
+      onConfirm: auth.logout,
     })
+
+  // Sesi masih dicek → jangan lempar ke login dulu
+  if (!user && (auth.loading || auth.error)) return <Memuat dari={[auth]} />
 
   // Belum login, atau akunnya dihapus/dinonaktifkan di Kelola Pengguna → ke halaman login
   if (!user || user.status_aktif === false) return <Navigate to="/login" replace />

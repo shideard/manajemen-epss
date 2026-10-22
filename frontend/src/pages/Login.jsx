@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useStore } from '../lib/store'
-import { cariAkun, DEMO_PASSWORD, KEYS, SEED_USERS } from '../lib/epss'
+import { useAuth } from '../lib/store'
 import background from '../assets/login/login-bg.png'
 import logoLine from '../assets/login/logo-line.svg'
 import logo from '../assets/sidebar/logo-kota-bogor.png'
@@ -12,16 +11,13 @@ const inputClass =
 function Login() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
-  const [users] = useStore(KEYS.users, SEED_USERS)
-  const [, setSesi] = useStore(KEYS.sesi, null)
+  const { login } = useAuth()
 
   function handleSubmit(event) {
     event.preventDefault()
     const { username, password } = Object.fromEntries(new FormData(event.currentTarget))
-    const akun = cariAkun(users, username.trim())
-    if (!akun || password !== DEMO_PASSWORD) return setError('Username atau password salah.')
-    if (akun.status_aktif === false) return setError('Akun Anda dinonaktifkan. Hubungi Super Admin Bidang.')
-    setSesi(akun.username)
+    const gagal = login(username, password)
+    if (gagal) return setError(gagal)
     navigate('/pilih-periode', { replace: true })
   }
 

@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { berkasUrl, usePeriode, useStore } from '../../lib/store'
-import { buktiKey, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, indikatorById, isPic, KEYS, LEVELS, levelTerpenuhi, metaBerkas, toISODate } from '../../lib/epss'
+import { berkasUrl, useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../../lib/store'
+import { buktiKey, formatTanggal, indikatorById, isPic, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { BackButton, ChecklistItem, StatusBukti } from '../../components/ui'
+import { BackButton, ChecklistItem, Memuat, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 import PedomanModal from '../../components/PedomanModal'
 import searchIcon from '../../assets/rencana/search-2-line.svg'
@@ -130,15 +130,14 @@ function RepositoriDetail() {
   const { user } = useOutletContext()
   const navigate = useNavigate()
   const { aktif } = usePeriode()
-  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
-  const [semuaBukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
-  const [berkas, setBerkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
-  const [levels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
+  const muat = [useKegiatan(), useBukti(), useBerkas(), useSkor()]
+  const [{ kegiatan }, { bukti: semuaBukti, ubah: ubahBukti }, { berkas, unggah: unggahBerkas, hapus: hapusBerkasKegiatan }, { levels }] = muat
   const [cari, setCari] = useState('')
   const fileInput = useRef(null)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const k = kegiatan.find((item) => item.id === kegiatanId)
+  if (!k && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} />
   if (!k) return <Navigate to="/repositori-bukti-dukung" replace />
 
   const files = berkas[k.id] ?? []
@@ -160,32 +159,20 @@ function RepositoriDetail() {
       message: `Hapus berkas "${f.nama}" dari kegiatan ini? Tindakan ini tidak bisa dibatalkan.`,
       confirmLabel: 'Hapus',
       danger: true,
-      onConfirm: () => {
-        URL.revokeObjectURL(berkasUrl.get(f.id))
-        berkasUrl.delete(f.id)
-        setBerkas((all) => ({ ...all, [k.id]: (all[k.id] ?? []).filter((x) => x.id !== f.id) }))
-      },
+      onConfirm: () => hapusBerkasKegiatan(k.id, f.id),
     })
   }
 
   function unggah(event) {
-    const baru = [...event.target.files].map((file) => {
-      const id = crypto.randomUUID()
-      berkasUrl.set(id, URL.createObjectURL(file))
-      return { id, nama: file.name, ukuran: file.size, tanggal: toISODate(new Date()), oleh: user.name }
-    })
-    setBerkas((all) => ({ ...all, [k.id]: [...(all[k.id] ?? []), ...baru] }))
+    unggahBerkas(k.id, event.target.files, user.name)
     event.target.value = ''
   }
 
-  const simpanBukti = (indikatorId, perubahan) =>
-    setBukti((all) => {
-      const key = buktiKey(k.id, indikatorId)
-      return { ...all, [key]: { ...all[key], ...perubahan, pengaju: user.name } }
-    })
+  const simpanBukti = (indikatorId, perubahan) => ubahBukti(buktiKey(k.id, indikatorId), { ...perubahan, pengaju: user.name })
 
   return (
     <div className="flex w-full flex-col gap-[33px]">
+      <Memuat dari={muat} />
       <div className="flex flex-col items-start gap-[7px] leading-[1.2] text-grey-500">
         <BackButton fallback="/repositori-bukti-dukung" />
         <div className="flex flex-col gap-[7px]">

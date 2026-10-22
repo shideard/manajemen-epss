@@ -104,6 +104,23 @@ export function Spinner({ className = 'size-4' }) {
   return <span aria-hidden className={`inline-block shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent ${className}`} />
 }
 
+// Status muat dari hook data (useKegiatan, useBukti, ...); tidak merender apa pun saat semuanya siap
+export function Memuat({ dari }) {
+  const error = dari.find((d) => d.error)?.error
+  if (error)
+    return (
+      <p role="alert" className="rounded-[15px] border border-red-600 bg-red-50 px-5 py-3 text-base text-red-600">
+        {error.message ?? 'Gagal memuat data.'}
+      </p>
+    )
+  if (!dari.some((d) => d.loading)) return null
+  return (
+    <p role="status" className="flex items-center gap-2 text-base text-grey-500">
+      <Spinner /> Memuat data…
+    </p>
+  )
+}
+
 export function ConfirmDialog({ title, message, confirmLabel = 'Ya, lanjutkan', danger = false, onConfirm, onClose }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
