@@ -7,7 +7,8 @@ import { matches } from './kegiatan'
 import { useBukti, useKegiatan, usePeriode } from '../../lib/store'
 import { formatTanggal, paginate, statusOf } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { Memuat, Pagination, SearchBox } from '../../components/ui'
+import { Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
+import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import arrowDown from '../../assets/rencana/arrow-down-s-line.svg'
@@ -20,20 +21,8 @@ const PAGE_SIZE = 5
 
 const STATUS_CLASS = {
   'Belum Mulai': 'bg-grey-50 text-grey-200',
-  Berjalan: 'bg-lime-300 text-grey-300',
+  Berjalan: 'bg-lime-300 text-grey-500',
   Selesai: 'bg-grey-200 text-white',
-}
-
-function SectionHeading({ title, subtitle, children }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex flex-col gap-[7px] leading-[1.2] text-heading">
-        <h1 className="font-semibold text-2xl leading-[1.2] text-grey-500">{title}</h1>
-        <p className="font-base text-lg leading-[1.2] text-grey-500">{subtitle}</p>
-      </div>
-      {children}
-    </div>
-  )
 }
 
 function RencanaKegiatan() {
@@ -75,26 +64,22 @@ function RencanaKegiatan() {
   const buka = (k) => (kelola ? setEditing(k) : navigate(`/repositori-bukti-dukung/${k.id}`))
 
   return (
-    <div className="flex w-full flex-col gap-[33px]">
+    <div className="flex w-full flex-col gap-8">
       <Memuat dari={muat} />
-      <SectionHeading
+      <PageHeader
         title="Rencana Kegiatan Statistik Sektoral"
         subtitle={kelola ? 'Kelola agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.' : 'Agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.'}
       >
         {kelola && (
-          <button
-            type="button"
-            onClick={() => setEditing({})}
-            className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300"
-          >
+          <button type="button" onClick={() => setEditing({})} className={buttonClass()}>
             <img src={addIcon} alt="" width={19} height={19} />
             Tambah Rencana Kegiatan
           </button>
         )}
-      </SectionHeading>
+      </PageHeader>
 
-      <section className="rounded-[20px] border-5 border-dashed border-lime-500 bg-lime-300 px-[10px] pt-[23px] pb-[10px]">
-        <div className="mb-[29px] flex flex-wrap items-center justify-between gap-3 px-5">
+      <section className="rounded-lg border-5 border-dashed border-lime-500 bg-lime-300 px-2.5 pt-6 pb-2.5">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 px-5">
           <SearchBox
             variant="grey"
             value={query}
@@ -112,7 +97,7 @@ function RencanaKegiatan() {
                 setTahun(e.target.value)
                 setPage(1)
               }}
-              className={`size-full appearance-none rounded-[16px] bg-grey2-75 px-[14px] text-base focus:outline-2 focus:outline-grey-300 ${
+              className={`size-full appearance-none rounded-md bg-grey2-75 px-3.5 text-body focus:outline-2 focus:outline-grey-300 ${
                 tahun ? 'text-grey-500' : 'font-light text-grey-75 italic'
               }`}
             >
@@ -121,14 +106,14 @@ function RencanaKegiatan() {
                 <option key={y}>{y}</option>
               ))}
             </select>
-            <img src={arrowDown} alt="" width={24} height={24} className="pointer-events-none absolute right-[14px] rounded-[5px] bg-grey-300" />
+            <img src={arrowDown} alt="" width={24} height={24} className="pointer-events-none absolute right-3.5 rounded-xs bg-grey-300" />
           </label>
         </div>
 
-        <div className="overflow-x-auto rounded-[20px] bg-[#fdfdfd] px-5 py-3">
-          <table className="w-full min-w-[760px] text-left text-black">
+        <div className="overflow-x-auto rounded-lg bg-grey2-50 px-5 py-3">
+          <table className="w-full min-w-[760px] text-left text-grey-500">
             <thead>
-              <tr className="border-b border-grey-100 text-center text-base leading-[1.2] font-bold">
+              <tr className="border-b border-grey-75 text-center text-body font-semibold">
                 <th className="w-[40%] py-5">Informasi Kegiatan</th>
                 <th className="py-5">OPD/PIC</th>
                 <th className="py-5">Jadwal Kegiatan</th>
@@ -139,7 +124,7 @@ function RencanaKegiatan() {
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-16 text-center text-grey-100">
+                  <td colSpan={5} className="py-16 text-center text-grey-200">
                     {kegiatan.length === 0
                       ? kelola
                         ? 'Belum ada rencana kegiatan. Klik "Tambah Rencana Kegiatan" untuk menambahkan.'
@@ -151,14 +136,14 @@ function RencanaKegiatan() {
               {rows.map((k) => {
                 const status = statusOf(k)
                 return (
-                  <tr key={k.id} className="border-b border-grey-100/50 align-top text-[13px] leading-[1.2] last:border-0">
+                  <tr key={k.id} className="border-b border-grey-75/50 align-top text-small last:border-0">
                     <td className="py-5 pr-4">
-                      <p className="text-base font-semibold">{k.nama}</p>
+                      <p className="text-body font-semibold">{k.nama}</p>
                       {k.deskripsi && <p className="mt-2 font-light">{k.deskripsi}</p>}
                     </td>
                     <td className="py-5 pr-4">
-                      <span className="inline-flex h-6 items-center rounded-[10px] bg-grey-200 px-[10px] font-medium text-white">{k.opd}</span>
-                      <p className="mt-[7px] flex items-end gap-1">
+                      <span className="inline-flex h-6 items-center rounded-sm bg-grey-200 px-2.5 font-medium text-white">{k.opd}</span>
+                      <p className="mt-2 flex items-end gap-1">
                         <img src={userIcon} alt="" width={17} height={17} />
                         <span>
                           <span className="font-light">PIC :</span> <span className="font-medium">{k.pic}</span>
@@ -169,19 +154,19 @@ function RencanaKegiatan() {
                       <p>
                         <span className="font-light">Mulai :</span> {formatTanggal(k.mulai)}
                       </p>
-                      <p className="mt-[7px]">
+                      <p className="mt-2">
                         <span className="font-light">Selesai :</span> {formatTanggal(k.selesai)}
                       </p>
                     </td>
                     <td className="py-5 text-center">
-                      <span className={`inline-flex h-6 items-center rounded-[10px] px-[10px] font-medium whitespace-nowrap ${STATUS_CLASS[status]}`}>
+                      <span className={`inline-flex h-6 items-center rounded-sm px-2.5 font-medium whitespace-nowrap ${STATUS_CLASS[status]}`}>
                         {status}
                       </span>
                     </td>
                     <td className="py-5 text-center">
                       {kelola ? (
-                        <span className="flex justify-center gap-[7px]">
-                          <button type="button" onClick={() => setEditing(k)} aria-label={`Edit ${k.nama}`} className="rounded-[5px] bg-lime-300">
+                        <span className="flex justify-center gap-2">
+                          <button type="button" onClick={() => setEditing(k)} aria-label={`Edit ${k.nama}`} className="rounded-xs bg-lime-300">
                             <img src={editIcon} alt="" width={24} height={24} />
                           </button>
                           <button
@@ -190,13 +175,13 @@ function RencanaKegiatan() {
                             disabled={sudahDiajukan(k)}
                             title={sudahDiajukan(k) ? 'Tidak bisa dihapus: bukti dukung kegiatan ini sudah diajukan' : undefined}
                             aria-label={`Hapus ${k.nama}`}
-                            className="grid size-6 place-items-center rounded-[5px] bg-red-200 disabled:opacity-40"
+                            className="grid size-6 place-items-center rounded-xs bg-red-200 disabled:opacity-40"
                           >
                             <img src={deleteIcon} alt="" width={18} height={18} />
                           </button>
                         </span>
                       ) : (
-                        <Link to={`/repositori-bukti-dukung/${k.id}`} aria-label={`Lihat bukti dukung ${k.nama}`} className="inline-block rounded-[5px] p-1 bg-lime-300 align-middle">
+                        <Link to={`/repositori-bukti-dukung/${k.id}`} aria-label={`Lihat bukti dukung ${k.nama}`} className="inline-grid size-6 place-items-center rounded-xs bg-lime-300 align-middle">
                           <img src={eyeIcon} alt="" width={15} height={15} />
                         </Link>
                       )}
@@ -213,12 +198,12 @@ function RencanaKegiatan() {
 
       <hr className="border-grey-75" />
 
-      <SectionHeading title="Kalender Kegiatan" subtitle="Pantau dan kelola jadwal kegiatan secara terstruktur dalam satu kalender." />
+      <PageHeader as="h2" title="Kalender Kegiatan" subtitle="Pantau dan kelola jadwal kegiatan secara terstruktur dalam satu kalender." />
       <KalenderKegiatan kegiatan={kegiatan} onOpen={buka} />
 
       <hr className="border-grey-75" />
 
-      <SectionHeading title="Peta Relasi Indikator" subtitle="Keterkaitan domain, aspek, dan indikator EPSS dengan rencana kegiatan." />
+      <PageHeader as="h2" title="Peta Relasi Indikator" subtitle="Keterkaitan domain, aspek, dan indikator EPSS dengan rencana kegiatan." />
       <PetaKegiatan kegiatan={kegiatan} bukti={bukti} onOpen={buka} />
 
       {editing && (

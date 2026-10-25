@@ -24,31 +24,31 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
   const agenda = agendaTerdekat(kegiatan, today)
 
   return (
-    <div className="flex flex-col items-start gap-[14px] lg:flex-row">
-      <div className="w-full min-w-0 flex-1 rounded-[14px] bg-grey-300 px-[10.5px] pb-[10.5px]">
-        <div className="flex items-start justify-between px-4 pt-[17px] pb-[9px]">
-          <div className="leading-[1.2]">
-            <p className="text-[31px] font-semibold text-lime-300">{cursor.toLocaleDateString('id-ID', { month: 'long' })}</p>
-            <p className="text-[20px] text-green-50">{year}</p>
+    <div className="flex flex-col items-start gap-3.5 lg:flex-row">
+      <div className="w-full min-w-0 flex-1 rounded-lg bg-grey-300 px-3 pb-3">
+        <div className="flex items-start justify-between px-4 pt-4 pb-2">
+          <div>
+            <p className="text-h1 font-semibold text-lime-300">{cursor.toLocaleDateString('id-ID', { month: 'long' })}</p>
+            <p className="text-lead text-grey-50">{year}</p>
           </div>
-          <div className="mt-[13px] flex gap-[5px]">
-            <button type="button" onClick={() => shift(-1)} aria-label="Bulan sebelumnya" className="rounded-[5px] bg-white">
+          <div className="mt-3 flex gap-1">
+            <button type="button" onClick={() => shift(-1)} aria-label="Bulan sebelumnya" className="rounded-xs bg-white">
               <img src={arrowFill} alt="" width={32} height={32} className="rotate-90" />
             </button>
-            <button type="button" onClick={() => shift(1)} aria-label="Bulan berikutnya" className="rounded-[5px] bg-white">
+            <button type="button" onClick={() => shift(1)} aria-label="Bulan berikutnya" className="rounded-xs bg-white">
               <img src={arrowFill} alt="" width={32} height={32} className="-rotate-90" />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-[5px] rounded-[14px] bg-white p-[15px]">
+        <div className="grid grid-cols-7 gap-1 rounded-md bg-white p-4">
           {HARI.map((hari) => (
-            <p key={hari} className="text-center text-[13px] leading-[1.2] font-semibold text-heading">
+            <p key={hari} className="text-center text-small font-semibold text-grey-500">
               {hari}
             </p>
           ))}
           {monthCells(year, month).map((day, i) => {
-            if (!day) return <div key={i} className="aspect-square xl:aspect-[3/2] rounded-[14px] border-2 border-grey-200/10 bg-[#c2c2c2]/10" />
+            if (!day) return <div key={i} className="aspect-square xl:aspect-[3/2] rounded-sm border-2 border-grey-200/10 bg-grey-50/10" />
 
             const date = toISODate(new Date(year, month, day))
             const weekend = i % 7 === 0 || i % 7 === 6
@@ -56,15 +56,15 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
             return (
               <div
                 key={i}
-                className={`relative aspect-square xl:aspect-[3/2] overflow-hidden rounded-[10px] border-2 border-grey-200 ${
+                className={`relative aspect-square xl:aspect-[3/2] overflow-hidden rounded-sm border-2 border-grey-200 ${
                   date === today ? 'bg-lime-300' : weekend ? 'bg-grey-50' : 'bg-green-50'
                 }`}
               >
-                <span className="absolute top-[3px] left-[3px] grid h-4 min-w-4 place-items-center rounded-[5px] bg-white px-0.5 text-[13px] leading-[1.2] font-bold text-grey-200">
+                <span className="absolute top-[3px] left-[3px] grid h-4 min-w-4 place-items-center rounded-xs bg-white px-0.5 text-small font-semibold text-grey-200">
                   {day}
                 </span>
                 {/* ponytail: maksimal 3 bar per hari; tambahkan penanda "+N" jika kegiatan sering bertumpuk */}
-                <div className="absolute inset-x-0 bottom-[14px] flex flex-col-reverse gap-[2px]">
+                <div className="absolute inset-x-0 bottom-[14px] flex flex-col-reverse gap-0.5">
                   {events.slice(0, 3).map((k) => (
                     <button
                       key={k.id}
@@ -83,18 +83,18 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
         </div>
       </div>
 
-      <div className="flex w-full flex-col gap-[7px] lg:w-[275px] xl:w-[340px]">
-        <div className="flex flex-col gap-[6px] rounded-[14px] bg-agenda px-7 py-4">
-          <img src={calendarHeader} alt="" width={39} height={39} className="rounded-[5px] bg-white" />
-          <p className="text-xl leading-[1.2] font-semibold text-grey-200">Agenda Terdekat</p>
+      <div className="flex w-full flex-col gap-2 lg:w-[275px] xl:w-[340px]">
+        <div className="flex flex-col gap-1.5 rounded-lg bg-grey2-300 px-7 py-4">
+          <img src={calendarHeader} alt="" width={39} height={39} className="rounded-xs bg-white" />
+          <p className="text-h3">Agenda Terdekat</p>
         </div>
-        {agenda.length === 0 && <p className="rounded-[14px] bg-agenda px-7 py-4 text-grey-200">Belum ada agenda terdekat.</p>}
+        {agenda.length === 0 && <p className="rounded-lg bg-grey2-300 px-7 py-4 text-grey-200">Belum ada agenda terdekat.</p>}
         {agenda.map((k) => (
           <button
             key={k.id}
             type="button"
             onClick={() => onOpen(k)}
-            className="flex flex-col gap-[6px] rounded-[14px] bg-agenda px-7 py-4 text-left text-base leading-[1.2] text-grey-200 hover:brightness-95"
+            className="flex flex-col gap-1.5 rounded-lg bg-grey2-300 px-7 py-4 text-left text-grey-200 hover:bg-grey2-200"
           >
             <span className="flex w-full items-center justify-between">
               <img src={IKON_WARNA[k.warna]} alt="" width={39} height={39} />
