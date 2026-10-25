@@ -3,7 +3,8 @@ import { Link, Navigate, useNavigate, useOutletContext, useParams } from 'react-
 import { berkasUrl, useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../../lib/store'
 import { buktiKey, formatTanggal, indikatorById, isPic, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { BackButton, ChecklistItem, Memuat, StatusBukti } from '../../components/ui'
+import { ChecklistItem, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
+import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import PedomanModal from '../../components/PedomanModal'
 import searchIcon from '../../assets/rencana/search-2-line.svg'
@@ -47,9 +48,9 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
   }
 
   return (
-    <article className="flex flex-col gap-[21px] rounded-[15px] bg-grey-300 pt-[21px]">
-      <header className="flex flex-wrap justify-between gap-4 px-[35px] text-base leading-[1.2] text-lime-300">
-        <div className="flex flex-col gap-[7px]">
+    <article className="flex flex-col gap-5 rounded-lg bg-grey-300 pt-5">
+      <header className="flex flex-wrap justify-between gap-4 px-9 text-lime-300">
+        <div className="flex flex-col gap-2">
           <p className="font-semibold">
             Domain {indikator.domainNomor} : {indikator.domain.nama}
           </p>
@@ -57,7 +58,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
             Indikator {indikator.nomor}: {indikator.nama} (Bobot BPS: {indikator.bobot.toFixed(1)}%)
           </p>
         </div>
-        <div className="flex flex-col gap-[7px] text-right">
+        <div className="flex flex-col gap-2 text-right">
           <p className="font-semibold">Target Kematangan :</p>
           <p className="font-light">
             Level {target} ({LEVELS[target - 1]})
@@ -65,13 +66,13 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
         </div>
       </header>
 
-      <div className="flex flex-col gap-3 rounded-[15px] bg-white px-[28px] py-[14px]">
+      <div className="flex flex-col gap-3 rounded-lg bg-white px-7 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-base leading-[1.2] font-semibold text-heading">Checklist Persyaratan Bukti Dukung (Level {level}) :</p>
-          <StatusBukti status={bukti.status} className="text-[13px]" />
+          <p className="font-semibold">Checklist Persyaratan Bukti Dukung (Level {level}) :</p>
+          <StatusBukti status={bukti.status} className="text-small" />
         </div>
         {bukti.status === 'perbaikan' && bukti.catatan && (
-          <p className="rounded-[10px] border border-red-500 bg-red-50 px-4 py-2 text-[13px] text-red-500">Catatan verifikator: {bukti.catatan}</p>
+          <Notice tone="red" className="text-small">Catatan verifikator: {bukti.catatan}</Notice>
         )}
         {syarat.map((item, i) => (
           <ChecklistItem key={item} checked={Boolean(checked[level]?.[i])} onChange={(value) => centang(i, value)} disabled={terkunci}>
@@ -80,39 +81,31 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
         ))}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="w-[160px] text-base leading-[1.2] font-bold text-heading">Level Terpenuhi : {terpenuhi}</p>
+          <p className="w-[160px] font-semibold">Level Terpenuhi : {terpenuhi}</p>
           {/* Berjenjang: tidak bisa lompat melewati level yang belum terpenuhi */}
-          <div className="flex h-[41px] w-[209px] items-center justify-between overflow-hidden rounded-[20px] bg-grey-300">
+          <div className="flex h-[41px] w-[209px] items-center justify-between overflow-hidden rounded-lg bg-grey-300">
             <button type="button" onClick={() => setLevel(level - 1)} disabled={level === 1} aria-label="Level sebelumnya" className="disabled:opacity-40">
               <img src={levelArrow} alt="" width={46} height={45} />
             </button>
-            <span className="text-base leading-[1.2] font-semibold text-lime-200">Level {level}</span>
+            <span className="font-semibold text-lime-300">Level {level}</span>
             <button type="button" onClick={() => setLevel(level + 1)} disabled={level >= maksLevel} aria-label="Level berikutnya" className="disabled:opacity-40">
               <img src={levelArrow} alt="" width={46} height={45} className="-scale-x-100" />
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setPedoman(true)}
-            className="flex w-[186px] items-center justify-between rounded-[16px] border-[0.7px] border-grey-500 px-[14px] py-[7px] text-[11px] leading-[1.2] text-grey-500"
-          >
+          <button type="button" onClick={() => setPedoman(true)} className={`gap-4! ${buttonClass('outline')}`}>
             Lihat Pedoman Indikator
             <img src={arrowSmall} alt="" width={20} height={10} />
           </button>
         </div>
 
-        {error && (
-          <p role="alert" className="text-sm text-red-600">
-            {error}
-          </p>
-        )}
+        <FormError>{error}</FormError>
 
         {!terkunci && (
-          <div className="flex flex-wrap items-center justify-end gap-[18px]">
-            <p role="status" className="text-[13px] text-grey-200">
+          <div className="flex flex-wrap items-center justify-end gap-4">
+            <p role="status" className="text-small text-grey-200">
               Draft tersimpan otomatis.
             </p>
-            <button type="button" onClick={ajukan} className="rounded-[16px] bg-grey-300 px-[19px] py-[10px] text-base leading-[1.2] text-lime-300">
+            <button type="button" onClick={ajukan} className={buttonClass()}>
               Ajukan Verifikasi
             </button>
           </div>
@@ -171,30 +164,28 @@ function RepositoriDetail() {
   const simpanBukti = (indikatorId, perubahan) => ubahBukti(buktiKey(k.id, indikatorId), { ...perubahan, pengaju: user.name })
 
   return (
-    <div className="flex w-full flex-col gap-[33px]">
+    <div className="flex w-full flex-col gap-8">
       <Memuat dari={muat} />
-      <div className="flex flex-col items-start gap-[7px] leading-[1.2] text-grey-500">
-        <BackButton fallback="/repositori-bukti-dukung" />
-        <div className="flex flex-col gap-[7px]">
-          <h1 className="text-[25px] font-semibold">Pengumpulan Bukti Dukung</h1>
-          <p className="text-base">Unggah dan kelola berkas bukti fisik terpusat berdasarkan kegiatan statistik dan indikator EPSS yang telah dipetakan.</p>
-        </div>
-      </div>
+      <PageHeader
+        back="/repositori-bukti-dukung"
+        title="Pengumpulan Bukti Dukung"
+        subtitle="Unggah dan kelola berkas bukti fisik terpusat berdasarkan kegiatan statistik dan indikator EPSS yang telah dipetakan."
+      />
 
       {!bolehEdit && (
-        <p role="status" className="rounded-[15px] border border-yellow-500 bg-yellow-50 px-5 py-3 text-base text-yellow-500">
+        <Notice tone="yellow">
           {!pic
             ? `Anda bukan PIC kegiatan ini (PIC: ${k.pic}). Halaman ini hanya dapat dilihat sebagai referensi.`
             : 'Periode aktif sudah dikunci. Bukti dukung hanya dapat dilihat.'}
-        </p>
+        </Notice>
       )}
 
-      <section className="flex flex-col gap-5 rounded-[20px] border-5 border-dashed border-lime-500 bg-lime-300 px-[10px] py-5">
-        <div className="flex flex-wrap items-center justify-between gap-3 px-[18px]">
+      <section className="flex flex-col gap-5 rounded-lg border-5 border-dashed border-lime-500 bg-lime-300 px-2.5 py-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4.5">
           {/* Input dengan datalist bawaan browser untuk pindah ke kegiatan lain */}
           <label className="relative flex h-[45px] w-[330px] max-w-full items-center">
             <span className="sr-only">Cari rencana kegiatan</span>
-            <img src={searchIcon} alt="" width={31} height={31} className="pointer-events-none absolute left-2 rounded-[10px] bg-grey-300" />
+            <img src={searchIcon} alt="" width={31} height={31} className="pointer-events-none absolute left-2 rounded-sm bg-grey-300" />
             <input
               list="daftar-kegiatan"
               value={cari}
@@ -207,7 +198,7 @@ function RepositoriDetail() {
                 }
               }}
               placeholder="Cari Rencana Kegiatan..."
-              className="size-full rounded-[16px] bg-grey2-75 pr-4 pl-[53px] text-base placeholder:font-light placeholder:text-grey-75 placeholder:italic focus:outline-2 focus:outline-grey-300"
+              className="size-full rounded-md bg-grey2-75 pr-4 pl-13 placeholder:font-light placeholder:text-grey-75 placeholder:italic focus:outline-2 focus:outline-grey-300"
             />
             <datalist id="daftar-kegiatan">
               {kegiatan.map((item) => (
@@ -215,18 +206,18 @@ function RepositoriDetail() {
               ))}
             </datalist>
           </label>
-          <Link to="/rencana-kegiatan" className="flex w-[292px] items-center justify-between rounded-[16px] border border-grey-200 px-[14px] py-[10px] text-base leading-[1.2] font-light text-grey-200 italic">
+          <Link to="/rencana-kegiatan" className={`gap-4! ${buttonClass('outline')}`}>
             Lihat Daftar Rencana Kegiatan
             <img src={arrowUpRight} alt="" width={24} height={24} />
           </Link>
         </div>
 
-        <div className="flex flex-col items-center gap-[50px] rounded-[20px] bg-[#fdfdfd] px-4 py-9 md:px-[39px]">
+        <div className="flex flex-col items-center gap-12.5 rounded-lg bg-grey2-50 px-4 py-9 md:px-10">
           <div className="flex w-full flex-col items-center gap-4">
-            <span className="rounded-[16px] border border-grey-500 px-5 py-1 text-base leading-[1.2] text-grey-500">Rencana Kegiatan</span>
-            <h2 className="text-center text-[31px] leading-[1.2] font-bold text-heading">{k.nama}</h2>
+            <span className="rounded-md border border-grey-500 px-5 py-1">Rencana Kegiatan</span>
+            <h2 className="text-center text-h2">{k.nama}</h2>
             <hr className="w-full border-grey-500" />
-            <dl className="grid w-full grid-cols-2 gap-[10px] px-4 text-center text-base leading-[1.2] text-black md:grid-cols-4 md:px-[60px]">
+            <dl className="grid w-full grid-cols-2 gap-2.5 px-4 text-center md:grid-cols-4 md:px-15">
               {[
                 ['OPD', k.opd],
                 ['PIC', k.pic],
@@ -234,16 +225,16 @@ function RepositoriDetail() {
                 ['Deadline Bukti', formatTanggal(aktif.batas)],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <dt className="font-bold">{label} :</dt>
+                  <dt className="font-semibold">{label} :</dt>
                   <dd>{value}</dd>
                 </div>
               ))}
             </dl>
           </div>
 
-          <p className="flex flex-wrap items-center gap-4 text-base leading-[1.2] font-semibold text-heading">
+          <p className="flex flex-wrap items-center gap-4 font-semibold">
             Kelengkapan Bukti Kegiatan :
-            <span className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 text-sm font-medium text-grey-400">
+            <span className="flex h-6 items-center gap-2.5 rounded-sm bg-lime-300 px-5 font-medium">
               <img src={bookIcon} alt="" width={15} height={15} />
               {files.length} Berkas Terunggah
             </span>
@@ -252,46 +243,46 @@ function RepositoriDetail() {
 
           {/* Target output diisi verifikator di form Rencana Kegiatan */}
           {k.output?.length > 0 && (
-            <div className="flex w-full flex-col items-start gap-[14px] md:px-[40px]">
-              <h3 className="text-base leading-[1.2] font-bold text-heading">Output Bukti Dukung yang Ditargetkan :</h3>
-              <ul className="flex w-full flex-col gap-[7px]">
+            <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
+              <h3 className="font-semibold">Output Bukti Dukung yang Ditargetkan :</h3>
+              <ul className="flex w-full flex-col gap-2">
                 {k.output.map((o) => (
-                  <li key={o.id} className="flex min-h-[45px] flex-col justify-center rounded-[15px] bg-lime-300 px-5 py-2 text-base leading-[1.2] text-[#4f4f4f]">
+                  <li key={o.id} className="flex min-h-[45px] flex-col justify-center rounded-md bg-lime-300 px-5 py-2">
                     <span>
                       {o.judul}
-                      {o.jenis && <span className="text-[13px]"> ({o.jenis})</span>}
+                      {o.jenis && <span className="text-small"> ({o.jenis})</span>}
                     </span>
-                    {o.contoh && <span className="truncate text-[13px] text-grey-200">Contoh dari verifikator: {o.contoh.nama}</span>}
+                    {o.contoh && <span className="truncate text-small text-grey-200">Contoh dari verifikator: {o.contoh.nama}</span>}
                   </li>
                 ))}
               </ul>
             </div>
           )}
 
-          <div className="flex w-full flex-col items-start gap-[14px] md:px-[40px]">
-            <h3 className="text-base leading-[1.2] font-bold text-heading">Dokumen Bukti yang Terlampir :</h3>
-            {files.length === 0 && <p className="text-[13px] text-grey-100">Belum ada berkas yang diunggah.</p>}
+          <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
+            <h3 className="font-semibold">Dokumen Bukti yang Terlampir :</h3>
+            {files.length === 0 && <p className="text-small text-grey-200">Belum ada berkas yang diunggah.</p>}
             {files.map((f) => {
               const url = berkasUrl.get(f.id)
               return (
-                <div key={f.id} className="flex w-full items-center justify-between gap-4 rounded-[10px] border border-black px-[28px] py-[7px]">
-                  <div className="flex min-w-0 items-center gap-[14px]">
-                    <span className="relative size-12 shrink-0 overflow-hidden rounded-[10px] bg-grey-300">
+                <div key={f.id} className="flex w-full items-center justify-between gap-4 rounded-sm border border-grey-500 px-7 py-2">
+                  <div className="flex min-w-0 items-center gap-3.5">
+                    <span className="relative size-12 shrink-0 overflow-hidden rounded-sm bg-grey-300">
                       <img src={fileText} alt="" width={54} height={54} className="absolute top-[3px] left-[-3px] max-w-none" />
                     </span>
-                    <span className="flex min-w-0 flex-col gap-[5px] leading-[1.2] text-heading">
-                      <span className="truncate text-[13px] font-medium">{f.nama}</span>
-                      <span className="text-[10px] font-light">{metaBerkas(f)}</span>
+                    <span className="flex min-w-0 flex-col gap-1">
+                      <span className="truncate text-small font-medium">{f.nama}</span>
+                      <span className="text-caption font-light">{metaBerkas(f)}</span>
                     </span>
                   </div>
-                  <div className="flex shrink-0 items-center gap-[14px]">
+                  <div className="flex shrink-0 items-center gap-3.5">
                     <img src={checkBadge} alt="Terunggah" width={30} height={30} />
                     {url ? (
-                      <a href={url} target="_blank" rel="noreferrer" aria-label={`Lihat ${f.nama}`} className="grid size-[30px] place-items-center rounded-[10px] bg-lime-200">
+                      <a href={url} target="_blank" rel="noreferrer" aria-label={`Lihat ${f.nama}`} className="grid size-[30px] place-items-center rounded-sm bg-lime-200">
                         <img src={eyeIcon} alt="" width={20} height={20} />
                       </a>
                     ) : (
-                      <span title="Pratinjau hanya tersedia pada sesi saat berkas diunggah" className="grid size-[30px] place-items-center rounded-[10px] bg-lime-200 opacity-40">
+                      <span title="Pratinjau hanya tersedia pada sesi saat berkas diunggah" className="grid size-[30px] place-items-center rounded-sm bg-lime-200 opacity-40">
                         <img src={eyeIcon} alt="" width={20} height={20} />
                       </span>
                     )}
@@ -302,7 +293,7 @@ function RepositoriDetail() {
                         disabled={Boolean(alasanTidakBisaHapus)}
                         title={alasanTidakBisaHapus || `Hapus ${f.nama}`}
                         aria-label={`Hapus ${f.nama}`}
-                        className="grid size-[30px] place-items-center rounded-[10px] bg-red-200 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="grid size-[30px] place-items-center rounded-sm bg-red-200 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <img src={deleteIcon} alt="" width={20} height={20} />
                       </button>
@@ -311,11 +302,11 @@ function RepositoriDetail() {
                 </div>
               )
             })}
-            {bolehEdit && alasanTidakBisaHapus && files.length > 0 && <p className="text-[13px] text-grey-100">{alasanTidakBisaHapus}</p>}
+            {bolehEdit && alasanTidakBisaHapus && files.length > 0 && <p className="text-small text-grey-200">{alasanTidakBisaHapus}</p>}
             {bolehEdit && (
               <>
                 <input ref={fileInput} type="file" multiple onChange={unggah} className="hidden" />
-                <button type="button" onClick={() => fileInput.current.click()} className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300">
+                <button type="button" onClick={() => fileInput.current.click()} className={buttonClass()}>
                   <img src={addIcon} alt="" width={19} height={19} />
                   Unggah Berkas Baru
                 </button>
@@ -325,13 +316,13 @@ function RepositoriDetail() {
         </div>
       </section>
 
-      <div className="flex flex-col items-center gap-[7px]">
-        <h2 className="text-center text-[31px] leading-[1.2] font-bold text-heading">Indikator tertaut :</h2>
-        <span className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-grey-500 px-5 text-base leading-[1.2] font-medium text-lime-300">
+      <div className="flex flex-col items-center gap-2">
+        <h2 className="text-center text-h2">Indikator Tertaut</h2>
+        <span className="flex h-6 items-center gap-2.5 rounded-sm bg-grey-500 px-5 font-medium text-lime-300">
           <img src={mindMap} alt="" width={21} height={19} />
           {tertaut.length} Indikator Terpetakan
         </span>
-        {tertaut.length === 0 && <p className="mt-3 text-base text-grey-100">Belum ada indikator. Pemetaan indikator diatur verifikator di menu Rencana Kegiatan.</p>}
+        {tertaut.length === 0 && <p className="mt-3 text-grey-200">Belum ada indikator. Pemetaan indikator diatur verifikator di menu Rencana Kegiatan.</p>}
       </div>
 
       {tertaut.map((b) => (

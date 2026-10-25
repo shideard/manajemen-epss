@@ -3,7 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
 import { useBukti, useKegiatan } from '../../lib/store'
 import { includesText, indikatorById, isPic, paginate } from '../../lib/epss'
-import { Memuat, Pagination, SearchBox, StatusBukti } from '../../components/ui'
+import { Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 
 const PAGE_SIZE = 5
 const FILTER = [
@@ -36,9 +36,9 @@ function RepositoriBukti() {
   const { rows, page: currentPage, pageCount } = paginate(filtered, page, PAGE_SIZE)
 
   return (
-    <div className="flex w-full flex-col gap-[30px]">
+    <div className="flex w-full flex-col gap-8">
       <Memuat dari={muat} />
-      <h1 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Upload Bukti Dukung</h1>
+      <PageHeader title="Upload Bukti Dukung" />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filter status">
@@ -51,7 +51,7 @@ function RepositoriBukti() {
                 setFilter(f.status)
                 setPage(1)
               }}
-              className={`h-[35px] cursor-pointer rounded-[15px] border border-grey-500 px-5 text-sm leading-[1.2] font-medium ${
+              className={`h-[45px] rounded-md border border-grey-500 px-5 font-medium ${
                 filter === f.status ? 'bg-grey-500 text-lime-300' : 'bg-lime-75 text-grey-500'
               }`}
             >
@@ -69,10 +69,10 @@ function RepositoriBukti() {
         />
       </div>
 
-      <section className="flex flex-col gap-[14px]">
+      <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-[20px] leading-[1.2] font-medium text-grey-500">{semua ? 'Semua Kegiatan' : 'Kegiatan Anda'}</h2>
-          <label className="flex items-center gap-2 text-base text-grey-500">
+          <h2 className="text-h3">{semua ? 'Semua Kegiatan' : 'Kegiatan Anda'}</h2>
+          <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={semua}
@@ -86,7 +86,7 @@ function RepositoriBukti() {
           </label>
         </div>
         {rows.length === 0 && (
-          <p className="rounded-[20px] bg-white py-10 text-center text-grey-100">
+          <p className="rounded-lg bg-white py-10 text-center text-grey-200">
             {kegiatan.length === 0
               ? 'Belum ada rencana kegiatan dari verifikator.'
               : semua
@@ -100,20 +100,20 @@ function RepositoriBukti() {
             <Link
               key={`${k.id}:${b.indikatorId}`}
               to={`/repositori-bukti-dukung/${k.id}`}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] bg-white px-[27px] py-4 transition duration-300 ease-out-quint hover:-translate-y-0.5 hover:shadow-md"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-white px-7 py-4 transition duration-300 ease-out-quint hover:-translate-y-0.5 hover:shadow-md"
             >
-              <span className="flex flex-col gap-2 leading-[1.2]">
-                <span className="text-base font-semibold text-grey-500">{k.nama}</span>
-                <span className="flex flex-wrap items-baseline gap-x-[17px] text-base font-light text-grey-200">
+              <span className="flex flex-col gap-2">
+                <span className="font-semibold">{k.nama}</span>
+                <span className="flex flex-wrap items-baseline gap-x-4 font-light text-grey-200">
                   <span>
                     PIC : <span className="font-medium">{k.pic}</span>
                   </span>
-                  <span aria-hidden className="text-[#cacaca]">
+                  <span aria-hidden className="text-grey-75">
                     |
                   </span>
                   <span>
                     {indikator ? `Indikator ${indikator.nomor} : ` : 'Indikator : '}
-                    <span className="text-[13px] font-medium">{indikator?.nama ?? 'Belum dipetakan'}</span>
+                    <span className="font-medium">{indikator?.nama ?? 'Belum dipetakan'}</span>
                   </span>
                 </span>
               </span>
@@ -125,10 +125,9 @@ function RepositoriBukti() {
 
       {filtered.length > 0 && <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />}
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Status per Indikator</h2>
+      <PageHeader as="h2" title="Status per Indikator">
         <SearchBox value={queryIndikator} onChange={setQueryIndikator} placeholder="Cari indikator..." />
-      </div>
+      </PageHeader>
       <DomainBukti query={queryIndikator} />
     </div>
   )

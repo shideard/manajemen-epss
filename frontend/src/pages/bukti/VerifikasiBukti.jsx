@@ -4,7 +4,7 @@ import { bolehUbah } from '../../config/menu'
 import DomainBukti from './DomainBukti'
 import { useBukti, useKegiatan, usePeriode, useSkor } from '../../lib/store'
 import { includesText, indikatorById, paginate } from '../../lib/epss'
-import { Memuat, Pagination, SearchBox, StatusBukti } from '../../components/ui'
+import { Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 
 const PAGE_SIZE = 5
@@ -36,10 +36,9 @@ function VerifikasiBukti() {
   }
 
   return (
-    <div className="flex w-full flex-col gap-[25px]">
+    <div className="flex w-full flex-col gap-8">
       <Memuat dari={muat} />
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Ajuan Terbaru</h1>
+      <PageHeader title="Ajuan Terbaru">
         <SearchBox
           value={query}
           onChange={(value) => {
@@ -48,31 +47,31 @@ function VerifikasiBukti() {
           }}
           placeholder="Cari indikator..."
         />
-      </div>
+      </PageHeader>
 
-      <ul className="flex flex-col gap-[14px]">
-        {rows.length === 0 && <li className="rounded-[20px] bg-white py-10 text-center text-grey-100">Tidak ada ajuan yang menunggu verifikasi.</li>}
+      <ul className="flex flex-col gap-4">
+        {rows.length === 0 && <li className="rounded-lg bg-white py-10 text-center text-grey-200">Tidak ada ajuan yang menunggu verifikasi.</li>}
         {rows.map((b) => {
           const indikator = indikatorById[b.indikatorId]
           return (
             <li key={`${b.kegiatanId}:${b.indikatorId}`}>
               <Link
                 to={`/verifikasi-bukti-dukung/${b.kegiatanId}/${b.indikatorId}`}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] bg-white px-[27px] py-4 transition duration-300 ease-out-quint hover:-translate-y-0.5 hover:shadow-md"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-white px-7 py-4 transition duration-300 ease-out-quint hover:-translate-y-0.5 hover:shadow-md"
               >
-                <span className="flex flex-col gap-2 leading-[1.2]">
-                  <span className="text-base font-semibold text-grey-500">
+                <span className="flex flex-col gap-2">
+                  <span className="font-semibold">
                     Indikator {indikator.nomor}: {indikator.nama}
                   </span>
-                  <span className="flex flex-wrap items-baseline gap-x-[17px] text-base font-light text-grey-200">
+                  <span className="flex flex-wrap items-baseline gap-x-4 font-light text-grey-200">
                     <span>
                       Pengaju: <span className="font-medium">{b.pengaju}</span>
                     </span>
-                    <span aria-hidden className="text-[#cacaca]">
+                    <span aria-hidden className="text-grey-75">
                       |
                     </span>
                     <span>
-                      Kegiatan : <span className="text-[13px] font-medium">{namaKegiatan[b.kegiatanId]}</span>
+                      Kegiatan : <span className="font-medium">{namaKegiatan[b.kegiatanId]}</span>
                     </span>
                   </span>
                 </span>
@@ -85,7 +84,8 @@ function VerifikasiBukti() {
 
       {ajuan.length > 0 && <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />}
 
-      <div className="mt-[25px] flex flex-col gap-[25px]">
+      <PageHeader as="h2" title="Status per Indikator" />
+      <div className="flex flex-col gap-6">
         <DomainBukti onVerifikasi={verifikasiIndikator} bolehVerifikasi={bolehUbah(user, 'verifikasiBukti', aktif)} />
       </div>
       {dialogKonfirmasi}
