@@ -43,7 +43,7 @@ function AppLayout({ bare = false }) {
 
   if (bare) {
     return (
-      <main className="relative min-h-screen bg-on-dark px-4 py-[102px] font-sans sm:px-10 xl:px-[60px]">
+      <main className="relative min-h-screen bg-grey2-100 px-4 py-25.5 font-sans sm:px-10 xl:px-15">
         <div className="stagger">
           <Outlet context={{ user, home: menuPaths[0] }} />
         </div>
@@ -56,17 +56,17 @@ function AppLayout({ bare = false }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-on-dark">
+    <div className="flex min-h-screen bg-grey2-100">
       <Sidebar user={user} onLogout={logout} open={menuMobile} onClose={() => setMenuMobile(false)} />
-      <main className="min-w-0 flex-1 px-4 pt-[26px] pb-[95px] font-sans sm:px-6 lg:px-10">
-        <div className="flex items-start gap-[7px]">
+      <main className="min-w-0 flex-1 px-4 pt-6.5 pb-24 font-sans sm:px-6 lg:px-10">
+        <div className="flex items-start gap-2">
           {/* Di bawah lg sidebar disembunyikan dan dibuka sebagai laci lewat tombol ini */}
           <button
             type="button"
             onClick={() => setMenuMobile(true)}
             aria-label="Buka menu"
             aria-expanded={menuMobile}
-            className="grid size-[42px] shrink-0 place-items-center rounded-[10px] bg-white text-grey-500 lg:hidden"
+            className="grid size-[45px] shrink-0 place-items-center rounded-sm bg-white text-grey-500 lg:hidden"
           >
             <Menu size={24} />
           </button>
@@ -75,7 +75,7 @@ function AppLayout({ bare = false }) {
           </div>
         </div>
         {/* key berubah tiap pindah halaman, jadi animasinya diputar ulang */}
-        <div key={location.pathname} className="stagger mt-[27px]">
+        <div key={location.pathname} className="stagger mt-7">
           <Outlet context={{ user }} />
         </div>
       </main>

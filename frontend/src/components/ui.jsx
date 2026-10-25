@@ -1,4 +1,4 @@
-// Komponen kecil yang dipakai ulang di banyak halaman (sesuai komponen di Figma Design.md)
+// Komponen kecil yang dipakai ulang di banyak halaman. Aturan pemakaiannya ada di frontend/DESIGN.md
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { animate } from 'motion/react'
@@ -14,9 +14,7 @@ import spamIcon from '../assets/icons/spam-2-line.svg'
 import checkCircleIcon from '../assets/icons/checkbox-circle-line.svg'
 import checkOn from '../assets/icons/check-fill.svg'
 import checkOff from '../assets/icons/check-fill-off.svg'
-
-const inputClass =
-  'h-[45px] w-full rounded-[15px] border-2 border-dashed border-grey-75 bg-white px-5 text-base font-normal text-grey-500 placeholder:font-light placeholder:text-grey-75/50 focus:border-solid focus:border-grey-500 focus:outline-none disabled:bg-grey2-75'
+import { buttonClass, fieldClass } from './classes'
 
 export function BackButton({ fallback }) {
   const navigate = useNavigate()
@@ -26,16 +24,54 @@ export function BackButton({ fallback }) {
     <button
       type="button"
       onClick={() => (location.key === 'default' ? navigate(fallback, { replace: true }) : navigate(-1))}
-      className="shrink-0 rounded-[16px] cursor-pointer bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300 hover:bg-grey-500"
+      className={buttonClass()}
     >
       Kembali
     </button>
   )
 }
 
+// Kepala halaman (h1, satu per halaman) atau kepala bagian (as="h2"); aksi di kanan lewat children
+const HEADING = { h1: ['text-h1', 'text-lead'], h2: ['text-h2', 'text-body'] }
+
+export function PageHeader({ as: Judul = 'h1', title, subtitle, back, children }) {
+  const [judul, sub] = HEADING[Judul]
+  return (
+    <div className="flex flex-col items-start gap-4">
+      {back && <BackButton fallback={back} />}
+      <div className="flex w-full flex-wrap items-center justify-between gap-4">
+        <div className="flex max-w-4xl flex-col gap-2">
+          <Judul className={judul}>{title}</Judul>
+          {subtitle && <p className={`${sub} text-grey-200`}>{subtitle}</p>}
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// Pesan berkotak (error, peringatan, info) dengan warna status yang sama dengan Badge
+export function Notice({ tone, role = 'status', children, className = '' }) {
+  return (
+    <p role={role} className={`rounded-md border px-5 py-3 ${TONES[tone]} ${className}`}>
+      {children}
+    </p>
+  )
+}
+
+// Pesan error di bawah form; tidak merender apa pun jika kosong
+export function FormError({ children }) {
+  if (!children) return null
+  return (
+    <p role="alert" className="text-small text-red-400">
+      {children}
+    </p>
+  )
+}
+
 export function Field({ label, aside, children, className = '' }) {
   return (
-    <label className={`flex flex-col gap-[7px] text-base leading-[1.2] font-semibold text-grey-500 ${className}`}>
+    <label className={`flex flex-col gap-2 text-body font-semibold text-grey-500 ${className}`}>
       <span className="flex items-center justify-between gap-2">
         {label}
         {aside}
@@ -46,13 +82,17 @@ export function Field({ label, aside, children, className = '' }) {
 }
 
 export function Input({ className = '', ...props }) {
-  return <input className={`${inputClass} ${className}`} {...props} />
+  return <input className={`h-[45px] ${fieldClass} ${className}`} {...props} />
 }
 
+// Opsi kosong yang terpilih tampil seperti placeholder
 export function Select({ className = '', children, ...props }) {
   return (
     <span className={`relative block ${className}`}>
-      <select className={`${inputClass} appearance-none border-[#b4b4b4] pr-12`} {...props}>
+      <select
+        className={`h-[45px] ${fieldClass} appearance-none pr-12 has-[option[value=""]:checked]:font-light has-[option[value=""]:checked]:text-grey-75`}
+        {...props}
+      >
         {children}
       </select>
       <img src={triangle} alt="" width={17} height={11} className="pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 -scale-y-100" />
@@ -60,9 +100,21 @@ export function Select({ className = '', children, ...props }) {
   )
 }
 
+// Kepala gelap semua pop-up (Modal, form Rencana Kegiatan, panel Daftar Indikator)
+export function DialogHeader({ title, onClose, closeLabel = 'Tutup', className = '' }) {
+  return (
+    <header className={`flex min-h-16 shrink-0 items-center justify-between gap-4 bg-grey-500 px-8.5 py-4 ${className}`}>
+      <h2 className="text-h3 text-white">{title}</h2>
+      <button type="button" onClick={onClose} aria-label={closeLabel}>
+        <img src={closeIcon} alt="" width={24} height={24} />
+      </button>
+    </header>
+  )
+}
+
 // Modal pakai <dialog> bawaan browser: Esc, fokus, dan backdrop sudah ditangani.
 // Ditutup dengan meng-unmount (onClose dari parent), jadi tidak perlu dialog.close()
-export function Modal({ title, titleClass = 'text-[20px] text-white', width = 833, onClose, children }) {
+export function Modal({ title, width = 833, onClose, children }) {
   const dialogRef = useRef(null)
 
   useEffect(() => {
@@ -74,14 +126,9 @@ export function Modal({ title, titleClass = 'text-[20px] text-white', width = 83
       ref={dialogRef}
       onClose={onClose}
       style={{ width: `min(${width}px, calc(100vw - 2rem))` }}
-      className="m-auto max-h-[calc(100vh-2rem)] overflow-y-auto rounded-[20px] bg-white font-sans shadow-[0_4px_20.9px_rgba(0,0,0,0.25)] backdrop:bg-black/40"
+      className="m-auto max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg bg-white font-sans shadow-lg backdrop:bg-grey-500/40"
     >
-      <header className="sticky top-0 z-10 flex min-h-[64px] items-center justify-between gap-4 bg-grey-500 px-[34px] py-4">
-        <h2 className={`leading-[1.2] font-semibold ${titleClass}`}>{title}</h2>
-        <button type="button" onClick={onClose} aria-label="Tutup">
-          <img src={closeIcon} alt="" width={24} height={24} />
-        </button>
-      </header>
+      <DialogHeader title={title} onClose={onClose} className="sticky top-0 z-10" />
       {children}
     </dialog>
   )
@@ -89,11 +136,11 @@ export function Modal({ title, titleClass = 'text-[20px] text-white', width = 83
 
 export function ModalActions({ onCancel, submitLabel = 'Simpan' }) {
   return (
-    <div className="flex justify-end gap-[18px] pt-6">
-      <button type="button" onClick={onCancel} className="w-[119px] rounded-[16px] bg-lime-300 py-[10px] text-base text-grey-500">
+    <div className="flex justify-end gap-4 pt-6">
+      <button type="button" onClick={onCancel} className={`min-w-30 ${buttonClass('secondary')}`}>
         Batal
       </button>
-      <button type="submit" className="min-w-[138px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base text-lime-300">
+      <button type="submit" className={`min-w-30 ${buttonClass()}`}>
         {submitLabel}
       </button>
     </div>
@@ -109,13 +156,13 @@ export function Memuat({ dari }) {
   const error = dari.find((d) => d.error)?.error
   if (error)
     return (
-      <p role="alert" className="rounded-[15px] border border-red-600 bg-red-50 px-5 py-3 text-base text-red-600">
+      <Notice tone="red" role="alert">
         {error.message ?? 'Gagal memuat data.'}
-      </p>
+      </Notice>
     )
   if (!dari.some((d) => d.loading)) return null
   return (
-    <p role="status" className="flex items-center gap-2 text-base text-grey-500">
+    <p role="status" className="flex items-center gap-2">
       <Spinner /> Memuat data…
     </p>
   )
@@ -140,16 +187,12 @@ export function ConfirmDialog({ title, message, confirmLabel = 'Ya, lanjutkan', 
   // Selama proses berjalan tombol Tutup/Batal diabaikan (Esc tetap menyembunyikan pop-up, prosesnya tetap selesai)
   const tutup = loading ? () => {} : onClose
   return (
-    <Modal title={title} titleClass="text-base text-lime-300" width={520} onClose={tutup}>
-      <div className="flex flex-col gap-4 px-[34px] pt-7 pb-8">
-        <p className="text-base leading-[1.4] text-grey-500">{message}</p>
-        {error && (
-          <p role="alert" className="text-sm text-red-600">
-            {error}
-          </p>
-        )}
-        <div className="flex flex-wrap justify-end gap-[18px] pt-4">
-          <button type="button" onClick={tutup} disabled={loading} className="w-[119px] rounded-[16px] bg-lime-300 py-[10px] text-base text-grey-500 disabled:opacity-60">
+    <Modal title={title} width={520} onClose={tutup}>
+      <div className="flex flex-col gap-4 px-8.5 pt-7 pb-8">
+        <p className="leading-snug">{message}</p>
+        <FormError>{error}</FormError>
+        <div className="flex flex-wrap justify-end gap-4 pt-4">
+          <button type="button" onClick={tutup} disabled={loading} className={`min-w-30 ${buttonClass('secondary')}`}>
             Batal
           </button>
           <button
@@ -157,9 +200,7 @@ export function ConfirmDialog({ title, message, confirmLabel = 'Ya, lanjutkan', 
             onClick={lanjut}
             disabled={loading}
             aria-busy={loading}
-            className={`flex min-w-[138px] items-center justify-center gap-2 rounded-[16px] px-5 py-[10px] text-base disabled:opacity-80 ${
-              danger ? 'bg-red-300 text-white' : 'bg-grey-300 text-lime-300'
-            }`}
+            className={`min-w-30 ${buttonClass(danger ? 'danger' : 'primary')}`}
           >
             {loading && <Spinner />}
             {loading ? 'Memproses...' : confirmLabel}
@@ -173,13 +214,13 @@ export function ConfirmDialog({ title, message, confirmLabel = 'Ya, lanjutkan', 
 const TONES = {
   red: 'border-red-500 bg-red-50 text-red-500',
   yellow: 'border-yellow-500 bg-yellow-50 text-yellow-500',
-  blue: 'border-blue-500 bg-blue-50 text-blue-600',
-  green: 'border-green-500 bg-green-100 text-green-500',
+  blue: 'border-blue-500 bg-blue-50 text-blue-500',
+  green: 'border-green-500 bg-green-50 text-green-500',
 }
 
 export function Badge({ tone, icon, children, className = '' }) {
   return (
-    <span className={`inline-flex items-center justify-center gap-[10px] rounded-[12px] border px-4 py-[6px] leading-[1.2] whitespace-nowrap ${TONES[tone]} ${className}`}>
+    <span className={`inline-flex items-center justify-center gap-2.5 rounded-sm border px-4 py-1.5 whitespace-nowrap ${TONES[tone]} ${className}`}>
       {icon && <img src={icon} alt="" width={15} height={15} className="shrink-0" />}
       {children}
     </span>
@@ -194,7 +235,7 @@ const STATUS_BUKTI = {
   terverifikasi: { tone: 'green', icon: checkCircleIcon, label: 'Terverifikasi' },
 }
 
-export function StatusBukti({ status = 'draft', label, className = 'text-sm' }) {
+export function StatusBukti({ status = 'draft', label, className = '' }) {
   const { tone, icon, label: defaultLabel } = STATUS_BUKTI[status]
   return (
     <Badge tone={tone} icon={icon} className={className}>
@@ -207,22 +248,22 @@ export function StatusBukti({ status = 'draft', label, className = 'text-sm' }) 
 export function SearchBox({ value, onChange, placeholder, variant = 'white', className = 'w-[330px]' }) {
   const white = variant === 'white'
   return (
-    <label className={`relative flex h-[40px] max-w-full items-center ${className}`}>
+    <label className={`relative flex h-[45px] max-w-full items-center ${className}`}>
       <span className="sr-only">{placeholder}</span>
       <img
         src={white ? searchLight : searchDark}
         alt=""
         width={31}
         height={31}
-        className={`pointer-events-none absolute left-2 rounded-[10px] ${white ? 'bg-white' : 'bg-grey-300'}`}
+        className={`pointer-events-none absolute left-2 rounded-sm ${white ? 'bg-white' : 'bg-grey-300'}`}
       />
       <input
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`size-full pr-4 pl-[53px] text-sm placeholder:font-light placeholder:italic focus:outline-2 focus:outline-grey-300 ${
-          white ? 'rounded-[15px] bg-white placeholder:text-grey-100' : 'rounded-[16px] bg-grey2-75 placeholder:text-grey-75'
+        className={`size-full rounded-md pr-4 pl-13 placeholder:font-light placeholder:text-grey-75 placeholder:italic focus:outline-2 focus:outline-grey-300 ${
+          white ? 'bg-white' : 'bg-grey2-75'
         }`}
       />
     </label>
@@ -239,7 +280,7 @@ export function Pagination({ page, pageCount, onChange }) {
     (_, i) => first + i
   )
   return (
-    <nav aria-label="Halaman" className="mx-auto flex h-[40px] w-[331px] items-center justify-between overflow-hidden rounded-[20px] bg-grey-300">
+    <nav aria-label="Halaman" className="mx-auto flex h-[40px] w-[331px] items-center justify-between overflow-hidden rounded-lg bg-grey-300">
       <button type="button" onClick={() => onChange(page - 1)} disabled={page === 1} aria-label="Halaman sebelumnya" className="cursor-pointer disabled:opacity-40">
         <img src={arrowLeft} alt="" width={40} height={40} />
       </button>
@@ -250,7 +291,7 @@ export function Pagination({ page, pageCount, onChange }) {
             type="button"
             onClick={() => onChange(n)}
             aria-current={n === page ? 'page' : undefined}
-            className={`relative grid size-[25px] cursor-pointer place-items-center text-[15px] leading-[1.2] font-medium ${n === page ? 'text-grey-300' : 'text-lime-300'}`}
+            className={`relative grid size-[25px] cursor-pointer place-items-center font-medium ${n === page ? 'text-grey-500' : 'text-lime-300'}`}
           >
             {n === page && <img src={activeDot} alt="" width={37} height={37} className="absolute inset-0" />}
             <span className="relative">{n}</span>
@@ -296,7 +337,7 @@ export function CountUp({ value, format = String }) {
 // Tombol gelap "Lihat ..." dengan panah panjang
 export function ArrowLink({ to, children, className = 'w-[211px]' }) {
   return (
-    <Link to={to} className={`group flex shrink-0 items-center justify-between gap-4 rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300 transition-transform duration-300 hover:scale-102 ${className}`}>
+    <Link to={to} className={`group justify-between! gap-4! ${buttonClass()} ${className}`}>
       {children}
       <img src={arrowLime} alt="" width={25} height={15} className="transition-transform duration-300 ease-out-quint group-hover:translate-x-1" />
     </Link>
@@ -306,12 +347,12 @@ export function ArrowLink({ to, children, className = 'w-[211px]' }) {
 // Baris checklist syarat bukti dukung (checkbox asli disembunyikan, tampilan sesuai desain)
 export function ChecklistItem({ checked, onChange, disabled, children }) {
   return (
-    <label className={`flex min-h-[45px] items-center gap-[17px] rounded-[10px] border border-dashed border-black px-[14px] py-[9px] ${disabled ? '' : 'cursor-pointer'}`}>
+    <label className={`flex min-h-[45px] items-center gap-4 rounded-sm border border-dashed border-grey-500 px-3.5 py-2 ${disabled ? '' : 'cursor-pointer'}`}>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} disabled={disabled} className="peer sr-only" />
-      <span className={`grid size-6 shrink-0 place-items-center rounded-[5px] peer-focus-visible:outline-2 peer-focus-visible:outline-grey-500 ${checked ? 'bg-grey-300' : 'bg-grey-75'}`}>
+      <span className={`grid size-6 shrink-0 place-items-center rounded-xs peer-focus-visible:outline-2 peer-focus-visible:outline-grey-500 ${checked ? 'bg-grey-300' : 'bg-grey-75'}`}>
         <img src={checked ? checkOn : checkOff} alt="" width={24} height={24} />
       </span>
-      <span className="text-[13px] leading-[1.2] font-semibold text-heading">{children}</span>
+      <span className="text-small font-semibold text-grey-500">{children}</span>
     </label>
   )
 }
@@ -334,9 +375,9 @@ export function Collapse({ open, children }) {
 // Kartu domain: header gelap + isi putih (Pedoman, Verifikasi, Repositori)
 export function DomainPanel({ title, aside, children }) {
   return (
-    <section className="overflow-hidden rounded-[20px] bg-grey-500">
-      <header className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-[17px]">
-        <h2 className="flex flex-wrap items-center gap-[17px] text-lg leading-[1.2] font-medium text-lime-200">{title}</h2>
+    <section className="overflow-hidden rounded-lg bg-grey-500">
+      <header className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-4">
+        <h2 className="flex flex-wrap items-center gap-4 text-h3 text-lime-300">{title}</h2>
         {aside}
       </header>
       {children}
