@@ -29,7 +29,16 @@ export const menuSections = [
     items: [
       { label: 'Dashboard', path: '/dashboard', icon: dashboardIcon, roles: [OPERATOR, VERIFIKATOR] },
       { label: 'Pedoman Indikator', path: '/pedoman-indikator', icon: bookIcon, roles: [OPERATOR, VERIFIKATOR] },
-      { label: 'Rencana Kegiatan', path: '/rencana-kegiatan', icon: calendarIcon, roles: [OPERATOR, VERIFIKATOR] },
+      {
+        label: 'Rencana Kegiatan',
+        icon: calendarIcon,
+        roles: [OPERATOR, VERIFIKATOR],
+        // Menu ber-submenu (dropdown di sidebar); submenu ikut roles induknya
+        children: [
+          { label: 'Rencana & Kalender', path: '/rencana-kegiatan' },
+          { label: 'Peta Relasi Kegiatan', path: '/rencana-kegiatan/peta-relasi' },
+        ],
+      },
       { label: 'Repositori Bukti Dukung', path: '/repositori-bukti-dukung', icon: folderIcon, roles: [OPERATOR] },
       { label: 'Kelola Pengguna', path: '/users', icon: Users, roles: [SUPER_ADMIN_BIDANG] },
       { label: 'Verifikasi Bukti Dukung', path: '/verifikasi-bukti-dukung', icon: scalesIcon, roles: [VERIFIKATOR] },
@@ -50,6 +59,10 @@ export function getMenuForRole(role) {
     .map((section) => ({ ...section, items: section.items.filter((item) => item.roles.includes(role)) }))
     .filter((section) => section.items.length > 0)
 }
+
+// Semua path halaman di menu role tersebut, termasuk submenu
+export const menuPathsForRole = (role) =>
+  getMenuForRole(role).flatMap((section) => section.items.flatMap((item) => item.children ?? [item]).map((item) => item.path))
 
 // Hak akses aksi di dalam halaman (akses halaman diatur oleh `roles` di menuSections).
 //   Operator    : lihat Rencana Kegiatan; unggah & ajukan bukti hanya untuk kegiatan yang ia PIC-nya

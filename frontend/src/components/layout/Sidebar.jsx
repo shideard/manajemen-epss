@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
 import { getMenuForRole, ROLE_LABELS } from '../../config/menu'
 import logo from '../../assets/sidebar/logo-kota-bogor.png'
@@ -26,6 +26,67 @@ function SectionTitle({ children, className }) {
     <motion.p layout="position" className={`text-small font-light text-white ${className}`}>
       {children}
     </motion.p>
+  )
+}
+
+// Menu ber-submenu: induknya tombol buka/tutup dropdown. Bubble aktif ada di induk saat salah satu
+// submenunya dibuka, jadi tetap terlihat saat sidebar ringkas (submenu-nya disembunyikan)
+function MenuGroup({ item, ringkas, rk, onClose }) {
+  const { pathname } = useLocation()
+  const aktif = item.children.some((c) => pathname === c.path || pathname.startsWith(`${c.path}/`))
+  const [buka, setBuka] = useState(aktif)
+
+  return (
+    <>
+      <motion.button
+        type="button"
+        onClick={() => setBuka(!buka)}
+        aria-expanded={buka}
+        title={ringkas ? item.label : undefined}
+        layout="position"
+        className={`relative flex w-[196px] shrink-0 items-center px-2 text-small font-semibold whitespace-nowrap text-grey-50 hover:text-white ${aktif ? 'h-[50px]' : 'h-6'} ${rk('lg:w-10')}`}
+      >
+        {aktif && <motion.span layoutId="sidebar-active-bubble" className="absolute inset-0 bg-grey-75/50" style={{ borderRadius: 10 }} />}
+        <motion.span layout="position" className="relative flex items-center gap-2">
+          <MenuIcon icon={item.icon} />
+          <span className={rk('lg:sr-only')}>{item.label}</span>
+        </motion.span>
+        <img
+          src={arrowDownIcon}
+          alt=""
+          width={24}
+          height={24}
+          className={`relative ml-auto shrink-0 transition-transform duration-300 ease-out-quint ${buka ? 'rotate-180' : ''} ${rk('lg:hidden')}`}
+        />
+      </motion.button>
+      <AnimatePresence initial={false}>
+        {buka && (
+          // -mt-5 menetralkan gap nav, jadi saat tinggi 0 dropdown tidak memakan tempat dan menu di bawahnya
+          // ikut turun/naik mengikuti tingginya. invisible saat ringkas: tetap memakan tempat, tidak bergeser
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className={`-mt-5 w-full overflow-hidden ${rk('lg:invisible')}`}
+          >
+            <div className="flex flex-col gap-3 pt-3 pl-10">
+              {item.children.map((child) => (
+                <NavLink
+                  key={child.path}
+                  to={child.path}
+                  end
+                  onClick={onClose}
+                  className="text-small font-medium whitespace-nowrap text-grey-75 hover:text-white [&.active]:font-semibold [&.active]:text-white"
+                >
+                  {child.label}
+                </NavLink>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
 
@@ -94,7 +155,10 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
               {index > 0 && <motion.img layout="position" src={divider} alt="" width={192} height={1} className={rk('lg:w-10')} />}
               {/* invisible, bukan sr-only: judul tetap memakan tempat, jadi menu di bawahnya tidak bergeser saat melebar */}
               <SectionTitle className={rk('lg:invisible')}>{section.title}</SectionTitle>
-              {section.items.map((item) => (
+              {section.items.map((item) =>
+                item.children ? (
+                  <MenuGroup key={item.label} item={item} ringkas={ringkas} rk={rk} onClose={onClose} />
+                ) : (
                 <MotionNavLink
                   key={item.path}
                   to={item.path}
@@ -122,7 +186,8 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
                     </>
                   )}
                 </MotionNavLink>
-              ))}
+                ),
+              )}
             </Fragment>
           ))}
         </nav>

@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
-import { getMenuForRole } from '../../config/menu'
+import { menuPathsForRole } from '../../config/menu'
 import { useAuth } from '../../lib/store'
 import { Memuat } from '../ui'
 import { useConfirm } from '../useConfirm'
@@ -57,7 +57,7 @@ function AppLayout({ bare = false }) {
 
 
   // Halaman di luar menu role ini → ke menu pertama (mis. superadmin → Kelola Pengguna)
-  const menuPaths = getMenuForRole(user.role).flatMap((section) => section.items.map((item) => item.path))
+  const menuPaths = menuPathsForRole(user.role)
   const allowed = [...menuPaths, ...COMMON_PATHS].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))
   if (!allowed) return <Navigate to={menuPaths[0]} replace />
 

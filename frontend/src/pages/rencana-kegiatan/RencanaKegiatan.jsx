@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
-import PetaKegiatan from './PetaKegiatan'
 import { matches } from './kegiatan'
 import { useBukti, useKegiatan, usePeriode } from '../../lib/store'
 import { formatTanggal, paginate, statusOf } from '../../lib/epss'
@@ -200,11 +199,6 @@ function RencanaKegiatan() {
 
       <PageHeader as="h2" title="Kalender Kegiatan" subtitle="Pantau dan kelola jadwal kegiatan secara terstruktur dalam satu kalender." />
       <KalenderKegiatan kegiatan={kegiatan} onOpen={buka} />
-
-      <hr className="border-grey-75" />
-
-      <PageHeader as="h2" title="Peta Relasi Indikator" subtitle="Keterkaitan domain, aspek, dan indikator EPSS dengan rencana kegiatan." />
-      <PetaKegiatan kegiatan={kegiatan} bukti={bukti} onOpen={buka} />
 
       {editing && (
         <KegiatanForm
