@@ -55,13 +55,16 @@ function Topbar() {
         >
           <img src={dotIcon} alt="" width={13} height={13} className={aktif?.terkunci ? 'grayscale' : ''} />
           <span className="truncate text-body font-semibold text-grey-500">Periode : {aktif ? periodeLabel(aktif) : '-'}</span>
-          <img
-            src={arrowDown}
-            alt=""
-            width={19}
-            height={19}
-            className={`rounded-xs bg-grey-200 transition-transform duration-300 ease-out-quint ${periodeOpen ? 'rotate-180' : ''}`}
-          />
+          {/* Kotak abunya diam, hanya panah putih di dalamnya yang berputar */}
+          <span className="shrink-0 rounded-xs bg-grey-200">
+            <img
+              src={arrowDown}
+              alt=""
+              width={19}
+              height={19}
+              className={`block transition-transform duration-300 ease-out-quint ${periodeOpen ? 'rotate-180' : ''}`}
+            />
+          </span>
         </button>
         <AnimatePresence>
           {periodeOpen && (
