@@ -69,7 +69,7 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
       onPointerLeave={() => setHover(false)}
       onFocus={() => setHover(true)}
       onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHover(false)}
-      className={`fixed inset-y-4 left-4 z-40 flex w-[242px] shrink-0 flex-col rounded-lg bg-grey-300 font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:translate-x-0 lg:overflow-hidden ${ringkas ? 'lg:w-[88px]' : ''} ${tetapRingkas && hover ? 'lg:shadow-lg' : ''} ${
+      className={`fixed inset-y-4 left-4 z-40 flex w-[242px] shrink-0 flex-col rounded-lg bg-grey-300 shadow-sm font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:translate-x-0 lg:overflow-hidden ${ringkas ? 'lg:w-[88px]' : ''} ${tetapRingkas && hover ? 'lg:shadow-lg' : ''} ${
         open ? 'translate-x-0' : 'max-lg:invisible -translate-x-full'
       }`}
     >
