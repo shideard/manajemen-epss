@@ -60,8 +60,8 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
     <>
     {open && <div onClick={onClose} aria-hidden className="fixed inset-0 z-30 bg-grey-500/40 lg:hidden" />}
     {/* Saat tertutup di layar kecil: geser keluar + invisible, jadi tidak bisa difokus keyboard */}
-    {/* Penahan tempat di layar besar (lebar sidebar + jarak 16px dari tepi), karena sidebar-nya fixed agar bisa melebar di atas konten */}
-    <div aria-hidden className={`hidden shrink-0 transition-[width] duration-300 ease-out-quint lg:block ${tetapRingkas ? 'w-[104px]' : 'w-[258px]'}`} />
+    {/* Penahan tempat di layar besar, karena sidebar-nya fixed agar bisa melebar di atas konten */}
+    <div aria-hidden className={`hidden shrink-0 transition-[width] duration-300 ease-out-quint lg:block ${tetapRingkas ? 'w-[88px]' : 'w-[242px]'}`} />
     <aside
       id="sidebar"
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
@@ -69,7 +69,7 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
       onPointerLeave={() => setHover(false)}
       onFocus={() => setHover(true)}
       onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHover(false)}
-      className={`fixed inset-y-4 left-4 z-40 flex w-[242px] shrink-0 flex-col rounded-lg bg-grey-300 shadow-sm font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:translate-x-0 lg:overflow-hidden ${ringkas ? 'lg:w-[88px]' : ''} ${tetapRingkas && hover ? 'lg:shadow-lg' : ''} ${
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:translate-x-0 lg:overflow-hidden ${ringkas ? 'lg:w-[88px]' : ''} ${tetapRingkas && hover ? 'lg:shadow-lg' : ''} ${
         open ? 'translate-x-0' : 'max-lg:invisible -translate-x-full'
       }`}
     >

@@ -51,7 +51,7 @@ function Topbar() {
         ref={popoverRef}
         id="notif-popover"
         popover="auto"
-        className="fixed inset-auto top-[86px] lg:top-[76px] origin-top-right right-4 lg:right-10 m-0 max-h-[661px] w-[min(395px,calc(100vw-2rem))] overflow-y-auto rounded-lg bg-white font-sans shadow-lg"
+        className="fixed inset-auto top-[86px] origin-top-right right-4 lg:right-10 m-0 max-h-[661px] w-[min(395px,calc(100vw-2rem))] overflow-y-auto rounded-lg bg-white font-sans shadow-lg"
       >
         <div className="sticky top-0 flex h-16 items-center justify-between bg-grey-500 px-6.5">
           <p className="flex items-center gap-2.5 text-body font-semibold text-lime-300">

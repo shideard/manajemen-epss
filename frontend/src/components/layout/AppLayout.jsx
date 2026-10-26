@@ -78,8 +78,7 @@ function AppLayout({ bare = false }) {
   return (
     <div className="flex min-h-screen bg-grey2-100">
       <Sidebar user={user} onLogout={logout} ringkas={ringkas} open={menuMobile} onClose={() => setMenuMobile(false)} />
-      {/* Di layar besar: atas sejajar dengan sidebar melayang (16px), jarak dari sidebar 24px */}
-      <main className="min-w-0 flex-1 px-4 pt-6.5 pb-24 font-sans sm:px-6 lg:pt-4 lg:pr-10 lg:pl-6">
+      <main className="min-w-0 flex-1 px-4 pt-6.5 pb-24 font-sans sm:px-6 lg:px-10">
         <div className="flex items-start gap-2">
           {/* Di bawah lg sidebar disembunyikan dan dibuka sebagai laci lewat tombol ini */}
           <button
