@@ -11,6 +11,7 @@ import accountIcon from '../../assets/sidebar/account-circle-fill.svg'
 
 // Halaman tanpa menu sidebar yang boleh dibuka semua role
 const COMMON_PATHS = ['/notifikasi', '/pilih-periode']
+const RINGKAS_KEY = 'epss.sidebar-ringkas'
 
 // bare = tanpa sidebar & topbar (halaman Pilih Periode)
 function AppLayout({ bare = false }) {
@@ -19,6 +20,25 @@ function AppLayout({ bare = false }) {
   const { user } = auth
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
   const [menuMobile, setMenuMobile] = useState(false)
+  // Sidebar ringkas (hanya logo + ikon) di layar besar secara default, pilihannya diingat per browser
+  const [ringkas, setRingkas] = useState(() => {
+    try {
+      return localStorage.getItem(RINGKAS_KEY) !== '0'
+    } catch {
+      return true
+    }
+  })
+
+  // Di bawah lg tombol menu membuka laci; di lg ke atas meringkas/melebarkan sidebar
+  const toggleMenu = () => {
+    if (!window.matchMedia('(min-width: 64rem)').matches) return setMenuMobile(true)
+    setRingkas(!ringkas)
+    try {
+      localStorage.setItem(RINGKAS_KEY, ringkas ? '0' : '1')
+    } catch {
+      // ponytail: tanpa localStorage pilihan hanya bertahan sampai halaman dimuat ulang
+    }
+  }
 
   // Sesi dihapus → render ulang → <Navigate> ke halaman login di bawah
   const logout = () =>
@@ -57,16 +77,16 @@ function AppLayout({ bare = false }) {
 
   return (
     <div className="flex min-h-screen bg-grey2-100">
-      <Sidebar user={user} onLogout={logout} open={menuMobile} onClose={() => setMenuMobile(false)} />
+      <Sidebar user={user} onLogout={logout} ringkas={ringkas} open={menuMobile} onClose={() => setMenuMobile(false)} />
       <main className="min-w-0 flex-1 px-4 pt-6.5 pb-24 font-sans sm:px-6 lg:px-10">
         <div className="flex items-start gap-2">
           {/* Di bawah lg sidebar disembunyikan dan dibuka sebagai laci lewat tombol ini */}
           <button
             type="button"
-            onClick={() => setMenuMobile(true)}
-            aria-label="Buka menu"
-            aria-expanded={menuMobile}
-            className="grid size-[45px] shrink-0 place-items-center rounded-sm bg-white text-grey-500 lg:hidden"
+            onClick={toggleMenu}
+            aria-label="Tampilkan atau ringkas menu"
+            aria-controls="sidebar"
+            className="grid size-[45px] shrink-0 place-items-center rounded-sm bg-white text-grey-500"
           >
             <Menu size={24} />
           </button>

@@ -30,11 +30,12 @@ function SectionTitle({ children, className }) {
 }
 
 // open/onClose = laci di layar kecil (di bawah lg); di layar besar sidebar selalu tampil,
-// Di layar besar sidebar ringkas (hanya logo + ikon) dan melebar menutupi konten saat di-hover/difokus;
-// laci di layar kecil tetap lebar penuh
-function Sidebar({ user, onLogout, open, onClose }) {
+// tetapRingkas = dipilih lewat tombol menu: di layar besar sidebar hanya logo + ikon dan melebar
+// menutupi konten saat di-hover/difokus; laci di layar kecil tetap lebar penuh
+function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
   const sections = getMenuForRole(user.role)
-  const [ringkas, setRingkas] = useState(true)
+  const [hover, setHover] = useState(false)
+  const ringkas = tetapRingkas && !hover
   // Class yang hanya berlaku saat ringkas; semuanya ber-prefix lg:
   const rk = (cls) => (ringkas ? cls : '')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -57,15 +58,16 @@ function Sidebar({ user, onLogout, open, onClose }) {
     <>
     {open && <div onClick={onClose} aria-hidden className="fixed inset-0 z-30 bg-grey-500/40 lg:hidden" />}
     {/* Saat tertutup di layar kecil: geser keluar + invisible, jadi tidak bisa difokus keyboard */}
-    {/* Penahan tempat 88px di layar besar, karena sidebar-nya fixed agar bisa melebar di atas konten */}
-    <div aria-hidden className="hidden w-[88px] shrink-0 lg:block" />
+    {/* Penahan tempat di layar besar, karena sidebar-nya fixed agar bisa melebar di atas konten */}
+    <div aria-hidden className={`hidden shrink-0 transition-[width] duration-300 ease-out-quint lg:block ${tetapRingkas ? 'w-[88px]' : 'w-[242px]'}`} />
     <aside
+      id="sidebar"
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
-      onPointerEnter={() => setRingkas(false)}
-      onPointerLeave={() => setRingkas(true)}
-      onFocus={() => setRingkas(false)}
-      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setRingkas(true)}
-      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:translate-x-0 lg:overflow-hidden ${ringkas ? 'lg:w-[88px]' : 'lg:shadow-lg'} ${
+      onPointerEnter={() => setHover(true)}
+      onPointerLeave={() => setHover(false)}
+      onFocus={() => setHover(true)}
+      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHover(false)}
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:translate-x-0 lg:overflow-hidden ${ringkas ? 'lg:w-[88px]' : ''} ${tetapRingkas && hover ? 'lg:shadow-lg' : ''} ${
         open ? 'translate-x-0' : 'max-lg:invisible -translate-x-full'
       }`}
     >
