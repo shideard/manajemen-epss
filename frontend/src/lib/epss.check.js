@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -41,6 +41,13 @@ assert.deepEqual(notifikasi([k], [1, 7], '2026-09-21'), [])
 
 assert.deepEqual(paginate([1, 2, 3, 4, 5, 6], 2, 5), { rows: [6], page: 2, pageCount: 2 })
 assert.deepEqual(paginate([], 3, 5), { rows: [], page: 1, pageCount: 1 })
+// Nomor halaman diringkas: pertama, terakhir, sekitar halaman aktif; celah satu nomor tetap ditampilkan
+assert.deepEqual(halamanTerlihat(1, 1), [1])
+assert.deepEqual(halamanTerlihat(1, 5), [1, 2, '…', 5])
+assert.deepEqual(halamanTerlihat(3, 5), [1, 2, 3, 4, 5])
+assert.deepEqual(halamanTerlihat(4, 10), [1, 2, 3, 4, 5, '…', 10])
+assert.deepEqual(halamanTerlihat(10, 20), [1, '…', 9, 10, 11, '…', 20])
+assert.deepEqual(halamanTerlihat(20, 20), [1, '…', 19, 20])
 
 const form = { nama: ' Siklus 2027 ', tahun1: '2027', tahun2: '2028', batas: '2028-05-30', target: '3.5' }
 assert.deepEqual(validasiPeriode(form).data, { nama: 'Siklus 2027', tahun1: '2027', tahun2: '2028', batas: '2028-05-30', target: 3.5 })

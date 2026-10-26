@@ -16,6 +16,7 @@ import checkCircleIcon from '../assets/icons/checkbox-circle-line.svg'
 import checkOn from '../assets/icons/check-fill.svg'
 import checkOff from '../assets/icons/check-fill-off.svg'
 import { buttonClass, fieldClass } from './classes'
+import { halamanTerlihat } from '../lib/epss'
 
 export function BackButton({ fallback }) {
   const navigate = useNavigate()
@@ -354,21 +355,20 @@ export function SearchBox({ value, onChange, placeholder, variant = 'white', cla
 }
 
 export function Pagination({ page, pageCount, onChange }) {
-  // Maksimal 3 nomor halaman di sekitar halaman aktif, seperti di desain
-  const visiblePages = 6
-  const first = Math.floor((page - 1) / visiblePages) * visiblePages + 1
-
-  const numbers = Array.from(
-    { length: Math.min(visiblePages, pageCount - first + 1) },
-    (_, i) => first + i
-  )
+  // Hanya halaman pertama, terakhir, dan sekitar halaman aktif; sisanya diringkas jadi '…'
+  const numbers = halamanTerlihat(page, pageCount)
   return (
     <nav aria-label="Halaman" className="mx-auto flex h-[40px] w-[331px] items-center justify-between overflow-hidden rounded-lg bg-grey-300">
       <button type="button" onClick={() => onChange(page - 1)} disabled={page === 1} aria-label="Halaman sebelumnya" className="cursor-pointer disabled:opacity-40">
         <img src={arrowLeft} alt="" width={40} height={40} />
       </button>
       <div className="flex items-center gap-1">
-        {numbers.map((n) => (
+        {numbers.map((n, i) =>
+          n === '…' ? (
+            <span key={`celah-${i}`} aria-hidden className="grid size-[25px] place-items-center font-medium text-lime-300">
+              …
+            </span>
+          ) : (
           <button
             key={n}
             type="button"
@@ -379,7 +379,8 @@ export function Pagination({ page, pageCount, onChange }) {
             {n === page && <img src={activeDot} alt="" width={37} height={37} className="absolute inset-0" />}
             <span className="relative">{n}</span>
           </button>
-        ))}
+          ),
+        )}
       </div>
       <button type="button" onClick={() => onChange(page + 1)} disabled={page === pageCount} aria-label="Halaman berikutnya" className="cursor-pointer disabled:opacity-40">
         <img src={arrowLeft} alt="" width={40} height={40} className="-scale-x-100" />
