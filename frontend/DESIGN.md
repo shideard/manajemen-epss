@@ -146,6 +146,8 @@ Tombol ikon di tabel: `grid size-6 place-items-center rounded-xs` dengan `bg-lim
 - `Field` (label `font-semibold` + `gap-2`) membungkus `Input`, `Select`, atau `<textarea className={`${fieldClass} ...`}>`.
 - Field = garis 1px `grey-75`, latar putih, `rounded-md`, placeholder `font-light grey-75`, fokus garis `grey-500`.
 - `Select`: opsi `value=""` yang terpilih otomatis tampil seperti placeholder.
+- `Dropdown` untuk filter di atas area kerja (tahun, domain/aspek/indikator): latar `grey2-75`, daftar opsi sendiri
+  (panel putih `rounded-lg shadow-lg`, opsi terpilih `bg-lime-300`), bukan daftar native browser.
 - `SearchBox` untuk pencarian (`variant="grey"` di dalam area kerja lime).
 - `FormError` untuk error form (merender kosong jika tidak ada error).
 - `ModalActions` untuk pasangan Batal + Simpan di akhir form modal.

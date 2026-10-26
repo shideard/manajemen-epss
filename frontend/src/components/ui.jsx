@@ -1,9 +1,10 @@
 // Komponen kecil yang dipakai ulang di banyak halaman. Aturan pemakaiannya ada di frontend/DESIGN.md
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { animate } from 'motion/react'
+import { animate, AnimatePresence, motion } from 'motion/react'
 import closeIcon from '../assets/rencana/close-line.svg'
 import triangle from '../assets/rencana/dropdown-triangle.svg'
+import arrowDown from '../assets/rencana/arrow-down-s-line.svg'
 import searchDark from '../assets/rencana/search-2-line.svg'
 import searchLight from '../assets/icons/search-2-line-dark-icon.svg'
 import arrowLeft from '../assets/rencana/arrow-drop-left-line.svg'
@@ -97,6 +98,88 @@ export function Select({ className = '', children, ...props }) {
       </select>
       <img src={triangle} alt="" width={17} height={11} className="pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 -scale-y-100" />
     </span>
+  )
+}
+
+// Dropdown filter (di atas kotak lime/peta) dengan daftar opsi bergaya aplikasi, bukan daftar native browser.
+// options = [{ value, label }]; opsi value "" (mis. "Semua tahun") tampil seperti placeholder saat terpilih.
+// className = wadah (lebar), tombolClass = tambahan class kotak pemicunya (mis. garis tepi)
+export function Dropdown({ value, options, onChange, label, className = '', tombolClass = '' }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const pemicuRef = useRef(null)
+  const terpilih = options.find((o) => o.value === value) ?? options[0]
+
+  // Tertutup saat klik di luar atau tekan Esc (fokus kembali ke tombolnya)
+  useEffect(() => {
+    if (!open) return
+    const tutupLuar = (e) => !ref.current.contains(e.target) && setOpen(false)
+    const tutupEsc = (e) => {
+      if (e.key !== 'Escape') return
+      setOpen(false)
+      pemicuRef.current.focus()
+    }
+    document.addEventListener('pointerdown', tutupLuar)
+    document.addEventListener('keydown', tutupEsc)
+    return () => {
+      document.removeEventListener('pointerdown', tutupLuar)
+      document.removeEventListener('keydown', tutupEsc)
+    }
+  }, [open])
+
+  function pilih(v) {
+    onChange(v)
+    setOpen(false)
+    pemicuRef.current.focus()
+  }
+
+  return (
+    <div ref={ref} className={`relative ${className}`}>
+      <button
+        type="button"
+        ref={pemicuRef}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label={`${label}: ${terpilih.label}`}
+        className={`flex h-[45px] w-full items-center gap-3 rounded-md bg-grey2-75 px-3.5 text-left text-body focus-visible:outline-2 focus-visible:outline-grey-300 ${
+          value ? 'text-grey-500' : 'font-light text-grey-75 italic'
+        } ${tombolClass}`}
+      >
+        <span className="flex-1 truncate">{terpilih.label}</span>
+        {/* Kotak abunya diam, hanya panah putih di dalamnya yang berputar */}
+        <span className="shrink-0 rounded-xs bg-grey-300">
+          <img src={arrowDown} alt="" width={24} height={24} className={`block transition-transform duration-300 ease-out-quint ${open ? 'rotate-180' : ''}`} />
+        </span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute top-full left-0 z-20 mt-2 flex max-h-72 w-full origin-top flex-col gap-1 overflow-y-auto rounded-lg bg-white p-2 shadow-lg"
+          >
+            {options.map((o) => {
+              const dipilih = o.value === value
+              return (
+                <li key={o.value}>
+                  <button
+                    type="button"
+                    onClick={() => pilih(o.value)}
+                    aria-current={dipilih}
+                    className={`w-full rounded-sm px-3.5 py-3 text-left text-body text-grey-500 ${dipilih ? 'bg-lime-300 font-semibold' : 'hover:bg-grey2-100'}`}
+                  >
+                    {o.label}
+                  </button>
+                </li>
+              )
+            })}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 

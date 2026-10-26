@@ -6,11 +6,10 @@ import { matches } from './kegiatan'
 import { useBukti, useKegiatan, usePeriode } from '../../lib/store'
 import { formatTanggal, paginate, statusOf } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
+import { Dropdown, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
-import arrowDown from '../../assets/rencana/arrow-down-s-line.svg'
 import userIcon from '../../assets/rencana/user-3-fill.svg'
 import editIcon from '../../assets/rencana/edit-2-fill.svg'
 import eyeIcon from '../../assets/icons/eye-line.svg'
@@ -88,25 +87,16 @@ function RencanaKegiatan() {
             }}
             placeholder="Cari Rencana Kegiatan..."
           />
-          <label className="relative flex h-[45px] w-[280px] items-center">
-            <span className="sr-only">Tahun kegiatan</span>
-            <select
-              value={tahun}
-              onChange={(e) => {
-                setTahun(e.target.value)
-                setPage(1)
-              }}
-              className={`size-full appearance-none rounded-md bg-grey2-75 px-3.5 text-body focus:outline-2 focus:outline-grey-300 ${
-                tahun ? 'text-grey-500' : 'font-light text-grey-75 italic'
-              }`}
-            >
-              <option value="">Semua Tahun Kegiatan</option>
-              {years.map((y) => (
-                <option key={y}>{y}</option>
-              ))}
-            </select>
-            <img src={arrowDown} alt="" width={24} height={24} className="pointer-events-none absolute right-3.5 rounded-xs bg-grey-300" />
-          </label>
+          <Dropdown
+            label="Tahun kegiatan"
+            value={tahun}
+            onChange={(value) => {
+              setTahun(value)
+              setPage(1)
+            }}
+            options={[{ value: '', label: 'Semua Tahun Kegiatan' }, ...years.map((y) => ({ value: y, label: y }))]}
+            className="w-[280px]"
+          />
         </div>
 
         <div className="overflow-x-auto rounded-lg bg-grey2-50 px-5 py-3">

@@ -3,7 +3,7 @@ import { Background, Controls, Handle, Panel, Position, ReactFlow, useNodesState
 import { animate } from 'motion/react'
 import '@xyflow/react/dist/style.css'
 import { PETA, petaRelasi, pilihTingkat, terhubung, WARNA } from '../../lib/epss'
-import arrowDown from '../../assets/rencana/arrow-down-s-line.svg'
+import { Dropdown } from '../../components/ui'
 
 const JENIS = [
   ['domain', 'Domain'],
@@ -18,29 +18,22 @@ const GARIS = { domain: 'outline-grey-500', aspek: 'outline-grey-200', indikator
 // Dropdown filter satu tingkat; titik warnanya sama dengan warna kotak tingkat itu di peta
 function FilterTingkat({ jenis, judul, value, options, onChange }) {
   return (
-    <label className="flex w-full flex-col gap-1.5 sm:w-[250px]">
+    <div className="flex w-full flex-col gap-1.5 sm:w-[250px]">
       <span className="flex items-center gap-1.5 text-small font-semibold text-grey-200">
         <span className={`size-3 rounded-full ${TITIK[jenis]}`} />
         {judul}
       </span>
-      <span className="relative flex h-[45px] items-center">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`size-full appearance-none truncate rounded-md bg-grey2-75 pr-12 pl-3.5 text-body focus:outline-2 focus:outline-grey-300 ${
-            value ? `text-grey-500 outline-2 ${GARIS[jenis]}` : 'font-light text-grey-75 italic outline-1 outline-grey-75'
-          }`}
-        >
-          <option value="">Semua {judul.toLowerCase()}</option>
-          {options.map((n) => (
-            <option key={n.id} value={n.id}>
-              {jenis === 'aspek' ? n.data.label : `${n.data.chip} – ${n.data.label}`}
-            </option>
-          ))}
-        </select>
-        <img src={arrowDown} alt="" width={24} height={24} className="pointer-events-none absolute right-3.5 rounded-xs bg-grey-300" />
-      </span>
-    </label>
+      <Dropdown
+        label={judul}
+        value={value}
+        onChange={onChange}
+        options={[
+          { value: '', label: `Semua ${judul.toLowerCase()}` },
+          ...options.map((n) => ({ value: n.id, label: jenis === 'aspek' ? n.data.label : `${n.data.chip} – ${n.data.label}` })),
+        ]}
+        tombolClass={value ? `outline-2 ${GARIS[jenis]}` : 'outline-1 outline-grey-75'}
+      />
+    </div>
   )
 }
 
