@@ -30,9 +30,11 @@ function SectionTitle({ children, className }) {
 }
 
 // open/onClose = laci di layar kecil (di bawah lg); di layar besar sidebar selalu tampil,
-// ringkas = di layar besar hanya logo + ikon (laci di layar kecil tetap lebar penuh)
-function Sidebar({ user, onLogout, ringkas, open, onClose }) {
+// Di layar besar sidebar ringkas (hanya logo + ikon) dan melebar menutupi konten saat di-hover/difokus;
+// laci di layar kecil tetap lebar penuh
+function Sidebar({ user, onLogout, open, onClose }) {
   const sections = getMenuForRole(user.role)
+  const [ringkas, setRingkas] = useState(true)
   // Class yang hanya berlaku saat ringkas; semuanya ber-prefix lg:
   const rk = (cls) => (ringkas ? cls : '')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -55,10 +57,15 @@ function Sidebar({ user, onLogout, ringkas, open, onClose }) {
     <>
     {open && <div onClick={onClose} aria-hidden className="fixed inset-0 z-30 bg-grey-500/40 lg:hidden" />}
     {/* Saat tertutup di layar kecil: geser keluar + invisible, jadi tidak bisa difokus keyboard */}
+    {/* Penahan tempat 88px di layar besar, karena sidebar-nya fixed agar bisa melebar di atas konten */}
+    <div aria-hidden className="hidden w-[88px] shrink-0 lg:block" />
     <aside
-      id="sidebar"
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
-      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:sticky lg:top-0 lg:translate-x-0 ${rk('lg:w-[88px]')} ${
+      onPointerEnter={() => setRingkas(false)}
+      onPointerLeave={() => setRingkas(true)}
+      onFocus={() => setRingkas(false)}
+      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setRingkas(true)}
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:translate-x-0 lg:overflow-hidden ${ringkas ? 'lg:w-[88px]' : 'lg:shadow-lg'} ${
         open ? 'translate-x-0' : 'max-lg:invisible -translate-x-full'
       }`}
     >
