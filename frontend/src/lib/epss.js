@@ -327,15 +327,13 @@ export function paginate(list, page, size) {
   return { rows: list.slice((current - 1) * size, current * size), page: current, pageCount }
 }
 
-// Nomor halaman yang ditampilkan: pertama, terakhir, dan di sekitar halaman aktif; celahnya jadi '…'.
-// Celah yang hanya satu nomor tetap ditampilkan nomornya, karena '…' memakan tempat yang sama
+// Nomor halaman yang ditampilkan: hanya pertama, aktif, dan terakhir; setiap celah jadi '…'
+// (halaman sebelah dibuka lewat tombol panah)
 export function halamanTerlihat(page, pageCount) {
-  const nomor = [...new Set([1, page - 1, page, page + 1, pageCount])].filter((n) => n >= 1 && n <= pageCount).sort((a, b) => a - b)
+  const nomor = [...new Set([1, page, pageCount])].sort((a, b) => a - b)
   const hasil = []
   for (const n of nomor) {
-    const sebelum = hasil.at(-1)
-    if (n - sebelum === 2) hasil.push(sebelum + 1)
-    else if (n - sebelum > 2) hasil.push('…')
+    if (n - hasil.at(-1) > 1) hasil.push('…')
     hasil.push(n)
   }
   return hasil

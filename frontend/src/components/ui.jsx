@@ -355,7 +355,7 @@ export function SearchBox({ value, onChange, placeholder, variant = 'white', cla
 }
 
 export function Pagination({ page, pageCount, onChange }) {
-  // Hanya halaman pertama, terakhir, dan sekitar halaman aktif; sisanya diringkas jadi '…'
+  // Hanya halaman pertama, aktif, dan terakhir; sisanya diringkas jadi '…'
   const numbers = halamanTerlihat(page, pageCount)
   return (
     <nav aria-label="Halaman" className="mx-auto flex h-[40px] w-[331px] items-center justify-between overflow-hidden rounded-lg bg-grey-300">
