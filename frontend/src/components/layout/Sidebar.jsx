@@ -70,15 +70,19 @@ function MenuGroup({ item, ringkas, rk, onClose }) {
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className={`-mt-5 w-full overflow-hidden ${rk('lg:invisible')}`}
           >
-            <div className="flex flex-col gap-3 pt-3 pl-10">
+            <div className="flex flex-col gap-3 pt-3">
               {item.children.map((child) => (
+                // Teks sama dengan menu utama; dot di kolom selebar ikon induk, jadi teksnya sejajar dengan label induk
                 <NavLink
                   key={child.path}
                   to={child.path}
                   end
                   onClick={onClose}
-                  className="text-small font-medium whitespace-nowrap text-grey-75 hover:text-white [&.active]:font-semibold [&.active]:text-white"
+                  className="group flex h-6 items-center gap-2 px-2 text-small font-semibold whitespace-nowrap text-grey-50 hover:text-white [&.active]:text-white"
                 >
+                  <span className="grid w-6 shrink-0 place-items-center">
+                    <span className="size-1.5 rounded-full bg-grey-75 group-[.active]:bg-lime-300" />
+                  </span>
                   {child.label}
                 </NavLink>
               ))}
