@@ -30,8 +30,8 @@ function SectionTitle({ children, className }) {
 }
 
 // Menu ber-submenu: induknya tombol buka/tutup dropdown. Bubble aktif ada di induk saat salah satu
-// submenunya dibuka, jadi tetap terlihat saat sidebar ringkas (submenu-nya disembunyikan)
-function MenuGroup({ item, ringkas, rk, onClose }) {
+// submenunya dibuka, jadi tetap terlihat saat sidebar ringkas (submenu-nya tidak dirender)
+function MenuGroup({ item, ringkas, sembunyikanSub, rk, onClose }) {
   const { pathname } = useLocation()
   const aktif = item.children.some((c) => pathname === c.path || pathname.startsWith(`${c.path}/`))
   const [buka, setBuka] = useState(aktif)
@@ -60,15 +60,15 @@ function MenuGroup({ item, ringkas, rk, onClose }) {
         />
       </motion.button>
       <AnimatePresence initial={false}>
-        {buka && (
+        {buka && !sembunyikanSub && (
           // -mt-5 menetralkan gap nav, jadi saat tinggi 0 dropdown tidak memakan tempat dan menu di bawahnya
-          // ikut turun/naik mengikuti tingginya. invisible saat ringkas: tetap memakan tempat, tidak bergeser
+          // ikut turun/naik mengikuti tingginya (juga saat sidebar ringkas/melebar)
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className={`-mt-5 w-full overflow-hidden ${rk('lg:invisible')}`}
+            className="-mt-5 w-full overflow-hidden"
           >
             <div className="flex flex-col gap-3 pt-3">
               {item.children.map((child) => (
@@ -161,7 +161,8 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
               <SectionTitle className={rk('lg:invisible')}>{section.title}</SectionTitle>
               {section.items.map((item) =>
                 item.children ? (
-                  <MenuGroup key={item.label} item={item} ringkas={ringkas} rk={rk} onClose={onClose} />
+                  // ringkas juga true di layar kecil (tidak ada hover), jadi submenu tetap tampil selama laci terbuka
+                  <MenuGroup key={item.label} item={item} ringkas={ringkas} sembunyikanSub={ringkas && !open} rk={rk} onClose={onClose} />
                 ) : (
                 <MotionNavLink
                   key={item.path}
