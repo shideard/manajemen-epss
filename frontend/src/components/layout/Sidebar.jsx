@@ -71,13 +71,14 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
         open ? 'translate-x-0' : 'max-lg:invisible -translate-x-full'
       }`}
     >
-      {/* Logo + nama aplikasi */}
-      <div className="mt-7.5 flex h-12 items-center justify-center gap-2">
-        <img src={logo} alt="Logo Kota Bogor" className="size-[35px] object-cover" />
+      {/* Logo + nama aplikasi; rata kiri dan tidak menyusut, jadi saat sidebar melebar teksnya
+          hanya tersingkap, tidak ikut bergeser. Logo sejajar dengan kolom ikon menu */}
+      <div className="mt-7.5 flex h-12 items-center gap-2 pl-6.5">
+        <img src={logo} alt="Logo Kota Bogor" className="size-[35px] shrink-0 object-cover" />
         <span className={`flex h-[33px] w-0 items-center justify-center ${rk('lg:hidden')}`}>
           <img src={logoLine} alt="" width={33} height={1} className="max-w-none rotate-90" />
         </span>
-        <div className={`flex w-[155px] flex-col gap-2 text-grey-50 ${rk('lg:hidden')}`}>
+        <div className={`flex w-[155px] shrink-0 flex-col gap-2 text-grey-50 ${rk('lg:hidden')}`}>
           <p className="text-small font-bold">Sistem Manajemen EPSS</p>
           <p className="text-caption font-light">Diskominfo Kota Bogor</p>
         </div>
