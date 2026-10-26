@@ -2,13 +2,12 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../lib/store'
 import { ROLES } from '../config/menu'
-import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, indikatorById, predikat, PREDIKAT_TONE, selisihHari, statusKegiatan, toISODate } from '../lib/epss'
-import { ArrowLink, Badge, CountUp, Memuat, PageHeader } from '../components/ui'
+import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusKegiatan, toISODate } from '../lib/epss'
+import { ArrowLink, Badge, CountUp, Dropdown, Memuat, PageHeader } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
 import arrowBlack from '../assets/icons/arrow-long-black.svg'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
-import triangle from '../assets/icons/polygon-small.svg'
 import closeCircle from '../assets/icons/close-circle-line.svg'
 import timeIcon from '../assets/icons/time-line.svg'
 import uploadIcon from '../assets/icons/file-upload-line.svg'
@@ -27,24 +26,46 @@ const angka = (n) => (n == null ? '-' : n.toFixed(2))
 const bertanda = (n) => (n > 0 ? `+${angka(n)}` : angka(n))
 const bulat = (n) => String(Math.round(n))
 
-function StatCard({ to, title, subtitle, value, unit, highlight }) {
+// footer = baris tambahan di bawah angka (progress bar, tanggal)
+function StatCard({ to, title, subtitle, value, unit, highlight, footer }) {
   return (
     <Link
       to={to}
-      className={`group flex min-h-[130px] flex-col justify-between gap-2 rounded-lg px-7 py-4 transition duration-300 ease-out-quint hover:-translate-y-1 hover:shadow-md ${highlight ? 'bg-lime-200' : 'bg-white'}`}
+      className={`group flex min-h-[130px] flex-col justify-between gap-4 rounded-lg px-7 py-5 transition duration-300 ease-out-quint hover:-translate-y-1 hover:shadow-md ${highlight ? 'bg-lime-200' : 'bg-white'}`}
     >
       <span>
         <span className="block text-h3 text-grey-500">{title}</span>
         <span className="block text-small text-grey-200">{subtitle}</span>
       </span>
-      <span className="flex items-end justify-between">
-        <span className="flex items-baseline gap-2">
-          {value}
-          <span className="text-body text-grey-500">{unit}</span>
+      <span className="flex flex-col gap-3">
+        <span className="flex items-end justify-between">
+          <span className="flex items-baseline gap-2">
+            {value}
+            <span className="text-body text-grey-500">{unit}</span>
+          </span>
+          <img src={highlight ? arrowBlack : arrowDark} alt="" width={29} height={15} className="mb-3 transition-transform duration-300 ease-out-quint group-hover:translate-x-1" />
         </span>
-        <img src={highlight ? arrowBlack : arrowDark} alt="" width={29} height={15} className="mb-3 transition-transform duration-300 ease-out-quint group-hover:translate-x-1" />
+        {footer}
       </span>
     </Link>
+  )
+}
+
+// Posisi nilai IPS (skala 1–5) di sepanjang garis skala, dalam persen
+const skala = (v) => `${Math.min(100, Math.max(0, ((v - 1) / 4) * 100))}%`
+// Rentang tiap predikat [bawah, atas, nama], dari Kurang sampai Memuaskan
+const RENTANG = PREDIKAT_BATAS.map(([bawah, nama], i) => [bawah, i === 0 ? 5 : PREDIKAT_BATAS[i - 1][0], nama]).reverse()
+
+// Selisih di kartu IPS: hijau kalau naik/di atas, merah kalau turun/di bawah
+function Selisih({ label, value, keterangan }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-md bg-white px-4 py-3">
+      <p className="text-small text-grey-200">{label}</p>
+      <p className={`text-h2 ${value == null ? 'text-grey-200' : value >= 0 ? 'text-green-500' : 'text-red-400'}`}>
+        <CountUp value={value} format={bertanda} />
+      </p>
+      {keterangan && <p className="text-caption text-grey-200">{keterangan}</p>}
+    </div>
   )
 }
 
@@ -67,6 +88,7 @@ function Dashboard() {
 
   const levelSimulasi = { ...levels }
   for (const s of simulasi) if (s.indikatorId) levelSimulasi[s.indikatorId] = s.level
+  const hasilSimulasi = hitungIps(INDIKATOR, levelSimulasi)
 
   function ubahSimulasi(index, perubahan) {
     setSimulasi((rows) => rows.map((row, i) => (i === index ? { ...row, ...perubahan } : row)))
@@ -78,46 +100,65 @@ function Dashboard() {
       <PageHeader title={`Selamat datang, ${user.name}!`} subtitle={`Pantau capaian ${aktif.nama}.`} />
       <hr className="border-grey-75" />
 
-      <section className="flex flex-col gap-6">
-        <div className="grid gap-5.5 2xl:grid-cols-2">
-          <div className="relative flex min-h-[170px] flex-col justify-between rounded-lg bg-lime-200 px-6 py-4.5">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-h3 text-grey-500">Indeks Pembangunan Statistik (IPS) Bayangan</h2>
-              <p className="max-w-[420px] text-small font-light text-grey-500">
+      <section className="@container flex flex-col gap-6">
+        {/* Kartu utama gelap: skor besar di kiri, posisinya di skala predikat + selisih di kanan.
+            Disusun berdasarkan lebar area konten (container query), jadi aman saat sidebar ringkas/lebar */}
+        <div className="rounded-lg bg-grey-500 px-8 py-7 text-white">
+          <div className="flex flex-col gap-8 @min-[820px]:flex-row @min-[820px]:items-center @min-[820px]:gap-12">
+            <div className="flex shrink-0 flex-col gap-2">
+              <h2 className="text-h3">Indeks Pembangunan Statistik (IPS) Bayangan</h2>
+              <p className="max-w-[360px] text-small font-light text-grey-75">
                 Skor dihitung otomatis berdasarkan {INDIKATOR.length} indikator dan bobot resmi Peraturan BPS No 3/2022.
               </p>
+              <div className="mt-3 flex items-center gap-5">
+                <p className="text-display-1 font-bold text-lime-300">
+                  <CountUp value={ips} format={angka} />
+                </p>
+                <Badge tone={PREDIKAT_TONE[predikat(ips)]} className="font-medium">
+                  {predikat(ips)}
+                </Badge>
+              </div>
             </div>
-            <div className="flex items-center gap-6">
-              <p className={`text-display-1 ${GRADIENT}`}>
-                <CountUp value={ips} format={angka} />
-              </p>
-              <Badge tone={PREDIKAT_TONE[predikat(ips)]} className="font-medium">
-                {predikat(ips)}
-              </Badge>
-            </div>
-          </div>
 
-          <div className="grid min-h-[170px] grid-cols-3 gap-4 rounded-lg bg-white px-9 py-6.5">
-            <div className="flex flex-col justify-between">
-              <h2 className="text-h3 text-grey-500">Target IPS</h2>
-              <p className={`text-display-1 ${GRADIENT}`}>
-                <CountUp value={aktif.target} format={angka} />
-              </p>
-            </div>
-            <div className="flex flex-col justify-between">
-              <p className="text-small">Kesenjangan IPS Bayangan terhadap target</p>
-              <p className={`text-display-3 ${GRADIENT}`}>
-                <CountUp value={ips - aktif.target} format={bertanda} />
-              </p>
-            </div>
-            <div className="flex flex-col justify-between">
-              <p className="text-small">IPS Periode Sebelumnya</p>
-              <p className="flex items-baseline gap-1 whitespace-nowrap">
-                <span className={`text-display-3 ${GRADIENT}`}>
-                  <CountUp value={sebelumnya?.actual} format={angka} />
-                </span>
-                {sebelumnya && <span className={`text-lead font-medium ${ips >= sebelumnya.actual ? 'text-green-500' : 'text-red-400'}`}>{bertanda(ips - sebelumnya.actual)}</span>}
-              </p>
+            <div className="flex min-w-0 flex-1 flex-col gap-6">
+              {/* Skala 1–5: isian lime = IPS Bayangan, pin putih = target, garis pemisah = batas predikat */}
+              <div role="img" aria-label={`IPS Bayangan ${angka(ips)} dari skala 1 sampai 5, target ${angka(aktif.target)}`}>
+                <div className="relative pt-9">
+                  <span className="absolute top-0 flex -translate-x-1/2 flex-col items-center gap-1" style={{ left: skala(aktif.target) }}>
+                    <span className="rounded-sm bg-white px-2 py-0.5 text-caption font-semibold whitespace-nowrap text-grey-500">Target {angka(aktif.target)}</span>
+                    <span className="h-3 w-0.5 bg-white" />
+                  </span>
+                  <div className="relative h-3 overflow-hidden rounded-full bg-grey-200">
+                    <span
+                      className="absolute inset-y-0 left-0 rounded-full bg-lime-300 transition-[width] duration-700 ease-out-quint motion-safe:animate-reveal-x"
+                      style={{ width: skala(ips) }}
+                    />
+                    {RENTANG.slice(1).map(([bawah]) => (
+                      <span key={bawah} className="absolute inset-y-0 w-0.5 bg-grey-500" style={{ left: skala(bawah) }} />
+                    ))}
+                  </div>
+                </div>
+                <div className="relative mt-2 h-3">
+                  {RENTANG.map(([bawah, atas, nama]) => (
+                    <span
+                      key={nama}
+                      className={`absolute -translate-x-1/2 text-caption whitespace-nowrap ${nama === predikat(ips) ? 'font-semibold text-lime-300' : 'text-grey-75'}`}
+                      style={{ left: skala((bawah + atas) / 2) }}
+                    >
+                      {nama}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Selisih label="Kesenjangan ke target" value={ips - aktif.target} keterangan={`Target ${angka(aktif.target)}`} />
+                <Selisih
+                  label="Dibanding periode lalu"
+                  value={sebelumnya ? ips - sebelumnya.actual : null}
+                  keterangan={sebelumnya ? `IPS ${sebelumnya.tahun1}–${sebelumnya.tahun2}: ${angka(sebelumnya.actual)}` : 'Belum ada periode sebelumnya'}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -137,6 +178,17 @@ function Dashboard() {
               </>
             }
             unit="indikator"
+            footer={
+              <span className="flex items-center gap-3">
+                <span className="h-2 flex-1 overflow-hidden rounded-full bg-white">
+                  <span
+                    className="block h-full rounded-full bg-grey-500 transition-[width] duration-700 ease-out-quint motion-safe:animate-reveal-x"
+                    style={{ width: `${(terverifikasi / INDIKATOR.length) * 100}%` }}
+                  />
+                </span>
+                <span className="text-small font-semibold text-grey-500">{Math.round((terverifikasi / INDIKATOR.length) * 100)}%</span>
+              </span>
+            }
           />
           <StatCard
             to={buktiLink}
@@ -150,11 +202,17 @@ function Dashboard() {
           <StatCard
             to="/rencana-kegiatan"
             title="Sisa Waktu Periode"
-            subtitle={`Batas unggah bukti: ${formatTanggal(aktif.batas)}.`}
+            subtitle="Sisa waktu sampai batas unggah bukti dukung."
             value={<span className="text-display-2 font-semibold text-grey-500">
                 <CountUp value={sisaHari} format={bulat} />
               </span>}
             unit="hari"
+            // Warna tanggal mengikuti urgensi: merah ≤ 30 hari (atau lewat), kuning ≤ 90 hari
+            footer={
+              <Badge tone={sisaHari <= 30 ? 'red' : sisaHari <= 90 ? 'yellow' : 'green'} className="self-start text-small">
+                {aktif.batas < today ? 'Batas lewat' : 'Batas'}: {formatTanggal(aktif.batas)}
+              </Badge>
+            }
           />
         </div>
       </section>
@@ -245,66 +303,112 @@ function Dashboard() {
 
         <section className="flex flex-col gap-6">
           <PageHeader as="h2" title="Simulasi Perubahan Level & Gap Analysis" />
-          <div className="flex flex-1 flex-col gap-8 rounded-lg bg-white px-6 py-8">
-            <p className="font-light">
-              Geser simulasi untuk melihat estimasi kenaikan skor IPS jika indikator ditingkatkan levelnya.
-            </p>
-            {simulasi.map((row, index) => (
-              <div key={index} className="flex flex-col justify-between gap-3">
-                <span className="relative w-[186px]">
-                  <select
-                    value={row.indikatorId}
-                    onChange={(e) => ubahSimulasi(index, { indikatorId: e.target.value, level: levels[e.target.value] ?? 1 })}
-                    aria-label="Pilih indikator simulasi"
-                    className="h-[25px] w-full appearance-none rounded-lg bg-lime-300 pr-8 pl-3 text-small text-grey-500"
-                  >
-                    <option value="">Pilih Indikator</option>
-                    {INDIKATOR.map((i) => (
-                      <option key={i.id} value={i.id}>
-                        Indikator {i.nomor}
-                      </option>
-                    ))}
-                  </select>
-                  <img src={triangle} alt="" width={10} height={6} className="pointer-events-none absolute top-1/2 right-[10px] -translate-y-1/2 -scale-y-100" />
-                  {simulasi.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setSimulasi((rows) => rows.filter((_, i) => i !== index))}
-                      aria-label="Hapus simulasi"
-                      className="absolute top-1/2 -right-7 -translate-y-1/2"
-                    >
-                      <img src={closeCircle} alt="" width={18} height={18} className="grayscale" />
-                    </button>
-                  )}
-                </span>
-                <input
-                  type="range"
-                  min={1}
-                  max={5}
-                  value={row.level}
-                  disabled={!row.indikatorId}
-                  onChange={(e) => ubahSimulasi(index, { level: Number(e.target.value) })}
-                  aria-label={row.indikatorId ? `Level simulasi ${indikatorById[row.indikatorId].nama}` : 'Level simulasi'}
-                  className="w-full cursor-pointer accent-grey-500 disabled:cursor-not-allowed"
-                />
-                {row.indikatorId && <p className="text-small text-grey-200">Level {row.level} — {indikatorById[row.indikatorId].nama}</p>}
-              </div>
-            ))}
-            <div className="mt-auto flex flex-wrap items-end justify-between gap-4">
-              <button
-                type="button"
-                onClick={() => setSimulasi((rows) => [...rows, { indikatorId: '', level: 1 }])}
-                className={buttonClass()}
-              >
-                <img src={addIcon} alt="" width={19} height={19} />
-                Tambah simulasi indikator
-              </button>
-              <p className="flex flex-col items-end gap-1">
-                <span className="text-body font-medium text-grey-500">Skor Hasil Simulasi</span>
-                <span className={`text-display-2 ${GRADIENT}`}>
-                  <CountUp value={hitungIps(INDIKATOR, levelSimulasi)} format={angka} />
+          <div className="flex flex-1 flex-col gap-5 rounded-lg bg-white p-6">
+            {/* Hasil di atas, jadi langsung terlihat setiap kali level diubah */}
+            <div className="flex flex-wrap items-end gap-x-6 gap-y-3 rounded-md bg-grey-500 px-5 py-4 text-white">
+              <p className="flex flex-col gap-1">
+                <span className="text-small text-grey-75">Skor saat ini</span>
+                <span className="text-h2">{angka(ips)}</span>
+              </p>
+              <span aria-hidden className="pb-1 text-h2 text-grey-75">
+                →
+              </span>
+              <p className="flex flex-col gap-1">
+                <span className="text-small text-grey-75">Hasil simulasi</span>
+                <span className="flex items-baseline gap-2">
+                  <span className="text-display-3 font-bold text-lime-300">
+                    <CountUp value={hasilSimulasi} format={angka} />
+                  </span>
+                  {hasilSimulasi > ips && <span className="text-body font-semibold text-green-200">{bertanda(hasilSimulasi - ips)}</span>}
                 </span>
               </p>
+              <p className="ml-auto flex flex-col items-end gap-2">
+                <Badge tone={PREDIKAT_TONE[predikat(hasilSimulasi)]} className="text-small font-medium">
+                  {predikat(hasilSimulasi)}
+                </Badge>
+                <span className="text-small text-grey-75">
+                  {hasilSimulasi >= aktif.target ? 'Target tercapai' : `Kurang ${angka(aktif.target - hasilSimulasi)} ke target ${angka(aktif.target)}`}
+                </span>
+              </p>
+            </div>
+
+            <p className="text-small text-grey-200">Pilih indikator lalu tentukan level tujuannya untuk melihat dampaknya pada skor IPS.</p>
+
+            <ul className="flex flex-col gap-3">
+              {simulasi.map((row, index) => {
+                const levelSaatIni = levels[row.indikatorId] ?? 1
+                const dampak = row.indikatorId ? hitungIps(INDIKATOR, { ...levels, [row.indikatorId]: row.level }) - ips : 0
+                // Indikator yang sudah dipakai baris lain tidak muncul lagi
+                const dipakai = new Set(simulasi.filter((_, i) => i !== index).map((r) => r.indikatorId))
+                return (
+                  <li key={index} className="flex flex-col gap-3 rounded-md border border-grey-75/50 p-4">
+                    <div className="flex items-center gap-3">
+                      <Dropdown
+                        label="Indikator simulasi"
+                        value={row.indikatorId}
+                        // Langsung naik satu level dari level saat ini, jadi dampaknya langsung terlihat
+                        onChange={(id) => ubahSimulasi(index, { indikatorId: id, level: id ? Math.min((levels[id] ?? 1) + 1, 5) : 1 })}
+                        options={[
+                          { value: '', label: 'Pilih indikator' },
+                          ...INDIKATOR.filter((i) => !dipakai.has(i.id)).map((i) => ({ value: i.id, label: `Indikator ${i.nomor} – ${i.nama}` })),
+                        ]}
+                        className="min-w-0 flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSimulasi((rows) => rows.filter((_, i) => i !== index))}
+                        aria-label="Hapus simulasi"
+                        className="grid size-9 shrink-0 place-items-center rounded-sm hover:bg-grey2-100"
+                      >
+                        <img src={closeCircle} alt="" width={20} height={20} className="grayscale" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {/* Level di bawah level saat ini dinonaktifkan: simulasinya untuk peningkatan */}
+                      <div role="group" aria-label="Level tujuan" className="flex flex-1 gap-1 rounded-md bg-grey2-75 p-1">
+                        {LEVELS.map((nama, i) => {
+                          const level = i + 1
+                          const dipilih = row.indikatorId && row.level === level
+                          return (
+                            <button
+                              key={nama}
+                              type="button"
+                              onClick={() => ubahSimulasi(index, { level })}
+                              disabled={!row.indikatorId || level < levelSaatIni}
+                              aria-pressed={!!dipilih}
+                              title={`Level ${level} (${nama})`}
+                              className={`h-9 flex-1 rounded-sm text-small font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                                dipilih ? 'bg-grey-500 text-lime-300' : 'text-grey-500 enabled:hover:bg-white'
+                              }`}
+                            >
+                              L{level}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <span className={`w-14 text-right text-body font-semibold ${dampak > 0 ? 'text-green-500' : 'text-grey-75'}`}>{bertanda(dampak)}</span>
+                    </div>
+                    {row.indikatorId && (
+                      <p className="text-caption text-grey-200">
+                        Saat ini {levelLabel(levelSaatIni)} → tujuan {levelLabel(row.level)}
+                      </p>
+                    )}
+                  </li>
+                )
+              })}
+              {simulasi.length === 0 && <li className="py-4 text-center text-small text-grey-200">Belum ada indikator yang disimulasikan.</li>}
+            </ul>
+
+            <div className="mt-auto flex flex-wrap justify-end gap-3">
+              {simulasi.some((r) => r.indikatorId) && (
+                <button type="button" onClick={() => setSimulasi([{ indikatorId: '', level: 1 }])} className={buttonClass('outline')}>
+                  Reset
+                </button>
+              )}
+              <button type="button" onClick={() => setSimulasi((rows) => [...rows, { indikatorId: '', level: 1 }])} className={buttonClass()}>
+                <img src={addIcon} alt="" width={19} height={19} />
+                Tambah indikator
+              </button>
             </div>
           </div>
         </section>

@@ -272,13 +272,16 @@ export function hitungIps(indikator, levels) {
 }
 
 // Predikat IPS sesuai Peraturan BPS No 3/2022
-export function predikat(ips) {
-  if (ips >= 4.2) return 'Memuaskan'
-  if (ips >= 3.5) return 'Sangat Baik'
-  if (ips >= 2.6) return 'Baik'
-  if (ips >= 1.8) return 'Cukup'
-  return 'Kurang'
-}
+// Batas bawah tiap predikat, dari yang tertinggi (juga dipakai skala IPS di dashboard)
+export const PREDIKAT_BATAS = [
+  [4.2, 'Memuaskan'],
+  [3.5, 'Sangat Baik'],
+  [2.6, 'Baik'],
+  [1.8, 'Cukup'],
+  [1, 'Kurang'],
+]
+
+export const predikat = (ips) => PREDIKAT_BATAS.find(([batas]) => ips >= batas)?.[1] ?? 'Kurang'
 
 // Verifikasi berjenjang: level terpenuhi = jumlah level berurutan dari level 1 yang semua syaratnya dicentang
 export function levelTerpenuhi(levels, checked = {}) {
