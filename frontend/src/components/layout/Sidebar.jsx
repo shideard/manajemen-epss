@@ -108,6 +108,13 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const akunRef = useRef(null)
 
+  // Kursor/fokus keluar sidebar: kalau sidebar-nya ikut mengecil, tombol Keluar ditutup juga
+  // (kalau dikunci lebar lewat tombol menu, biarkan terbuka)
+  function tutupHover() {
+    setHover(false)
+    if (tetapRingkas) setMenuOpen(false)
+  }
+
   // Menu akun tertutup saat klik di luar atau tekan Esc
   useEffect(() => {
     if (!menuOpen) return
@@ -131,9 +138,9 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
       id="sidebar"
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
       onPointerEnter={() => setHover(true)}
-      onPointerLeave={() => setHover(false)}
+      onPointerLeave={tutupHover}
       onFocus={() => setHover(true)}
-      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHover(false)}
+      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && tutupHover()}
       className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:translate-x-0 lg:overflow-hidden ${ringkas ? 'lg:w-[88px]' : ''} ${tetapRingkas && hover ? 'lg:shadow-lg' : ''} ${
         open ? 'translate-x-0' : 'max-lg:invisible -translate-x-full'
       }`}
