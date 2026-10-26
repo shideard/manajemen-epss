@@ -21,17 +21,20 @@ const MotionNavLink = motion.create(NavLink)
 
 const bubbleTransition = { type: 'spring', stiffness: 500, damping: 38 }
 
-function SectionTitle({ children }) {
+function SectionTitle({ children, className }) {
   return (
-    <motion.p layout="position" className="text-small font-light text-white">
+    <motion.p layout="position" className={`text-small font-light text-white ${className}`}>
       {children}
     </motion.p>
   )
 }
 
-// open/onClose = laci di layar kecil (di bawah lg); di layar besar sidebar selalu tampil
-function Sidebar({ user, onLogout, open, onClose }) {
+// open/onClose = laci di layar kecil (di bawah lg); di layar besar sidebar selalu tampil,
+// ringkas = di layar besar hanya logo + ikon (laci di layar kecil tetap lebar penuh)
+function Sidebar({ user, onLogout, ringkas, open, onClose }) {
   const sections = getMenuForRole(user.role)
+  // Class yang hanya berlaku saat ringkas; semuanya ber-prefix lg:
+  const rk = (cls) => (ringkas ? cls : '')
   const [menuOpen, setMenuOpen] = useState(false)
   const akunRef = useRef(null)
 
@@ -53,18 +56,19 @@ function Sidebar({ user, onLogout, open, onClose }) {
     {open && <div onClick={onClose} aria-hidden className="fixed inset-0 z-30 bg-grey-500/40 lg:hidden" />}
     {/* Saat tertutup di layar kecil: geser keluar + invisible, jadi tidak bisa difokus keyboard */}
     <aside
+      id="sidebar"
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
-      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility] duration-300 ease-out-quint lg:sticky lg:top-0 lg:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility,width] duration-300 ease-out-quint lg:sticky lg:top-0 lg:translate-x-0 ${rk('lg:w-[88px]')} ${
         open ? 'translate-x-0' : 'max-lg:invisible -translate-x-full'
       }`}
     >
       {/* Logo + nama aplikasi */}
       <div className="mt-7.5 flex h-12 items-center justify-center gap-2">
         <img src={logo} alt="Logo Kota Bogor" className="size-[35px] object-cover" />
-        <span className="flex h-[33px] w-0 items-center justify-center">
+        <span className={`flex h-[33px] w-0 items-center justify-center ${rk('lg:hidden')}`}>
           <img src={logoLine} alt="" width={33} height={1} className="max-w-none rotate-90" />
         </span>
-        <div className="flex w-[155px] flex-col gap-2 text-grey-50">
+        <div className={`flex w-[155px] flex-col gap-2 text-grey-50 ${rk('lg:hidden')}`}>
           <p className="text-small font-bold">Sistem Manajemen EPSS</p>
           <p className="text-caption font-light">Diskominfo Kota Bogor</p>
         </div>
@@ -72,19 +76,20 @@ function Sidebar({ user, onLogout, open, onClose }) {
 
       {/* Menu navigasi; reducedMotion="user" mematikan animasi jika user memilih "kurangi animasi" di OS */}
       <MotionConfig transition={bubbleTransition} reducedMotion="user">
-        <nav className="mt-15 ml-6 flex w-[194px] flex-col items-start gap-5">
+        <nav className={`mt-15 ml-6 flex w-[194px] flex-col items-start gap-5 ${rk('lg:ml-0 lg:w-full lg:items-center')}`}>
           {sections.map((section, index) => (
             <Fragment key={section.title}>
-              {index > 0 && <motion.img layout="position" src={divider} alt="" width={192} height={1} />}
-              <SectionTitle>{section.title}</SectionTitle>
+              {index > 0 && <motion.img layout="position" src={divider} alt="" width={192} height={1} className={rk('lg:w-12')} />}
+              <SectionTitle className={rk('lg:sr-only')}>{section.title}</SectionTitle>
               {section.items.map((item) => (
                 <MotionNavLink
                   key={item.path}
                   to={item.path}
                   onClick={onClose}
+                  title={ringkas ? item.label : undefined}
                   layout="position"
                   // NavLink otomatis memberi class "active" pada menu halaman saat ini
-                  className="relative flex h-6 w-[196px] shrink-0 items-center px-2 text-small font-semibold whitespace-nowrap text-grey-50 hover:text-white [&.active]:h-[50px]"
+                  className={`relative flex h-6 w-[196px] shrink-0 items-center px-2 text-small font-semibold whitespace-nowrap text-grey-50 hover:text-white [&.active]:h-[50px] ${rk('lg:w-[50px] lg:justify-center')}`}
                 >
                   {({ isActive }) => (
                     <>
@@ -98,7 +103,8 @@ function Sidebar({ user, onLogout, open, onClose }) {
                       )}
                       <motion.span layout="position" className="relative flex items-center gap-2">
                         <MenuIcon icon={item.icon} />
-                        {item.label}
+                        {/* sr-only, bukan hidden: nama menu tetap terbaca screen reader */}
+                        <span className={rk('lg:sr-only')}>{item.label}</span>
                       </motion.span>
                     </>
                   )}
@@ -109,7 +115,7 @@ function Sidebar({ user, onLogout, open, onClose }) {
         </nav>
 
         {/* Profil user; klik untuk membuka tombol Keluar */}
-        <div ref={akunRef} className="relative mt-auto mb-8.5 ml-5 w-[196px]">
+        <div ref={akunRef} className={`relative mt-auto mb-8.5 ml-5 w-[196px] ${rk('lg:ml-0 lg:w-full')}`}>
           <AnimatePresence>
             {menuOpen && (
               <motion.button
@@ -130,11 +136,12 @@ function Sidebar({ user, onLogout, open, onClose }) {
             onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
             aria-label="Menu akun"
-            className="flex w-full items-center rounded-sm px-2 text-left"
+            title={ringkas ? user.name : undefined}
+            className={`flex w-full items-center rounded-sm px-2 text-left ${rk('lg:justify-center')}`}
           >
             <span className="flex items-center gap-2">
               <img src={accountIcon} alt="" width={53} height={53} className="shrink-0" />
-              <span className="flex flex-col gap-2 text-small whitespace-nowrap text-grey-50">
+              <span className={`flex flex-col gap-2 text-small whitespace-nowrap text-grey-50 ${rk('lg:sr-only')}`}>
                 <span className="font-semibold">{user.name}</span>
                 <span className="font-light">{ROLE_LABELS[user.role]}</span>
               </span>
@@ -144,7 +151,7 @@ function Sidebar({ user, onLogout, open, onClose }) {
               alt=""
               width={24}
               height={24}
-              className={`ml-auto shrink-0 transition-transform duration-300 ease-out-quint ${menuOpen ? 'rotate-180' : ''}`}
+              className={`ml-auto shrink-0 transition-transform duration-300 ease-out-quint ${menuOpen ? 'rotate-180' : ''} ${rk('lg:hidden')}`}
             />
           </button>
         </div>
