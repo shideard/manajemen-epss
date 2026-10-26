@@ -36,7 +36,9 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
   const sections = getMenuForRole(user.role)
   const [hover, setHover] = useState(false)
   const ringkas = tetapRingkas && !hover
-  // Class yang hanya berlaku saat ringkas; semuanya ber-prefix lg:
+  // Class yang hanya berlaku saat ringkas; semuanya ber-prefix lg:. Posisi saat ringkas sengaja tidak
+  // bergantung pada lebar sidebar (yang sedang beranimasi), supaya Motion tidak mengukur posisi sementara
+  // dan ikon tidak memantul saat sidebar ditutup
   const rk = (cls) => (ringkas ? cls : '')
   const [menuOpen, setMenuOpen] = useState(false)
   const akunRef = useRef(null)
@@ -86,10 +88,10 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
 
       {/* Menu navigasi; reducedMotion="user" mematikan animasi jika user memilih "kurangi animasi" di OS */}
       <MotionConfig transition={bubbleTransition} reducedMotion="user">
-        <nav className={`mt-15 ml-6 flex w-[194px] flex-col items-start gap-5 ${rk('lg:ml-0 lg:w-full lg:items-center')}`}>
+        <nav className="mt-15 ml-6 flex w-[194px] flex-col items-start gap-5">
           {sections.map((section, index) => (
             <Fragment key={section.title}>
-              {index > 0 && <motion.img layout="position" src={divider} alt="" width={192} height={1} className={rk('lg:w-12')} />}
+              {index > 0 && <motion.img layout="position" src={divider} alt="" width={192} height={1} className={rk('lg:w-10')} />}
               {/* invisible, bukan sr-only: judul tetap memakan tempat, jadi menu di bawahnya tidak bergeser saat melebar */}
               <SectionTitle className={rk('lg:invisible')}>{section.title}</SectionTitle>
               {section.items.map((item) => (
@@ -100,7 +102,7 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
                   title={ringkas ? item.label : undefined}
                   layout="position"
                   // NavLink otomatis memberi class "active" pada menu halaman saat ini
-                  className={`relative flex h-6 w-[196px] shrink-0 items-center px-2 text-small font-semibold whitespace-nowrap text-grey-50 hover:text-white [&.active]:h-[50px] ${rk('lg:w-[50px] lg:justify-center')}`}
+                  className={`relative flex h-6 w-[196px] shrink-0 items-center px-2 text-small font-semibold whitespace-nowrap text-grey-50 hover:text-white [&.active]:h-[50px] ${rk('lg:w-10')}`}
                 >
                   {({ isActive }) => (
                     <>
@@ -126,7 +128,10 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
         </nav>
 
         {/* Profil user; klik untuk membuka tombol Keluar */}
-        <div ref={akunRef} className={`relative mt-auto mb-8.5 ml-5 w-[196px] ${rk('lg:ml-0 lg:w-full')}`}>
+        <div
+          ref={akunRef}
+          className={`relative mt-auto mb-8.5 ml-5 w-[196px] transition-[margin] duration-300 ease-out-quint ${rk('lg:ml-2.5')}`}
+        >
           <AnimatePresence>
             {menuOpen && (
               <motion.button
@@ -148,7 +153,7 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
             aria-expanded={menuOpen}
             aria-label="Menu akun"
             title={ringkas ? user.name : undefined}
-            className={`flex w-full items-center rounded-sm px-2 text-left ${rk('lg:justify-center')}`}
+            className="flex w-full items-center rounded-sm px-2 text-left"
           >
             <span className="flex items-center gap-2">
               <img src={accountIcon} alt="" width={53} height={53} className="shrink-0" />
