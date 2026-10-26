@@ -89,7 +89,8 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
           {sections.map((section, index) => (
             <Fragment key={section.title}>
               {index > 0 && <motion.img layout="position" src={divider} alt="" width={192} height={1} className={rk('lg:w-12')} />}
-              <SectionTitle className={rk('lg:sr-only')}>{section.title}</SectionTitle>
+              {/* invisible, bukan sr-only: judul tetap memakan tempat, jadi menu di bawahnya tidak bergeser saat melebar */}
+              <SectionTitle className={rk('lg:invisible')}>{section.title}</SectionTitle>
               {section.items.map((item) => (
                 <MotionNavLink
                   key={item.path}
