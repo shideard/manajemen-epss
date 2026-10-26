@@ -74,13 +74,8 @@ function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
                       <li key={i.id} className="border-b border-grey-75/50 py-4 last:border-0">
                         <div className="flex items-center justify-between gap-4 px-7">
                           <div className="flex flex-col gap-2">
-                            <p className="flex flex-wrap items-center gap-x-8 gap-y-2">
-                              <span className="font-semibold">
-                                Indikator {i.nomor}: {i.nama}
-                              </span>
-                              <Badge tone={semuaValid ? 'green' : 'blue'} className="text-small">
-                                {valid.length} dari {daftar.length} Kegiatan Terverifikasi
-                              </Badge>
+                            <p className="font-semibold">
+                              Indikator {i.nomor}: {i.nama}
                             </p>
                             <p className="flex flex-wrap gap-x-4 text-small font-light text-grey-200">
                               <span>Level Terverifikasi: {levelLabel(levels[i.id])}</span>
@@ -90,7 +85,13 @@ function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
                               <span>Tersedia : {jumlahBukti(bukti, berkas, i.id)} Bukti dukung</span>
                             </p>
                           </div>
-                          <Toggle open={terbuka} onClick={() => setIndikatorTerbuka((s) => toggleSet(s, i.id))} label={`Indikator ${i.nomor}`} icon={arrowDark} />
+                          {/* Badge rata kanan tepat sebelum tombol buka, jadi sejajar di semua indikator */}
+                          <div className="flex shrink-0 items-center gap-4">
+                            <Badge tone={semuaValid ? 'green' : 'blue'} className="text-small">
+                              {valid.length} dari {daftar.length} Kegiatan Terverifikasi
+                            </Badge>
+                            <Toggle open={terbuka} onClick={() => setIndikatorTerbuka((s) => toggleSet(s, i.id))} label={`Indikator ${i.nomor}`} icon={arrowDark} />
+                          </div>
                         </div>
 
                         <Collapse open={terbuka}>
