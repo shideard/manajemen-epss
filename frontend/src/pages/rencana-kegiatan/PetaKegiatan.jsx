@@ -12,6 +12,8 @@ const JENIS = [
   ['kegiatan', 'Rencana Kegiatan'],
 ]
 const TITIK = { domain: 'bg-grey-500', aspek: 'bg-grey-200', indikator: 'border border-lime-200 bg-lime-100' }
+// Garis tepi filter yang sedang dipakai, warnanya mengikuti titik tingkatnya
+const GARIS = { domain: 'outline-grey-500', aspek: 'outline-grey-200', indikator: 'outline-lime-500' }
 
 // Dropdown filter satu tingkat; titik warnanya sama dengan warna kotak tingkat itu di peta
 function FilterTingkat({ jenis, judul, value, options, onChange }) {
@@ -26,7 +28,7 @@ function FilterTingkat({ jenis, judul, value, options, onChange }) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={`size-full appearance-none truncate rounded-md bg-grey2-75 pr-12 pl-3.5 text-body focus:outline-2 focus:outline-grey-300 ${
-            value ? 'text-grey-500' : 'font-light text-grey-75 italic'
+            value ? `text-grey-500 outline-2 ${GARIS[jenis]}` : 'font-light text-grey-75 italic'
           }`}
         >
           <option value="">Semua {judul.toLowerCase()}</option>
