@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Check } from 'lucide-react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
@@ -35,6 +36,7 @@ function RencanaKegiatan() {
   const [tahun, setTahun] = useState('')
   const [page, setPage] = useState(1)
   const [editing, setEditing] = useState(null) // null = form tertutup, {} = tambah baru
+  const [kegiatanBaruId, setKegiatanBaruId] = useState(null)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const years = [...new Set(kegiatan.map((k) => k.tahun))].sort()
@@ -42,9 +44,17 @@ function RencanaKegiatan() {
   const { rows, page: currentPage, pageCount } = paginate(filtered, page, PAGE_SIZE)
 
   function save(data) {
-    simpan(editing.id, data)
+    const kegiatanBaru = !editing.id
+    const id = simpan(editing.id, data)
     setEditing(null)
+    if (kegiatanBaru) setKegiatanBaruId(id)
   }
+
+  useEffect(() => {
+    if (!kegiatanBaruId) return undefined
+    const timer = window.setTimeout(() => navigate(`/rencana-kegiatan/${kegiatanBaruId}`, { replace: true }), 1600)
+    return () => window.clearTimeout(timer)
+  }, [kegiatanBaruId, navigate])
 
   // Sama dengan aturan lepas indikator: kegiatan yang buktinya sudah diajukan tidak bisa dihapus
   const sudahDiajukan = (k) => Object.values(bukti).some((b) => b.kegiatanId === k.id && b.status !== 'draft')
@@ -157,6 +167,13 @@ function RencanaKegiatan() {
                     <td className="py-5 text-center">
                       {kelola ? (
                         <span className="flex justify-center gap-2">
+                          <Link
+                            to={`/rencana-kegiatan/${k.id}`}
+                            aria-label={`Lihat detail ${k.nama}`}
+                            className="inline-grid size-6 place-items-center rounded-xs bg-lime-300"
+                          >
+                            <img src={eyeIcon} alt="" width={15} height={15} />
+                          </Link>
                           <button type="button" onClick={() => setEditing(k)} aria-label={`Edit ${k.nama}`} className="rounded-xs bg-lime-300">
                             <img src={editIcon} alt="" width={24} height={24} />
                           </button>
@@ -201,6 +218,16 @@ function RencanaKegiatan() {
         />
       )}
       {dialogKonfirmasi}
+      {kegiatanBaruId && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-grey-500/40 px-4" role="status" aria-live="polite">
+          <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-xl bg-white px-8 py-9 text-center shadow-xl">
+            <span className="grid size-16 place-items-center rounded-full bg-green-50 text-green-500">
+              <Check size={34} strokeWidth={3} aria-hidden="true" />
+            </span>
+            <p className="text-h3 font-semibold">Kegiatan berhasil dibuat</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

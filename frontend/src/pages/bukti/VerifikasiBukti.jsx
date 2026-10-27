@@ -4,7 +4,7 @@ import { bolehUbah } from '../../config/menu'
 import DomainBukti from './DomainBukti'
 import { useBukti, useKegiatan, usePeriode, useSkor } from '../../lib/store'
 import { includesText, indikatorById, paginate } from '../../lib/epss'
-import { Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
+import { Dropdown, Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 
 const PAGE_SIZE = 5
@@ -16,6 +16,7 @@ function  VerifikasiBukti() {
   const [{ kegiatan }, { bukti }, { tetapkanLevel }] = muat
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [filterIndikator, setFilterIndikator] = useState('semua')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
@@ -75,7 +76,7 @@ function  VerifikasiBukti() {
                     </span>
                   </span>
                 </span>
-                <StatusBukti status="menunggu" />
+                <StatusBukti status="menunggu" className="text-small"/>
               </Link>
             </li>
           )
@@ -84,9 +85,26 @@ function  VerifikasiBukti() {
 
       {ajuan.length > 0 && <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />}
 
-      <PageHeader as="h2" title="Status per Indikator" />
+      <PageHeader as="h2" title="Status per Indikator">
+        <Dropdown
+          label="Filter indikator"
+          value={filterIndikator}
+          onChange={setFilterIndikator}
+          options={[
+            { value: 'semua', label: 'Semua indikator' },
+            { value: 'terverifikasi', label: 'Sudah diverifikasi' },
+            { value: 'siap', label: 'Siap diverifikasi' },
+            { value: 'belum-lengkap', label: 'Belum lengkap' },
+          ]}
+          className="w-[260px]"
+        />
+      </PageHeader>
       <div className="flex flex-col gap-6">
-        <DomainBukti onVerifikasi={verifikasiIndikator} bolehVerifikasi={bolehUbah(user, 'verifikasiBukti', aktif)} />
+        <DomainBukti
+          filterIndikator={filterIndikator}
+          onVerifikasi={verifikasiIndikator}
+          bolehVerifikasi={bolehUbah(user, 'verifikasiBukti', aktif)}
+        />
       </div>
       {dialogKonfirmasi}
     </div>

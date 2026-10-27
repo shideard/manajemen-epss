@@ -8,6 +8,7 @@ import Notifikasi from './pages/Notifikasi'
 import PedomanIndikator from './pages/PedomanIndikator'
 import ExportLke from './pages/ExportLke'
 import RencanaKegiatan from './pages/rencana-kegiatan/RencanaKegiatan'
+import RencanaKegiatanDetail from './pages/rencana-kegiatan/RencanaKegiatanDetail'
 import PetaRelasiKegiatan from './pages/rencana-kegiatan/PetaRelasiKegiatan'
 import PengaturanPeriode from './pages/periode/PengaturanPeriode'
 import KonfigurasiPeriode from './pages/periode/KonfigurasiPeriode'
@@ -30,6 +31,7 @@ function App() {
         <Route path="/pedoman-indikator" element={<PedomanIndikator />} />
         <Route path="/rencana-kegiatan" element={<RencanaKegiatan />} />
         <Route path="/rencana-kegiatan/peta-relasi" element={<PetaRelasiKegiatan />} />
+        <Route path="/rencana-kegiatan/:kegiatanId" element={<RencanaKegiatanDetail />} />
         <Route path="/repositori-bukti-dukung" element={<RepositoriBukti />} />
         <Route path="/repositori-bukti-dukung/arsip" element={<ArsipBukti />} />
         <Route path="/repositori-bukti-dukung/:kegiatanId" element={<RepositoriDetail />} />

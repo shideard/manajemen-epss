@@ -95,8 +95,8 @@ function VerifikasiDetail() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-6">
-              <StatusBukti status={bukti.status} label={bukti.status === 'menunggu' ? 'Belum diverifikasi' : undefined} />
-              <p className="font-light text-grey-200">Pengaju: {bukti.pengaju ?? '-'}</p>
+              <StatusBukti status={bukti.status} label={bukti.status === 'menunggu' ? 'Belum diverifikasi' : undefined} className="text-small" />
+              <p className="font-light text-grey-200">Pengaju: <span className="font-semibold">{bukti.pengaju ?? '-'}</span></p>
             </div>
           </div>
           <hr className="border-grey-75" />
@@ -168,7 +168,7 @@ function VerifikasiDetail() {
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="font-semibold">Level Terpenuhi : {terpenuhi}</p>
-            <button type="button" onClick={() => setPedoman(true)} className={buttonClass('secondary')}>
+            <button type="button" onClick={() => setPedoman(true)} className={buttonClass('secondary', 'sm')}>
               <img src={bookIcon} alt="" width={19} height={19} />
               Lihat Pedoman Indikator
             </button>

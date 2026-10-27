@@ -87,6 +87,7 @@ export function useKegiatan() {
         id ? list.map((k) => (k.id === id ? { ...k, ...data } : k)) : [...list, { ...data, id: kegiatanId, warna: list.length % WARNA.length }],
       )
       setBukti((all) => sinkronPemetaan(all, kegiatanId, indikator))
+      return kegiatanId
     },
     hapus(id) {
       setKegiatan((list) => list.filter((k) => k.id !== id))
