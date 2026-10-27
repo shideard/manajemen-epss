@@ -16,11 +16,15 @@ function PedomanIndikator() {
     <div className="flex w-full flex-col gap-8">
       <Memuat dari={muat} />
       <PageHeader title="Daftar Indikator dan Pedoman Bukti Dukung EPSS" subtitle="Struktur indikator beserta pedoman dan syarat pemenuhannya.">
-        <SearchBox value={query} onChange={setQuery} placeholder="Cari indikator..." />
+        <SearchBox value={query} onChange={setQuery} placeholder="Cari domain atau indikator..." />
       </PageHeader>
 
       {DOMAINS.map((domain, d) => {
-        const indikator = INDIKATOR.filter((i) => i.domain === domain && includesText([i.nama, `indikator ${i.nomor}`], query))
+        const indikator = INDIKATOR.filter(
+          (i) =>
+            i.domain === domain &&
+            includesText([i.nama, `indikator ${i.nomor}`, domain.nama, `domain ${d + 1}`], query),
+        )
         if (indikator.length === 0) return null
         return (
           <DomainPanel

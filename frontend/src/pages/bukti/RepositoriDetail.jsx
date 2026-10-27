@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
 import { Link, Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { berkasUrl, useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../../lib/store'
 import { buktiKey, formatTanggal, indikatorById, isPic, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
@@ -92,10 +93,14 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
               <img src={levelArrow} alt="" width={46} height={45} className="-scale-x-100" />
             </button>
           </div>
-          <button type="button" onClick={() => setPedoman(true)} className={`gap-4! ${buttonClass('outline')}`}>
-            Lihat Pedoman Indikator
-            <img src={arrowSmall} alt="" width={20} height={10} />
-          </button>
+            <button
+                    type="button"
+                    onClick={() => setDibuka(i)}
+                    className={buttonClass('secondary', 'sm')}
+                  >
+                    <img src={bookIcon} alt="" width={15} height={15} />
+                    Pedoman &amp; Syarat
+            </button>
         </div>
 
         <FormError>{error}</FormError>
@@ -216,30 +221,31 @@ function RepositoriDetail() {
           <div className="flex w-full flex-col items-center gap-4">
             <span className="rounded-md border border-grey-500 px-5 py-1">Rencana Kegiatan</span>
             <h2 className="text-center text-h2">{k.nama}</h2>
-            <hr className="w-full border-grey-500" />
+            <hr className="w-full border-grey-50" />
             <dl className="grid w-full grid-cols-2 gap-2.5 px-4 text-center md:grid-cols-4 md:px-15">
               {[
-                ['OPD', k.opd],
-                ['PIC', k.pic],
-                ['Jadwal', `${formatTanggal(k.mulai)} s/d ${formatTanggal(k.selesai)}`],
-                ['Deadline Bukti', formatTanggal(aktif.batas)],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="font-semibold">{label} :</dt>
-                  <dd>{value}</dd>
+                [Building2, 'OPD', k.opd],
+                [UserRound, 'PIC', k.pic],
+                [CalendarDays, 'Jadwal', <> {formatTanggal(k.mulai)}<br />- {formatTanggal(k.selesai)}</>],
+                [Clock3, 'Deadline Bukti', formatTanggal(aktif.batas)],
+              ].map(([Icon, label, value]) => (
+                <div key={label} className="flex flex-col items-center gap-2">
+                  <Icon size={25} aria-hidden="true" className="text-white bg-grey-500 py-1 px-1 rounded-xs" />
+                  <dt className="font-bold">{label}</dt>
+                  <dd className="bg-lime-100 py-2 px-4 rounded-sm">{value}</dd>
                 </div>
               ))}
             </dl>
           </div>
 
           <p className="flex flex-wrap items-center gap-4 font-semibold">
-            Kelengkapan Bukti Kegiatan :
+            Kelengkapan Bukti Kegiatan:
             <span className="flex h-6 items-center gap-2.5 rounded-sm bg-lime-300 px-5 font-medium">
               <img src={bookIcon} alt="" width={15} height={15} />
               {files.length} Berkas Terunggah
             </span>
           </p>
-          <hr className="w-full border-grey-500" />
+          <hr className="w-full border-grey-50" />
 
           {/* Target output diisi verifikator di form Rencana Kegiatan */}
           {k.output?.length > 0 && (
@@ -260,7 +266,7 @@ function RepositoriDetail() {
           )}
 
           <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
-            <h3 className="font-semibold">Dokumen Bukti yang Terlampir :</h3>
+            <h3 className="font-semibold">Dokumen Bukti yang Terlampir:</h3>
             {files.length === 0 && <p className="text-small text-grey-200">Belum ada berkas yang diunggah.</p>}
             {files.map((f) => {
               const url = berkasUrl.get(f.id)
@@ -282,7 +288,7 @@ function RepositoriDetail() {
                         <img src={eyeIcon} alt="" width={20} height={20} />
                       </a>
                     ) : (
-                      <span title="Pratinjau hanya tersedia pada sesi saat berkas diunggah" className="grid size-[30px] place-items-center rounded-sm bg-lime-200 opacity-40">
+                      <span title="Pratinjau hanya tersedia pada sesi saat berkas diunggah" className="grid size-[30px] place-items-center rounded-sm bg-lime-300 opacity-40">
                         <img src={eyeIcon} alt="" width={20} height={20} />
                       </span>
                     )}

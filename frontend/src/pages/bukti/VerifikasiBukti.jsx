@@ -9,7 +9,7 @@ import { useConfirm } from '../../components/useConfirm'
 
 const PAGE_SIZE = 5
 
-function VerifikasiBukti() {
+function  VerifikasiBukti() {
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
   const muat = [useKegiatan(), useBukti(), useSkor()]

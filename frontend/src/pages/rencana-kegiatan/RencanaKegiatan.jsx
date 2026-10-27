@@ -103,6 +103,7 @@ function RencanaKegiatan() {
           <table className="w-full min-w-[760px] text-left text-grey-500">
             <thead>
               <tr className="border-b border-grey-75 text-center text-body font-semibold">
+                <th className="w-14 py-5">No.</th>
                 <th className="w-[40%] py-5">Informasi Kegiatan</th>
                 <th className="py-5">OPD/PIC</th>
                 <th className="py-5">Jadwal Kegiatan</th>
@@ -113,7 +114,7 @@ function RencanaKegiatan() {
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-16 text-center text-grey-200">
+                  <td colSpan={6} className="py-16 text-center text-grey-200">
                     {kegiatan.length === 0
                       ? kelola
                         ? 'Belum ada rencana kegiatan. Klik "Tambah Rencana Kegiatan" untuk menambahkan.'
@@ -126,6 +127,7 @@ function RencanaKegiatan() {
                 const status = statusOf(k)
                 return (
                   <tr key={k.id} className="border-b border-grey-75/50 align-top text-small last:border-0">
+                    <td className="py-5 text-center font-medium">{(currentPage - 1) * PAGE_SIZE + rows.indexOf(k) + 1}</td>
                     <td className="py-5 pr-4">
                       <p className="text-body font-semibold">{k.nama}</p>
                       {k.deskripsi && <p className="mt-2 font-light">{k.deskripsi}</p>}
@@ -135,16 +137,16 @@ function RencanaKegiatan() {
                       <p className="mt-2 flex items-end gap-1">
                         <img src={userIcon} alt="" width={17} height={17} />
                         <span>
-                          <span className="font-light">PIC :</span> <span className="font-medium">{k.pic}</span>
+                          <span className="font-light">PIC:</span> <span className="font-medium">{k.pic}</span>
                         </span>
                       </p>
                     </td>
                     <td className="py-5 pr-4 font-medium">
                       <p>
-                        <span className="font-light">Mulai :</span> {formatTanggal(k.mulai)}
+                        <span className="font-light">Mulai:</span> {formatTanggal(k.mulai)}
                       </p>
                       <p className="mt-2">
-                        <span className="font-light">Selesai :</span> {formatTanggal(k.selesai)}
+                        <span className="font-light">Selesai:</span> {formatTanggal(k.selesai)}
                       </p>
                     </td>
                     <td className="py-5 text-center">

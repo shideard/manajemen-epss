@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/store'
 import background from '../assets/login/login-bg.png'
@@ -10,6 +11,7 @@ import { buttonClass } from '../components/classes'
 function Login() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const { login } = useAuth()
 
   function handleSubmit(event) {
@@ -46,7 +48,25 @@ function Login() {
                 <Input name="username" required autoComplete="username" placeholder="Contoh: operator.dinsos" />
               </Field>
               <Field label="Password">
-                <Input name="password" type="password" required autoComplete="current-password" placeholder="Masukkan password" />
+                <span className="relative block">
+                  <Input
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="current-password"
+                    placeholder="Masukkan password"
+                    className="pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                    aria-pressed={showPassword}
+                    className="absolute inset-y-0 right-3 flex items-center justify-center text-grey-300 hover:text-grey-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+                  </button>
+                </span>
               </Field>
               <FormError>{error}</FormError>
             </div>
