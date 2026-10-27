@@ -73,4 +73,13 @@ class PeriodeEvaluasiController extends Controller
 
         return PeriodeEvaluasiResource::collection($periode);
     }
+
+    public function show(PeriodeEvaluasi $periode): PeriodeEvaluasiResource 
+    {
+        Gate::authorize('view', $periode);
+
+        $periode->load('versiInstrumen');
+
+        return new PeriodeEvaluasiResource($periode);
+    }
 }

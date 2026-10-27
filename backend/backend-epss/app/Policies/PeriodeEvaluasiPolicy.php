@@ -6,6 +6,7 @@ use App\Models\PeriodeEvaluasi;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
+use App\Enums\StatusPeriode;
 
 class PeriodeEvaluasiPolicy
 {
@@ -39,5 +40,22 @@ class PeriodeEvaluasiPolicy
     public function lock(User $user, PeriodeEvaluasi $periode): bool {
         return $user->status_aktif
             && $user->role === UserRole::VERIFIKATOR;
+    }
+
+    public function view(User $user, PeriodeEvaluasi $periode): bool
+    {
+        if (!$user->status_aktif) {
+            return false;
+        }
+
+        if ($user->role === UserRole::VERIFIKATOR) {
+            return true;
+        }
+
+        return $user->role === UserRole::OPERATOR
+            && in_array($periode->status, [
+                StatusPeriode::AKTIF,
+                StatusPeriode::TERKUNCI,
+            ], true);
     }
 }

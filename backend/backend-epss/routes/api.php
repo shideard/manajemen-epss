@@ -55,6 +55,13 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         KunciPeriodeController::class
         )->name('periode-evaluasi.lock');
     
+        Route::get('/periode-evaluasi/{periode}', [
+        PeriodeEvaluasiController::class,
+        'show',
+        ])->whereUuid('periode')
+        ->name('periode-evaluasi.show');
+
+        
     });
 });
 

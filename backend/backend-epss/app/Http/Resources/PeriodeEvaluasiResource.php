@@ -12,6 +12,7 @@ class PeriodeEvaluasiResource extends JsonResource
         return [
             'id' => $this->id,
             'versi_instrumen_id' => $this->versi_instrumen_id,
+            'versi_instrumen' => new VersiInstrumenResource($this->whenLoaded('versiInstrumen')),
             'nama_periode' => $this->nama_periode,
             'tahun_mulai' => $this->tahun_mulai,
             'tahun_selesai' => $this->tahun_selesai,
