@@ -367,7 +367,36 @@ export const jumlahBukti = (bukti, berkas, indikatorId) =>
     .filter((b) => b.indikatorId === indikatorId)
     .reduce((total, b) => total + (berkas[b.kegiatanId]?.length ?? 0), 0)
 
-export const metaBerkas = (f) => `Ukuran: ${(f.ukuran / 1024 / 1024).toFixed(1)} MB  •  Diunggah: ${formatTanggal(f.tanggal)} oleh ${f.oleh}`
+// Isi Repositori: satu baris per berkas (id) dengan semua kegiatan yang memakainya, terbaru dulu.
+// Tiap entri di berkas[kegiatanId] mencatat periode saat diunggah/ditautkan, jadi berkas lama yang dipakai ulang
+// ikut masuk folder periode sekarang. Entri lama tanpa periodeId masuk periode yang tahunnya memuat tanggal unggah.
+// Tag indikator = gabungan indikator yang dipetakan ke semua kegiatan tertaut (urut nomor), jadi bertambah saat ditautkan
+export function arsipBerkas(berkas, kegiatan, bukti, periode) {
+  const kegiatanById = new Map(kegiatan.map((k) => [k.id, k]))
+  const arsip = new Map()
+  for (const [kegiatanId, list] of Object.entries(berkas)) {
+    const k = kegiatanById.get(kegiatanId)
+    if (!k) continue
+    const indikator = Object.values(bukti)
+      .filter((b) => b.kegiatanId === kegiatanId)
+      .map((b) => indikatorById[b.indikatorId])
+      .filter(Boolean)
+    for (const f of list) {
+      const tahun = f.tanggal.slice(0, 4)
+      const periodeId = f.periodeId ?? periode.find((p) => p.tahun1 <= tahun && tahun <= p.tahun2)?.id
+      const item = arsip.get(f.id) ?? { id: f.id, nama: f.nama, ukuran: f.ukuran, tanggal: f.tanggal, oleh: f.oleh, kegiatan: [], indikator: [], periode: [] }
+      item.kegiatan.push(k)
+      item.indikator = [...new Set([...item.indikator, ...indikator])].sort((a, b) => a.nomor - b.nomor)
+      if (periodeId && !item.periode.includes(periodeId)) item.periode.push(periodeId)
+      arsip.set(f.id, item)
+    }
+  }
+  return [...arsip.values()].sort((a, b) => b.tanggal.localeCompare(a.tanggal))
+}
+
+export const formatUkuran = (byte) => `${(byte / 1024 / 1024).toFixed(1)} MB`
+
+export const metaBerkas = (f) => `Ukuran: ${formatUkuran(f.ukuran)}  •  Diunggah: ${formatTanggal(f.tanggal)} oleh ${f.oleh}`
 
 // Rekap LKE per indikator sebagai CSV (pemisah ";" agar langsung terbaca Excel berbahasa Indonesia)
 export function lkeCsv(levels, bukti, berkas, namaKegiatan) {

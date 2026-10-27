@@ -62,8 +62,11 @@ function MenuGroup({ item, ringkas, sembunyikanSub, rk, onClose }) {
       <AnimatePresence initial={false}>
         {buka && !sembunyikanSub && (
           // -mt-5 menetralkan gap nav, jadi saat tinggi 0 dropdown tidak memakan tempat dan menu di bawahnya
-          // ikut turun/naik mengikuti tingginya (juga saat sidebar ringkas/melebar)
+          // ikut turun/naik mengikuti tingginya (juga saat sidebar ringkas/melebar).
+          // layout="position": saat induk berganti tinggi (pindah halaman masuk/keluar grup) submenu ikut meluncur
+          // bersama menu lain, bukan melompat duluan
           <motion.div
+            layout="position"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}

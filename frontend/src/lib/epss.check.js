@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -109,6 +109,22 @@ assert.deepEqual(lengkap, { domain: 'd:d1', aspek: 'a:d1:Metadata Statistik', in
 assert.deepEqual(pilihTingkat(peta.edges, lengkap, 'aspek', ''), { domain: 'd:d1', aspek: '', indikator: '' })
 assert.deepEqual(pilihTingkat(peta.edges, lengkap, 'domain', ''), kosong)
 assert.deepEqual(pilihTingkat(peta.edges, lengkap, 'domain', 'd:d2'), { domain: 'd:d2', aspek: '', indikator: '' })
+
+// Repositori: berkas yang ditautkan ke dua kegiatan = satu baris, masuk folder kedua periodenya;
+// entri tanpa periodeId ikut tahun unggah; berkas kegiatan yang sudah dihapus tidak ikut
+const lamaF = { id: 'f1', nama: 'SK.pdf', ukuran: 1, tanggal: '2024-03-01', oleh: 'ani' }
+const arsip = arsipBerkas(
+  { k1: [lamaF], k2: [{ ...lamaF, periodeId: 'p2025' }, { id: 'f2', nama: 'b', ukuran: 1, tanggal: '2026-01-01', oleh: 'ani', periodeId: 'p2025' }], hilang: [{ id: 'f3', tanggal: '2026-02-01' }] },
+  [{ id: 'k1' }, { id: 'k2' }],
+  { 'k1:i2': { kegiatanId: 'k1', indikatorId: 'i2' }, 'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1' }, 'k2:i1': { kegiatanId: 'k2', indikatorId: 'i1' }, 'k2:i3': { kegiatanId: 'k2', indikatorId: 'i3' } },
+  SEED_PERIODE,
+)
+assert.deepEqual(arsip.map((f) => f.id), ['f2', 'f1'])
+assert.deepEqual(arsip[1].kegiatan.map((k) => k.id), ['k1', 'k2'])
+assert.deepEqual(arsip[1].indikator.map((i) => i.id), ['i1', 'i2', 'i3']) // gabungan k1 + k2, tanpa dobel
+assert.deepEqual(arsip[0].indikator.map((i) => i.id), ['i1', 'i3'])
+assert.deepEqual(arsip[1].periode, ['p2023', 'p2025'])
+assert.equal(formatUkuran(1572864), '1.5 MB')
 
 console.log('epss.check: OK')
 
