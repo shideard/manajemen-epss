@@ -58,4 +58,9 @@ class PeriodeEvaluasiPolicy
                 StatusPeriode::TERKUNCI,
             ], true);
     }
+
+    public function update(User $user, PeriodeEvaluasi $periode): bool {
+    return $user->status_aktif
+        && $user->role === UserRole::VERIFIKATOR;
+}
 }

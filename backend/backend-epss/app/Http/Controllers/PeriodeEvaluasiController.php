@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\Periode\UpdatePeriodeEvaluasiRequest;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 
 class PeriodeEvaluasiController extends Controller
@@ -81,5 +84,55 @@ class PeriodeEvaluasiController extends Controller
         $periode->load('versiInstrumen');
 
         return new PeriodeEvaluasiResource($periode);
+    }
+
+    public function update(UpdatePeriodeEvaluasiRequest $request, PeriodeEvaluasi $periode): PeriodeEvaluasiResource 
+    {
+        $validated = $request->validated();
+
+        $updatedPeriode = DB::transaction(function () use (
+            $periode,
+            $validated
+        ): PeriodeEvaluasi {
+            $lockedPeriode = PeriodeEvaluasi::query()
+                ->lockForUpdate()
+                ->findOrFail($periode->id);
+
+            abort_if(
+                $lockedPeriode->status === StatusPeriode::TERKUNCI,
+                409,
+                'Periode terkunci harus dibuka kembali sebelum diedit.'
+            );
+
+            $effective = array_replace([
+                'tahun_mulai' => $lockedPeriode->tahun_mulai,
+                'tahun_selesai' => $lockedPeriode->tahun_selesai,
+                'tanggal_mulai' => $lockedPeriode->tanggal_mulai?->toDateString(),
+                'tanggal_selesai' => $lockedPeriode->tanggal_selesai?->toDateString(),
+            ], $validated);
+
+            Validator::make($effective, [
+                'tahun_selesai' => [
+                    'gte:tahun_mulai',
+                ],
+                'tanggal_selesai' => [
+                    'nullable',
+                    'date_format:Y-m-d',
+                    Rule::when(
+                        $effective['tanggal_mulai'] !== null,
+                        ['after_or_equal:tanggal_mulai']
+                    ),
+                ],
+            ])->validate();
+
+            $lockedPeriode->fill($validated);
+            $lockedPeriode->save();
+
+            return $lockedPeriode;
+        });
+
+        return new PeriodeEvaluasiResource(
+            $updatedPeriode->refresh()->load('versiInstrumen')
+        );
     }
 }

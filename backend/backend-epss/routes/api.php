@@ -61,7 +61,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ])->whereUuid('periode')
         ->name('periode-evaluasi.show');
 
-        
+        Route::patch('/periode-evaluasi/{periode}', [
+        PeriodeEvaluasiController::class,
+        'update',
+        ])->whereUuid('periode')
+        ->name('periode-evaluasi.update');
     });
 });
 
