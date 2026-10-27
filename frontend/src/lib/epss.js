@@ -1,8 +1,29 @@
 // Data referensi & logika murni EPSS (tanpa React), dicek oleh epss.check.js
-import { statusOf, toISODate, WARNA } from '../pages/rencana-kegiatan/kegiatan.js'
+
+// Warna bar kalender & ikon agenda, urutannya sama dengan ikon calendar-2-fill-{1..4}.svg
+export const WARNA = ['#b57fd4', '#d47f81', '#7fa7d4', '#eef281']
+
+// Tanggal lokal 'YYYY-MM-DD' (format sv-SE = ISO); string ISO aman dibandingkan dengan < dan >
+export const toISODate = (date) => date.toLocaleDateString('sv-SE')
+
+export function statusOf(kegiatan, today = toISODate(new Date())) {
+  if (today < kegiatan.mulai) return 'Belum Mulai'
+  if (today > kegiatan.selesai) return 'Selesai'
+  return 'Berjalan'
+}
+
+// Kegiatan yang belum selesai, diurutkan dari yang paling dekat mulainya
+export function agendaTerdekat(list, today, limit = 4) {
+  return list
+    .filter((k) => k.selesai >= today)
+    .sort((a, b) => a.mulai.localeCompare(b.mulai))
+    .slice(0, limit)
+}
 
 // Key localStorage untuk useStore
+// ponytail: data disimpan di localStorage browser; pindahkan ke API Laravel saat endpoint-nya siap
 export const KEYS = {
+  kegiatan: 'epss.rencana-kegiatan',
   periode: 'epss.periode',
   periodeAktif: 'epss.periode-aktif',
   bukti: 'epss.bukti', // { 'kegiatanId:indikatorId': { checked, status, level, catatan } }
@@ -251,13 +272,16 @@ export function hitungIps(indikator, levels) {
 }
 
 // Predikat IPS sesuai Peraturan BPS No 3/2022
-export function predikat(ips) {
-  if (ips >= 4.2) return 'Memuaskan'
-  if (ips >= 3.5) return 'Sangat Baik'
-  if (ips >= 2.6) return 'Baik'
-  if (ips >= 1.8) return 'Cukup'
-  return 'Kurang'
-}
+// Batas bawah tiap predikat, dari yang tertinggi (juga dipakai skala IPS di dashboard)
+export const PREDIKAT_BATAS = [
+  [4.2, 'Memuaskan'],
+  [3.5, 'Sangat Baik'],
+  [2.6, 'Baik'],
+  [1.8, 'Cukup'],
+  [1, 'Kurang'],
+]
+
+export const predikat = (ips) => PREDIKAT_BATAS.find(([batas]) => ips >= batas)?.[1] ?? 'Kurang'
 
 // Verifikasi berjenjang: level terpenuhi = jumlah level berurutan dari level 1 yang semua syaratnya dicentang
 export function levelTerpenuhi(levels, checked = {}) {
@@ -301,6 +325,18 @@ export function paginate(list, page, size) {
   const pageCount = Math.max(1, Math.ceil(list.length / size))
   const current = Math.min(page, pageCount)
   return { rows: list.slice((current - 1) * size, current * size), page: current, pageCount }
+}
+
+// Nomor halaman yang ditampilkan: hanya pertama, aktif, dan terakhir; setiap celah jadi '…'
+// (halaman sebelah dibuka lewat tombol panah)
+export function halamanTerlihat(page, pageCount) {
+  const nomor = [...new Set([1, page, pageCount])].sort((a, b) => a - b)
+  const hasil = []
+  for (const n of nomor) {
+    if (n - hasil.at(-1) > 1) hasil.push('…')
+    hasil.push(n)
+  }
+  return hasil
 }
 
 export const formatTanggal = (iso, month = 'long') =>

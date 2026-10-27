@@ -2,9 +2,8 @@ import { useMemo, useRef, useState } from 'react'
 import { Background, Controls, Handle, Panel, Position, ReactFlow, useNodesState } from '@xyflow/react'
 import { animate } from 'motion/react'
 import '@xyflow/react/dist/style.css'
-import { PETA, petaRelasi, pilihTingkat, terhubung } from '../../lib/epss'
-import { WARNA } from './kegiatan'
-import arrowDown from '../../assets/rencana/arrow-down-s-line.svg'
+import { PETA, petaRelasi, pilihTingkat, terhubung, WARNA } from '../../lib/epss'
+import { Dropdown } from '../../components/ui'
 
 const JENIS = [
   ['domain', 'Domain'],
@@ -13,33 +12,28 @@ const JENIS = [
   ['kegiatan', 'Rencana Kegiatan'],
 ]
 const TITIK = { domain: 'bg-grey-500', aspek: 'bg-grey-200', indikator: 'border border-lime-200 bg-lime-100' }
+// Garis tepi filter yang sedang dipakai, warnanya mengikuti titik tingkatnya (yang belum dipilih: garis tipis grey-75)
+const GARIS = { domain: 'outline-grey-500', aspek: 'outline-grey-200', indikator: 'outline-lime-500' }
 
 // Dropdown filter satu tingkat; titik warnanya sama dengan warna kotak tingkat itu di peta
 function FilterTingkat({ jenis, judul, value, options, onChange }) {
   return (
-    <label className="flex w-full flex-col gap-[6px] sm:w-[250px]">
-      <span className="flex items-center gap-[6px] text-[13px] font-semibold text-grey-200">
+    <div className="flex w-full flex-col gap-1.5 sm:w-[250px]">
+      <span className="flex items-center gap-1.5 text-small font-semibold text-grey-200">
         <span className={`size-3 rounded-full ${TITIK[jenis]}`} />
         {judul}
       </span>
-      <span className="relative flex h-[45px] items-center">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`size-full appearance-none truncate rounded-[16px] bg-grey2-75 pr-12 pl-[14px] text-base focus:outline-2 focus:outline-grey-300 ${
-            value ? 'text-grey-500' : 'font-light text-grey-75 italic'
-          }`}
-        >
-          <option value="">Semua {judul.toLowerCase()}</option>
-          {options.map((n) => (
-            <option key={n.id} value={n.id}>
-              {jenis === 'aspek' ? n.data.label : `${n.data.chip} – ${n.data.label}`}
-            </option>
-          ))}
-        </select>
-        <img src={arrowDown} alt="" width={24} height={24} className="pointer-events-none absolute right-[14px] rounded-[5px] bg-grey-300" />
-      </span>
-    </label>
+      <Dropdown
+        label={judul}
+        value={value}
+        onChange={onChange}
+        options={[
+          { value: '', label: `Semua ${judul.toLowerCase()}` },
+          ...options.map((n) => ({ value: n.id, label: jenis === 'aspek' ? n.data.label : `${n.data.chip} – ${n.data.label}` })),
+        ]}
+        tombolClass={value ? `outline-2 ${GARIS[jenis]}` : 'outline-1 outline-grey-75'}
+      />
+    </div>
   )
 }
 
@@ -57,12 +51,12 @@ function NodePeta({ data }) {
     <div
       title={label}
       style={{ background: kegiatan && WARNA[kegiatan.warna], animationDelay: `${kolom * 90}ms` }}
-      className={`w-[230px] rounded-[12px] px-3 py-2 text-[12px] leading-[1.2] shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-[opacity,scale,box-shadow] duration-200 motion-safe:animate-rise ${KELAS[jenis]} ${
+      className={`w-[230px] rounded-sm px-3 py-2 text-small shadow-sm transition-[opacity,scale,box-shadow] duration-200 motion-safe:animate-rise ${KELAS[jenis]} ${
         redup ? 'opacity-25' : ''
-      } ${sorot ? 'scale-[1.04] shadow-[0_8px_20px_rgba(0,0,0,0.18)]' : ''}`}
+      } ${sorot ? 'scale-[1.04] shadow-md' : ''}`}
     >
       {jenis !== 'domain' && <Handle type="target" position={Position.Left} className="opacity-0" />}
-      <p className="flex justify-between gap-2 text-[10px] font-semibold tracking-wide uppercase opacity-70">
+      <p className="flex justify-between gap-2 text-caption font-semibold tracking-wide uppercase opacity-70">
         <span className="shrink-0">{chip}</span>
         <span className="truncate">{info}</span>
       </p>
@@ -73,7 +67,7 @@ function NodePeta({ data }) {
 }
 
 function JudulKolom({ data }) {
-  return <p className="w-[230px] text-center text-[13px] font-bold tracking-wide text-heading uppercase">{data.label}</p>
+  return <p className="w-[230px] text-center text-small font-semibold tracking-wide uppercase">{data.label}</p>
 }
 
 const nodeTypes = { peta: NodePeta, judul: JudulKolom }
@@ -165,13 +159,13 @@ function PetaKegiatan({ kegiatan, bukti, onOpen }) {
           onChange={(id) => pilih('indikator', id)}
         />
         {ringkasan && (
-          <p role="status" className="pb-3 text-[13px] text-grey-200">
+          <p role="status" className="pb-3 text-small text-grey-200">
             Jalur: {ringkasan}
           </p>
         )}
       </div>
 
-      <div style={{ height: tinggi }} className="w-full overflow-hidden rounded-[20px] border-5 border-dashed border-lime-500 bg-lime-50">
+      <div style={{ height: tinggi }} className="w-full overflow-hidden rounded-lg border-5 border-dashed border-lime-500 bg-lime-50">
         <ReactFlow
           nodes={tampilNodes}
           edges={edges}
@@ -197,7 +191,7 @@ function PetaKegiatan({ kegiatan, bukti, onOpen }) {
         >
           <Background color="var(--color-lime-500)" gap={22} size={1.5} />
           <Controls showInteractive={false} />
-          <Panel position="bottom-right" className="rounded-[10px] bg-white/85 px-3 py-2 text-[12px] text-grey-200 shadow-sm">
+          <Panel position="bottom-right" className="rounded-sm bg-white/85 px-3 py-2 text-small text-grey-200 shadow-sm">
             Klik kotak untuk menandai jalurnya · kotak bisa digeser
           </Panel>
         </ReactFlow>

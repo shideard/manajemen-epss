@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { LEVELS } from '../lib/epss'
 import { Modal } from './ui'
+import { buttonClass } from './classes'
 
 // Kriteria & syarat tiap level satu indikator (dipakai di Pedoman, Repositori, Verifikasi)
 function PedomanModal({ indikator, level: levelAwal = 1, onClose }) {
@@ -9,8 +10,8 @@ function PedomanModal({ indikator, level: levelAwal = 1, onClose }) {
 
   return (
     <Modal title={`Indikator ${indikator.nomor}: ${indikator.nama}`} onClose={onClose}>
-      <div className="flex flex-col gap-[52px] px-[34px] pt-8 pb-8">
-        <div role="tablist" aria-label="Level" className="flex justify-between gap-1 overflow-x-auto rounded-[15px] bg-lime-75 px-[10px] py-[5px]">
+      <div className="flex flex-col gap-13 px-8.5 pt-8 pb-8">
+        <div role="tablist" aria-label="Level" className="flex justify-between gap-1 overflow-x-auto rounded-md bg-lime-75 px-2.5 py-1">
           {LEVELS.map((_, i) => (
             <button
               key={i}
@@ -18,18 +19,18 @@ function PedomanModal({ indikator, level: levelAwal = 1, onClose }) {
               role="tab"
               aria-selected={level === i + 1}
               onClick={() => setLevel(i + 1)}
-              className={`h-[45px] w-[126px] shrink-0 rounded-[15px] text-base leading-[1.2] font-semibold ${level === i + 1 ? 'bg-grey-500 text-lime-300' : 'text-grey-500'}`}
+              className={`h-[45px] w-[126px] shrink-0 rounded-md text-body font-semibold ${level === i + 1 ? 'bg-grey-500 text-lime-300' : 'text-grey-500'}`}
             >
               Level {i + 1}
             </button>
           ))}
         </div>
 
-        <div role="tabpanel" className="flex flex-col gap-[17px]">
-          <h3 className="text-center text-[20px] leading-[1.2] font-semibold text-grey-500">
+        <div role="tabpanel" className="flex flex-col gap-4">
+          <h3 className="text-center text-h3 text-grey-500">
             Level {level}: {LEVELS[level - 1]}
           </h3>
-          <div className="flex flex-col gap-6 rounded-[15px] bg-lime-50 p-6 text-base leading-[1.2] text-grey-500">
+          <div className="flex flex-col gap-6 rounded-md bg-lime-50 p-6 text-body text-grey-500">
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Kriteria Level</p>
               <p className="font-light">{kriteria}</p>
@@ -56,7 +57,7 @@ function PedomanModal({ indikator, level: levelAwal = 1, onClose }) {
         </div>
 
         <div className="flex justify-end">
-          <button type="button" onClick={onClose} className="rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300">
+          <button type="button" onClick={onClose} className={buttonClass()}>
             Tutup
           </button>
         </div>
