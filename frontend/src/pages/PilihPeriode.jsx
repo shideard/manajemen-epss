@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Navigate, useNavigate, useOutletContext } from 'react-router-dom'
 import { usePeriode } from '../lib/store'
 import { paginate } from '../lib/epss'
-import { Badge, Pagination } from '../components/ui'
+import { Badge, PageHeader, Pagination } from '../components/ui'
+import { buttonClass } from '../components/classes'
 import { ROLES } from '../config/menu'
 import arrowBlack from '../assets/icons/arrow-long-black.svg'
 
@@ -26,31 +27,27 @@ function PilihPeriode() {
   }
 
   return (
-    <div className="flex w-full flex-col items-center gap-[30px]">
-      <div className="flex w-full flex-col gap-2 rounded-[20px] bg-lime-200 px-[27px] py-[21px] leading-[1.2] text-grey-500">
-        <h1 className="text-[25px] font-bold">Pilih Periode Penilaian</h1>
-        <p className="text-base">Pilih periode penilaian yang akan digunakan untuk mengelola dan melakukan evaluasi penyelenggaraan statistik sektoral.</p>
-      </div>
+    <div className="flex w-full flex-col gap-8">
+      <PageHeader
+        title="Pilih Periode Penilaian"
+        subtitle="Pilih periode penilaian yang akan digunakan untuk mengelola dan melakukan evaluasi penyelenggaraan statistik sektoral."
+      />
 
-      <div className="grid w-full gap-4 md:grid-cols-2 md:gap-x-[22px] 2xl:grid-cols-3">
+      <div className="grid w-full gap-6 md:grid-cols-2 2xl:grid-cols-3">
         {rows.map((p) => (
-          <article key={p.id} className="flex min-h-[193px] flex-col justify-between gap-4 rounded-[20px] bg-grey-300 px-[27px] pt-[22px] pb-[26px]">
+          <article key={p.id} className="flex min-h-[193px] flex-col justify-between gap-4 rounded-lg bg-grey-300 p-6">
             <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-col gap-[7px] leading-[1.2]">
-                <h2 className="max-w-[305px] text-[25px] font-semibold text-white">{p.nama}</h2>
-                <p className="text-base text-lime-75">
+              <div className="flex flex-col gap-2">
+                <h2 className="max-w-[305px] text-h3 text-white">{p.nama}</h2>
+                <p className="text-body text-lime-300">
                   {p.tahun1}-{p.tahun2}
                 </p>
               </div>
-              <Badge tone={p.terkunci ? 'red' : 'green'} className="w-[158px] text-base">
+              <Badge tone={p.terkunci ? 'red' : 'green'}>
                 {p.terkunci ? 'Periode terkunci' : 'Periode Aktif'}
               </Badge>
             </div>
-            <button
-              type="button"
-              onClick={() => pilih(p.id)}
-              className="flex items-center justify-between rounded-[16px] bg-white px-5 py-[10px] text-base leading-[1.2] text-grey-500"
-            >
+            <button type="button" onClick={() => pilih(p.id)} className={`justify-between! ${buttonClass('secondary')}`}>
               Pilih Periode
               <img src={arrowBlack} alt="" width={29} height={15} />
             </button>

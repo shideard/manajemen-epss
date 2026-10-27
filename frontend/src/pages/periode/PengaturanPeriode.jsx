@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { usePeriode, useStore } from '../../lib/store'
-import { EMPTY_LIST, formatTanggal, includesText, KEYS, paginate, validasiPeriode } from '../../lib/epss'
-import { Field, Input, Modal, ModalActions, Pagination, SearchBox, Select } from '../../components/ui'
+import { usePeriode } from '../../lib/store'
+import { formatTanggal, includesText, paginate, validasiPeriode } from '../../lib/epss'
+import { Field, FormError, Input, Memuat, Modal, ModalActions, PageHeader, Pagination, SearchBox, Select } from '../../components/ui'
+import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import listIcon from '../../assets/icons/list-unordered.svg'
@@ -20,7 +21,7 @@ export function PeriodeFields({ periode = {}, disabled, namaAside }) {
       <Field label="Nama Periode" aside={namaAside}>
         <Input name="nama" required disabled={disabled} defaultValue={periode.nama} placeholder="Contoh: Evaluasi EPSS Kota Bogor Siklus 2027–2028" />
       </Field>
-      <div className="grid gap-[22px] sm:grid-cols-2 sm:gap-[30px]">
+      <div className="grid gap-6 sm:grid-cols-2">
         <Field label="Tahun Pertama">
           <Select name="tahun1" disabled={disabled} defaultValue={periode.tahun1 ?? String(tahunIni)}>
             {OPSI_TAHUN.map((tahun) => (
@@ -36,7 +37,7 @@ export function PeriodeFields({ periode = {}, disabled, namaAside }) {
           </Select>
         </Field>
         <Field label="Batas Akhir Unggah Bukti">
-          <Input type="date" name="batas" required disabled={disabled} defaultValue={periode.batas} className="border-[#b4b4b4]" />
+          <Input type="date" name="batas" required disabled={disabled} defaultValue={periode.batas} />
         </Field>
         <Field label="Target Skor">
           <Input
@@ -49,7 +50,6 @@ export function PeriodeFields({ periode = {}, disabled, namaAside }) {
             disabled={disabled}
             defaultValue={periode.target}
             placeholder="Isi Target (1.00-5.00)"
-            className="border-[#b4b4b4]"
           />
         </Field>
       </div>
@@ -69,13 +69,9 @@ function TambahPeriode({ periode, onSave, onClose }) {
 
   return (
     <Modal title="Tambah Periode Penilaian EPSS" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-[22px] px-[34px] pt-7 pb-8">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6 px-8.5 pt-7 pb-8">
         <PeriodeFields />
-        {error && (
-          <p role="alert" className="text-sm text-red-600">
-            {error}
-          </p>
-        )}
+        <FormError>{error}</FormError>
         <ModalActions onCancel={onClose} />
       </form>
     </Modal>
@@ -83,11 +79,11 @@ function TambahPeriode({ periode, onSave, onClose }) {
 }
 
 function PengaturanPeriode() {
-  const { periode, setPeriode } = usePeriode()
+  const muat = [usePeriode()]
+  const [{ periode, tambah: tambahPeriode, hapus: hapusPeriode }] = muat
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [tambah, setTambah] = useState(false)
-  const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   // Periode terkunci = arsip skor resmi, jadi hanya periode yang belum dikunci yang bisa dihapus
@@ -97,10 +93,7 @@ function PengaturanPeriode() {
       message: `Hapus periode "${p.nama}"? Riwayat snapshot skor periode ini ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
       confirmLabel: 'Hapus',
       danger: true,
-      onConfirm: () => {
-        setPeriode((list) => list.filter((x) => x.id !== p.id))
-        setSnapshot((list) => list.filter((s) => s.periodeId !== p.id))
-      },
+      onConfirm: () => hapusPeriode(p.id),
     })
   }
 
@@ -109,21 +102,18 @@ function PengaturanPeriode() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <div className="flex flex-wrap items-center justify-between gap-1">
-        <div className="flex flex-col gap-1 text-grey-500">
-          <h1 className="text-2xl font-bold">Pengaturan Periode EPSS Biennial</h1>
-          <p className="text-lg font-regular">Konfigurasi siklus 2 tahunan year-agnostic dan penetapan target IPS.</p>
-        </div>
-        <button type="button" onClick={() => setTambah(true)} className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300 transform transition-transform duration-300 ease-out-quint hover:scale-102">
+      <Memuat dari={muat} />
+      <PageHeader title="Pengaturan Periode EPSS Biennial" subtitle="Konfigurasi siklus 2 tahunan year-agnostic dan penetapan target IPS.">
+        <button type="button" onClick={() => setTambah(true)} className={buttonClass()}>
           <img src={addIcon} alt="" width={19} height={19} />
           Tambah Periode
         </button>
-      </div>
+      </PageHeader>
 
-      <section className="rounded-[20px] border-5 border-dashed border-lime-500 bg-lime-300 px-[10px] pt-[23px] pb-[10px]">
-        <div className="mb-[29px] flex flex-wrap items-center justify-between gap-3 px-5">
-          <h2 className="flex items-center gap-2 text-[25px] leading-[1.2] font-semibold text-grey-300">
-            <img src={listIcon} alt="" width={32} height={32} className="rounded-[5px] bg-white" />
+      <section className="rounded-lg border-5 border-dashed border-lime-500 bg-lime-300 px-2.5 pt-6 pb-2.5">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 px-5">
+          <h2 className="flex items-center gap-2 text-h3">
+            <img src={listIcon} alt="" width={32} height={32} className="rounded-xs bg-white" />
             List Periode
           </h2>
           <SearchBox
@@ -137,10 +127,10 @@ function PengaturanPeriode() {
           />
         </div>
 
-        <div className="overflow-x-auto rounded-[20px] border border-lime-500 bg-[#fdfdfd] px-[13px] py-3">
-          <table className="w-full min-w-[760px] text-center text-base leading-[1.2] text-black">
+        <div className="overflow-x-auto rounded-lg border border-lime-500 bg-grey2-50 px-3 py-3">
+          <table className="w-full min-w-[760px] text-center text-body text-grey-500">
             <thead>
-              <tr className="border-b border-grey-100 font-bold">
+              <tr className="border-b border-grey-75 font-semibold">
                 <th className="w-[123px] py-4">Periode Penilaian</th>
                 <th className="py-4">Nama Siklus</th>
                 <th className="py-4">Batas Akhir Unggah Bukti</th>
@@ -152,23 +142,23 @@ function PengaturanPeriode() {
             <tbody className="font-medium">
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-16 text-grey-100">
+                  <td colSpan={6} className="py-16 text-grey-200">
                     Tidak ada periode yang cocok dengan pencarian.
                   </td>
                 </tr>
               )}
               {rows.map((p) => (
-                <tr key={p.id} className="border-b border-grey-100/50 last:border-0">
-                  <td className="py-[14px]">
+                <tr key={p.id} className="border-b border-grey-75/50 last:border-0">
+                  <td className="py-3.5">
                     {p.tahun1}/{p.tahun2}
                   </td>
-                  <td className="px-4 py-[14px]">{p.nama}</td>
-                  <td className="py-[14px]">{formatTanggal(p.batas)}</td>
-                  <td className="py-[14px]">{p.target.toFixed(2)}</td>
-                  <td className="py-[14px]">{p.actual?.toFixed(2) ?? '-'}</td>
-                  <td className="py-[14px]">
-                    <span className="flex justify-center gap-[7px]">
-                      <Link to={`/pengaturan-periode/${p.id}`} aria-label={`Konfigurasi ${p.nama}`} className="rounded-[5px] bg-lime-300">
+                  <td className="px-4 py-3.5">{p.nama}</td>
+                  <td className="py-3.5">{formatTanggal(p.batas)}</td>
+                  <td className="py-3.5">{p.target.toFixed(2)}</td>
+                  <td className="py-3.5">{p.actual?.toFixed(2) ?? '-'}</td>
+                  <td className="py-3.5">
+                    <span className="flex justify-center gap-2">
+                      <Link to={`/pengaturan-periode/${p.id}`} aria-label={`Konfigurasi ${p.nama}`} className="rounded-xs bg-lime-300">
                         <img src={editIcon} alt="" width={24} height={24} />
                       </Link>
                       <button
@@ -177,7 +167,7 @@ function PengaturanPeriode() {
                         disabled={p.terkunci || periode.length === 1}
                         title={p.terkunci ? 'Periode terkunci tidak bisa dihapus' : periode.length === 1 ? 'Minimal harus ada satu periode' : undefined}
                         aria-label={`Hapus ${p.nama}`}
-                        className="grid size-6 place-items-center rounded-[5px] bg-red-200 disabled:opacity-40"
+                        className="grid size-6 place-items-center rounded-xs bg-red-200 disabled:opacity-40"
                       >
                         <img src={deleteIcon} alt="" width={18} height={18} />
                       </button>
@@ -196,7 +186,7 @@ function PengaturanPeriode() {
         <TambahPeriode
           periode={periode}
           onSave={(data) => {
-            setPeriode((list) => [{ ...data, id: crypto.randomUUID(), actual: null, terkunci: false }, ...list])
+            tambahPeriode(data)
             setTambah(false)
           }}
           onClose={() => setTambah(false)}

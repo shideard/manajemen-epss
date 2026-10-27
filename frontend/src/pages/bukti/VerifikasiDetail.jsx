@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { berkasUrl, usePeriode, useStore } from '../../lib/store'
+import { berkasUrl, useBerkas, useBukti, useKegiatan, usePeriode } from '../../lib/store'
 import { bolehUbah } from '../../config/menu'
-import { STORAGE_KEY as KEGIATAN_KEY } from '../rencana-kegiatan/kegiatan'
-import { buktiKey, EMPTY_LIST, EMPTY_OBJECT, indikatorById, KEYS, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
-import { BackButton, ChecklistItem, StatusBukti } from '../../components/ui'
+import { buktiKey, indikatorById, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
+import { ChecklistItem, Field, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
+import { buttonClass, fieldClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import PedomanModal from '../../components/PedomanModal'
 import fileIcon from '../../assets/icons/file-3-fill.svg'
@@ -17,9 +17,8 @@ function VerifikasiDetail() {
   const navigate = useNavigate()
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const [kegiatan] = useStore(KEGIATAN_KEY, EMPTY_LIST)
-  const [semuaBukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
-  const [berkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
+  const muat = [useKegiatan(), useBukti(), useBerkas()]
+  const [{ kegiatan }, { bukti: semuaBukti, ubah: ubahBukti }, { berkas }] = muat
   const [dipilih, setDipilih] = useState(0)
   const [level, setLevel] = useState(null)
   const [catatan, setCatatan] = useState('')
@@ -33,6 +32,7 @@ function VerifikasiDetail() {
   const bukti = semuaBukti[key]
   const k = kegiatan.find((item) => item.id === kegiatanId)
   const indikator = indikatorById[indikatorId]
+  if ((!bukti || !k) && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} />
   if (!bukti || !k || !indikator) return <Navigate to="/verifikasi-bukti-dukung" replace />
 
   // Hanya ajuan berstatus "menunggu" yang bisa diputuskan, dan tidak saat periode dikunci
@@ -45,7 +45,7 @@ function VerifikasiDetail() {
   const levelAktif = level ?? Math.min(terpenuhi + 1, LEVELS.length)
   const checked = semuaChecked[levelAktif] ?? []
 
-  const simpan = (perubahan) => setBukti((all) => ({ ...all, [key]: { ...all[key], ...perubahan, checked: semuaChecked } }))
+  const simpan = (perubahan) => ubahBukti(key, { ...perubahan, checked: semuaChecked })
 
   function centang(index, value) {
     const baris = indikator.levels[levelAktif - 1].syarat.map((_, i) => (i === index ? value : Boolean(checked[i])))
@@ -81,44 +81,42 @@ function VerifikasiDetail() {
   const url = file && berkasUrl.get(file.id)
 
   return (
-    <div className="flex w-full flex-col gap-[18px]">
-      <div className="flex flex-col items-start gap-[7px]">
-        <BackButton fallback="/verifikasi-bukti-dukung" />
-        <h1 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Verifikasi Bukti Dukung Kegiatan</h1>
-      </div>
+    <div className="flex w-full flex-col gap-8">
+      <Memuat dari={muat} />
+      <PageHeader back="/verifikasi-bukti-dukung" title="Verifikasi Bukti Dukung Kegiatan" />
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(440px,2fr)_3fr]">
-        <div className="flex flex-col gap-6 rounded-[20px] bg-white p-6">
+        <div className="flex flex-col gap-6 rounded-lg bg-white p-6">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-[7px] leading-[1.2] text-grey-500">
-              <h2 className="text-[20px] font-semibold">{k.nama}</h2>
-              <p className="text-base">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-h3">{k.nama}</h2>
+              <p>
                 Indikator {indikator.nomor}: {indikator.nama}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-6">
               <StatusBukti status={bukti.status} label={bukti.status === 'menunggu' ? 'Belum diverifikasi' : undefined} />
-              <p className="text-base font-light text-grey-300">Pengaju: {bukti.pengaju ?? '-'}</p>
+              <p className="font-light text-grey-200">Pengaju: {bukti.pengaju ?? '-'}</p>
             </div>
           </div>
           <hr className="border-grey-75" />
 
           <section className="flex flex-col gap-3">
-            <h3 className="text-base leading-[1.2] font-semibold text-grey-500">Bukti dukung yang dilampirkan</h3>
-            {files.length === 0 && <p className="text-[13px] text-grey-100">Belum ada berkas.</p>}
+            <h3 className="font-semibold">Bukti dukung yang dilampirkan</h3>
+            {files.length === 0 && <p className="text-small text-grey-200">Belum ada berkas.</p>}
             {files.map((f, i) => (
               <button
                 key={f.id}
                 type="button"
                 onClick={() => setDipilih(i)}
                 aria-pressed={i === dipilih}
-                className={`rounded-[15px] p-5 text-left ${i === dipilih ? 'border-[1.5px] border-grey-500 bg-lime-300' : 'border border-grey-100 bg-white'}`}
+                className={`rounded-md p-5 text-left ${i === dipilih ? 'border-2 border-grey-500 bg-lime-300' : 'border border-grey-75 bg-white'}`}
               >
-                <span className="flex items-center gap-[9px]">
+                <span className="flex items-center gap-2">
                   <img src={fileIcon} alt="" width={24} height={24} />
-                  <span className="flex min-w-0 flex-col gap-[7px] leading-[1.2] text-grey-500">
-                    <span className="truncate text-[13px] font-semibold">{f.nama}</span>
-                    <span className="text-[10px] whitespace-pre-wrap text-grey-200">{metaBerkas(f)}</span>
+                  <span className="flex min-w-0 flex-col gap-2">
+                    <span className="truncate text-small font-semibold">{f.nama}</span>
+                    <span className="text-caption whitespace-pre-wrap text-grey-200">{metaBerkas(f)}</span>
                   </span>
                 </span>
               </button>
@@ -127,10 +125,10 @@ function VerifikasiDetail() {
           <hr className="border-grey-75" />
 
           <section className="flex flex-col gap-3">
-            <div className="flex flex-col gap-[5px] leading-[1.2] text-grey-500">
-              <h3 className="text-base font-semibold">Checklist per Level</h3>
+            <div className="flex flex-col gap-1">
+              <h3 className="font-semibold">Checklist per Level</h3>
               {/* Tombol level hanya membuka checklist; level yang ditetapkan selalu Level Terpenuhi */}
-              <p className="text-[13px]">Pilih level untuk melihat syaratnya. Level yang ditetapkan saat disetujui adalah Level Terpenuhi.</p>
+              <p className="text-small text-grey-200">Pilih level untuk melihat syaratnya. Level yang ditetapkan saat disetujui adalah Level Terpenuhi.</p>
             </div>
             <div className="grid grid-cols-5 gap-2">
               {LEVELS.map((nama, i) => {
@@ -143,23 +141,23 @@ function VerifikasiDetail() {
                     onClick={() => setLevel(n)}
                     disabled={n > terpenuhi + 1}
                     aria-pressed={aktif}
-                    className={`flex h-[65px] flex-col items-center justify-center gap-[3px] rounded-[15px] disabled:opacity-40 ${
-                      aktif ? 'border-[1.5px] border-grey-500 bg-lime-300 text-grey-500' : 'bg-grey-500 text-lime-200'
+                    className={`flex h-[65px] flex-col items-center justify-center gap-1 rounded-md disabled:opacity-40 ${
+                      aktif ? 'border-2 border-grey-500 bg-lime-300 text-grey-500' : 'bg-grey-500 text-lime-300'
                     }`}
                   >
-                    <span className="text-[15px] font-semibold">{n}</span>
-                    <span className="text-[10px]">{nama}</span>
-                    {n <= terpenuhi && <span className="text-[10px] font-semibold">Terpenuhi</span>}
+                    <span className="font-semibold">{n}</span>
+                    <span className="text-caption">{nama}</span>
+                    {n <= terpenuhi && <span className="text-caption font-semibold">Terpenuhi</span>}
                   </button>
                 )
               })}
             </div>
           </section>
 
-          <section className="flex flex-col gap-[10px]">
-            <div className="flex flex-col gap-[5px] leading-[1.2] text-grey-500">
-              <h3 className="text-base font-semibold">Checklist Persyaratan Bukti Dukung:</h3>
-              <p className="text-[13px]">Anda bisa lanjut ke level selanjutnya jika seluruh persyaratan pada level {levelAktif} sudah terpenuhi.</p>
+          <section className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-1">
+              <h3 className="font-semibold">Checklist Persyaratan Bukti Dukung:</h3>
+              <p className="text-small text-grey-200">Anda bisa lanjut ke level selanjutnya jika seluruh persyaratan pada level {levelAktif} sudah terpenuhi.</p>
             </div>
             {indikator.levels[levelAktif - 1].syarat.map((syarat, i) => (
               <ChecklistItem key={syarat} checked={Boolean(checked[i])} onChange={(value) => centang(i, value)} disabled={!bolehPutuskan}>
@@ -169,54 +167,49 @@ function VerifikasiDetail() {
           </section>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm leading-[1.2] font-semibold text-grey-400">Level Terpenuhi : {terpenuhi}</p>
-            <button type="button" onClick={() => setPedoman(true)} className="flex items-center gap-[10px] rounded-[16px] bg-lime-300 px-5 py-2 text-sm text-grey-500 hover:scale-102 transition-transform duration-300 ease-out-quint">
+            <p className="font-semibold">Level Terpenuhi : {terpenuhi}</p>
+            <button type="button" onClick={() => setPedoman(true)} className={buttonClass('secondary')}>
               <img src={bookIcon} alt="" width={19} height={19} />
               Lihat Pedoman Indikator
             </button>
           </div>
 
           {!bolehPutuskan && (
-            <p role="status" className="rounded-[15px] border border-yellow-500 bg-yellow-50 px-4 py-3 text-[13px] text-yellow-500">
+            <Notice tone="yellow" className="text-small">
               {aktif.terkunci ? 'Periode aktif sudah dikunci. Ajuan hanya dapat dilihat.' : 'Ajuan ini tidak sedang menunggu verifikasi, sehingga tidak dapat diputuskan.'}
-            </p>
+            </Notice>
           )}
 
           {bolehPutuskan && (
-            <label className="flex flex-col gap-3 text-base leading-[1.2] font-semibold text-grey-500">
-              Catatan perbaikan untuk operator
+            <Field label="Catatan perbaikan untuk operator">
               <textarea
                 value={catatan}
                 onChange={(e) => {
                   setCatatan(e.target.value)
                   setError('')
                 }}
-                className="h-[66px] resize-y rounded-[15px] border border-[#7e7e7e] px-5 py-3 text-base font-normal focus:outline-2 focus:outline-grey-500"
+                className={`${fieldClass} min-h-[66px] resize-y py-3`}
               />
-            </label>
+            </Field>
           )}
 
-          {error && (
-            <p role="alert" className="text-sm text-red-600">
-              {error}
-            </p>
-          )}
+          <FormError>{error}</FormError>
 
           {bolehPutuskan && (
-            <div className="flex flex-col gap-[6px] pt-5">
-              <button type="button" onClick={kirimRevisi} className="rounded-[16px] border border-grey-500 py-[10px] text-base leading-[1.2] text-grey-500">
+            <div className="flex flex-col gap-2 pt-4">
+              <button type="button" onClick={kirimRevisi} className={buttonClass('outline')}>
                 Kirim Revisi ke Operator
               </button>
-              <button type="button" onClick={setujui} className="rounded-[16px] bg-grey-300 py-[10px] text-base leading-[1.2] text-lime-300">
+              <button type="button" onClick={setujui} className={buttonClass()}>
                 Setujui &amp; Tetapkan Level {terpenuhi || ''}
               </button>
             </div>
           )}
         </div>
 
-        <section className="sticky top-6 flex min-h-[600px] flex-col overflow-hidden rounded-[20px] bg-grey-500 xl:h-[909px]">
-          <header className="flex items-center justify-between gap-4 px-[31px] py-6">
-            <p className="flex min-w-0 items-center gap-[26px] text-base leading-[1.2] text-white">
+        <section className="sticky top-6 flex min-h-[600px] flex-col overflow-hidden rounded-lg bg-grey-500 xl:h-[909px]">
+          <header className="flex items-center justify-between gap-4 px-8 py-6">
+            <p className="flex min-w-0 items-center gap-4 text-white">
               <img src={fileWhite} alt="" width={24} height={24} />
               <span className="truncate">{file?.nama ?? 'Tidak ada berkas'}</span>
             </p>
@@ -226,7 +219,7 @@ function VerifikasiDetail() {
               </a>
             )}
           </header>
-          <div className="grid flex-1 place-items-center rounded-b-[20px] bg-[#ccc]">
+          <div className="grid flex-1 place-items-center rounded-b-lg bg-grey-50">
             {url ? (
               <iframe src={url} title={file.nama} className="size-full" />
             ) : (
