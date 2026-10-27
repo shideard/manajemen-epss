@@ -16,6 +16,7 @@ use App\Http\Controllers\KunciPeriodeController;
 
 // opd
 use App\Http\Controllers\PilihanOpdController;
+use App\Http\Controllers\PilihanPicController;
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
@@ -77,6 +78,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/pilihan/opd', 
         PilihanOpdController::class)
         ->name('pilihan.opd');
+
+        Route::get('/pilihan/pic', 
+        PilihanPicController::class)
+        ->name('pilihan.pic');
 
     });
 });
