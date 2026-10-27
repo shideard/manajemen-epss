@@ -3,7 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import { usePeriode, useStore } from '../lib/store'
 import { ROLES } from '../config/menu'
 import { agendaTerdekat, STORAGE_KEY as KEGIATAN_KEY, toISODate } from './rencana-kegiatan/kegiatan'
-import { DOMAINS, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, hitungIps, INDIKATOR, indikatorById, KEYS, predikat, selisihHari, statusKegiatan } from '../lib/epss'
+import { DOMAINS, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, hitungIps, INDIKATOR, indikatorById, KEYS, predikat, PREDIKAT_TONE, selisihHari, statusKegiatan } from '../lib/epss'
 import { ArrowLink, Badge, CountUp } from '../components/ui'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
 import arrowBlack from '../assets/icons/arrow-long-black.svg'
@@ -78,7 +78,7 @@ function Dashboard() {
     <div className="flex w-full flex-col gap-11">
       <div className="flex flex-col gap-2 leading-[1.2] text-grey-400">
         <h1 className="text-[31px] font-bold">Selamat datang, {user.name}!</h1>
-        <p className="text-[25px] font-medium">Pantau capaian {aktif.nama}.</p>
+        <p className="text-lg font-medium">Pantau capaian {aktif.nama}.</p>
       </div>
       <hr className="border-grey-75" />
 
@@ -87,7 +87,7 @@ function Dashboard() {
           <div className="relative flex min-h-[170px] flex-col justify-between rounded-[20px] bg-lime-200 px-[25px] py-[18px] leading-[1.2]">
             <div className="flex flex-col gap-[5px]">
               <h2 className="text-[20px] font-semibold text-grey-400">Indeks Pembangunan Statistik (IPS) Bayangan</h2>
-              <p className="max-w-[420px] text-[13px] font-light text-grey-500">
+              <p className="max-w-[420px] text-sm font-light text-grey-500">
                 Skor dihitung otomatis berdasarkan {INDIKATOR.length} indikator dan bobot resmi Peraturan BPS No 3/2022.
               </p>
             </div>
@@ -95,7 +95,9 @@ function Dashboard() {
               <p className={`text-[61px] ${GRADIENT}`}>
                 <CountUp value={ips} format={angka} />
               </p>
-              <span className="rounded-[23px] border-[1.5px] border-green-500 bg-green-75 px-5 py-1 text-base font-medium text-grey-500">{predikat(ips)}</span>
+              <Badge tone={PREDIKAT_TONE[predikat(ips)]} className="rounded-[23px]! border-[1.5px]! px-5! py-1! text-base font-medium">
+                {predikat(ips)}
+              </Badge>
             </div>
           </div>
 
@@ -107,13 +109,13 @@ function Dashboard() {
               </p>
             </div>
             <div className="flex flex-col justify-between">
-              <p className="text-[13px] text-grey-500">Kesenjangan IPS Bayangan terhadap target</p>
+              <p className="text-sm font-regular text-grey-500">Kesenjangan IPS Bayangan terhadap target</p>
               <p className={`text-[39px] ${GRADIENT}`}>
                 <CountUp value={ips - aktif.target} format={bertanda} />
               </p>
             </div>
             <div className="flex flex-col justify-between">
-              <p className="text-[13px] text-grey-500">IPS Periode Sebelumnya</p>
+              <p className="text-sm font-regular text-grey-500">IPS Periode Sebelumnya</p>
               <p className="flex items-baseline gap-1 whitespace-nowrap">
                 <span className={`text-[39px] ${GRADIENT}`}>
                   <CountUp value={sebelumnya?.actual} format={angka} />
@@ -163,17 +165,17 @@ function Dashboard() {
 
       <section className="flex flex-col gap-9">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Kegiatan Terdekat</h2>
+          <h2 className="text-2xl leading-[1.2] font-semibold text-grey-500">Kegiatan Terdekat</h2>
           <ArrowLink to="/rencana-kegiatan">Lihat Kegiatan</ArrowLink>
         </div>
         <div className="overflow-x-auto rounded-[20px] bg-grey-500 p-[9px]">
           <table className="w-full min-w-[760px] text-left text-base leading-[1.2]">
             <thead className="text-lime-300">
               <tr>
-                <th className="px-5 py-4 font-bold">Nama Kegiatan</th>
-                <th className="w-[220px] px-5 py-4 font-bold">Jadwal Kegiatan</th>
-                <th className="w-[220px] px-5 py-4 font-bold whitespace-nowrap">Kelengkapan Bukti</th>
-                <th className="w-[269px] px-5 py-4 text-center font-bold">Status</th>
+                <th className="px-5 py-4 font-medium">Nama Kegiatan</th>
+                <th className="w-[220px] px-5 py-4 font-medium">Jadwal Kegiatan</th>
+                <th className="w-[220px] px-5 py-4 font-medium whitespace-nowrap">Kelengkapan Bukti</th>
+                <th className="w-[269px] px-5 py-4 text-center font-medium">Status</th>
               </tr>
             </thead>
             {/* Baris putih membulat seperti kartu di desain */}
@@ -191,7 +193,7 @@ function Dashboard() {
                     <td className="px-5 py-4">{formatTanggal(k.mulai)}</td>
                     <td className="px-5 py-4">{berkas[k.id]?.length ?? 0} berkas diunggah</td>
                     <td className="px-5 py-3">
-                      <Badge {...STATUS_KEGIATAN[status]} className="w-[229px] justify-start text-base">
+                      <Badge {...STATUS_KEGIATAN[status]} className="w-full justify-center text-sm">
                         {status}
                       </Badge>
                     </td>
@@ -213,11 +215,11 @@ function Dashboard() {
       <div className="grid gap-10 lg:grid-cols-2">
         <section className="flex flex-col gap-[37px]">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-[25px] leading-[1.2] font-semibold text-grey-500">
+            <h2 className="text-2xl leading-[1.2] font-semibold text-grey-500">
               Capaian Skor
               <br />5 Domain EPSS
             </h2>
-            <ArrowLink to="/pedoman-indikator" className="w-[218px]">
+            <ArrowLink to="/pedoman-indikator" className="w-54">
               Lihat Pedoman
             </ArrowLink>
           </div>
@@ -258,11 +260,11 @@ function Dashboard() {
             <br />& Gap Analysis
           </h2>
           <div className="flex flex-1 flex-col gap-8 rounded-[20px] bg-white px-[25px] py-8">
-            <p className="text-base leading-[1.2] font-medium text-grey-400">
+            <p className="text-base leading-[1.2] font-light text-grey-400">
               Geser simulasi untuk melihat estimasi kenaikan skor IPS jika indikator ditingkatkan levelnya.
             </p>
             {simulasi.map((row, index) => (
-              <div key={index} className="flex flex-col gap-[11px]">
+              <div key={index} className="flex flex-col justify-between gap-[11px]">
                 <span className="relative w-[186px]">
                   <select
                     value={row.indikatorId}
@@ -277,7 +279,7 @@ function Dashboard() {
                       </option>
                     ))}
                   </select>
-                  <img src={triangle} alt="" width={15} height={8} className="pointer-events-none absolute top-1/2 right-[10px] -translate-y-1/2 -scale-y-100" />
+                  <img src={triangle} alt="" width={10} height={6} className="pointer-events-none absolute top-1/2 right-[10px] -translate-y-1/2 -scale-y-100" />
                   {simulasi.length > 1 && (
                     <button
                       type="button"
@@ -306,7 +308,7 @@ function Dashboard() {
               <button
                 type="button"
                 onClick={() => setSimulasi((rows) => [...rows, { indikatorId: '', level: 1 }])}
-                className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300"
+                className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300 transition-transform duration-300 hover:scale-102"
               >
                 <img src={addIcon} alt="" width={19} height={19} />
                 Tambah simulasi indikator

@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import { getMenuForRole } from '../../config/menu'
@@ -16,6 +18,7 @@ function AppLayout({ bare = false }) {
   const [sesi, setSesi] = useStore(KEYS.sesi, null)
   const [users] = useStore(KEYS.users, SEED_USERS)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
+  const [menuMobile, setMenuMobile] = useState(false)
   const user = cariAkun(users, sesi)
 
   // Sesi dihapus → render ulang → <Navigate> ke halaman login di bawah
@@ -52,9 +55,23 @@ function AppLayout({ bare = false }) {
 
   return (
     <div className="flex min-h-screen bg-on-dark">
-      <Sidebar user={user} onLogout={logout} />
+      <Sidebar user={user} onLogout={logout} open={menuMobile} onClose={() => setMenuMobile(false)} />
       <main className="min-w-0 flex-1 px-4 pt-[26px] pb-[95px] font-sans sm:px-6 lg:px-10">
-        <Topbar />
+        <div className="flex items-start gap-[7px]">
+          {/* Di bawah lg sidebar disembunyikan dan dibuka sebagai laci lewat tombol ini */}
+          <button
+            type="button"
+            onClick={() => setMenuMobile(true)}
+            aria-label="Buka menu"
+            aria-expanded={menuMobile}
+            className="grid size-[42px] shrink-0 place-items-center rounded-[10px] bg-white text-grey-500 lg:hidden"
+          >
+            <Menu size={24} />
+          </button>
+          <div className="min-w-0 flex-1">
+            <Topbar />
+          </div>
+        </div>
         {/* key berubah tiap pindah halaman, jadi animasinya diputar ulang */}
         <div key={location.pathname} className="stagger mt-[27px]">
           <Outlet context={{ user }} />

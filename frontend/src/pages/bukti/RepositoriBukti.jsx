@@ -41,7 +41,7 @@ function RepositoriBukti() {
       <h1 className="text-[25px] leading-[1.2] font-semibold text-grey-500">Upload Bukti Dukung</h1>
 
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-3" role="group" aria-label="Filter status">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter status">
           {FILTER.map((f) => (
             <button
               key={f.label}
@@ -51,7 +51,7 @@ function RepositoriBukti() {
                 setFilter(f.status)
                 setPage(1)
               }}
-              className={`h-[45px] rounded-[15px] border border-grey-500 px-5 text-base leading-[1.2] font-medium ${
+              className={`h-[35px] cursor-pointer rounded-[15px] border border-grey-500 px-5 text-sm leading-[1.2] font-medium ${
                 filter === f.status ? 'bg-grey-500 text-lime-300' : 'bg-lime-75 text-grey-500'
               }`}
             >
@@ -82,7 +82,7 @@ function RepositoriBukti() {
               }}
               className="size-[18px] accent-grey-500"
             />
-            Tampilkan kegiatan operator lain (referensi)
+            Tampilkan kegiatan operator lain
           </label>
         </div>
         {rows.length === 0 && (

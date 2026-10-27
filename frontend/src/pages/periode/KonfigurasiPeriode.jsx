@@ -3,7 +3,7 @@ import { Navigate, useParams } from 'react-router-dom'
 import { PeriodeFields } from './PengaturanPeriode'
 import { usePeriode, useStore } from '../../lib/store'
 import { EMPTY_LIST, EMPTY_OBJECT, hitungIps, INDIKATOR, KEYS, predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
-import { Badge } from '../../components/ui'
+import { BackButton, Badge } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 
 const formatWaktu = (iso) => new Date(iso).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' }).replace(' ', '   ')
@@ -25,7 +25,10 @@ function KonfigurasiPeriode() {
 
   function handleSubmit(event) {
     event.preventDefault()
-    const { data, error } = validasiPeriode(Object.fromEntries(new FormData(event.currentTarget)))
+    const { data, error } = validasiPeriode(
+      Object.fromEntries(new FormData(event.currentTarget)),
+      periode.filter((item) => item.id !== id),
+    )
     if (error) return setPesan(error)
     ubah(data)
     setPesan('Konfigurasi tersimpan.')
@@ -46,9 +49,12 @@ function KonfigurasiPeriode() {
 
   return (
     <div className="flex w-full flex-col gap-[33px]">
-      <div className="flex flex-col gap-[7px] leading-[1.2] text-grey-500">
-        <h1 className="text-[31px] font-bold">Konfigurasi Periode &amp; Target IPS</h1>
-        <p className="text-[20px] font-medium">Konfigurasi siklus 2 tahunan year-agnostic dan penetapan target IPS.</p>
+      <div className="flex flex-col items-start gap-[7px] leading-[1.2] text-grey-500">
+        <BackButton fallback="/pengaturan-periode" />
+        <div className="flex flex-col gap-[7px]">
+          <h1 className="text-[31px] font-bold">Konfigurasi Periode &amp; Target IPS</h1>
+          <p className="text-[20px] font-medium">Konfigurasi siklus 2 tahunan year-agnostic dan penetapan target IPS.</p>
+        </div>
       </div>
 
       <div className="grid gap-[33px] lg:grid-cols-[3fr_2fr]">

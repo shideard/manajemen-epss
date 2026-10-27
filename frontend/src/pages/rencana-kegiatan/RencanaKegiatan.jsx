@@ -5,7 +5,7 @@ import KalenderKegiatan from './KalenderKegiatan'
 import PetaKegiatan from './PetaKegiatan'
 import { matches, statusOf, STORAGE_KEY, WARNA } from './kegiatan'
 import { usePeriode, useStore } from '../../lib/store'
-import { EMPTY_LIST, EMPTY_OBJECT, KEYS, paginate, sinkronPemetaan } from '../../lib/epss'
+import { EMPTY_LIST, EMPTY_OBJECT, formatTanggal, KEYS, paginate, sinkronPemetaan } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { Pagination, SearchBox } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
@@ -28,8 +28,8 @@ function SectionHeading({ title, subtitle, children }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-col gap-[7px] leading-[1.2] text-heading">
-        <h1 className="text-[31px] font-bold">{title}</h1>
-        <p className="text-[20px] font-medium">{subtitle}</p>
+        <h1 className="font-semibold text-2xl leading-[1.2] text-grey-500">{title}</h1>
+        <p className="font-base text-lg leading-[1.2] text-grey-500">{subtitle}</p>
       </div>
       {children}
     </div>
@@ -84,7 +84,7 @@ function RencanaKegiatan() {
   const buka = (k) => (kelola ? setEditing(k) : navigate(`/repositori-bukti-dukung/${k.id}`))
 
   return (
-    <div className="flex w-full flex-col gap-[33px] font-sans">
+    <div className="flex w-full flex-col gap-[33px]">
       <SectionHeading
         title="Rencana Kegiatan Statistik Sektoral"
         subtitle={kelola ? 'Kelola agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.' : 'Agenda statistik sektoral OPD dalam siklus evaluasi biennial 2 tahunan.'}
@@ -93,7 +93,7 @@ function RencanaKegiatan() {
           <button
             type="button"
             onClick={() => setEditing({})}
-            className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300"
+            className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300 transition-transform duration-300 ease-out-quint hover:scale-102"
           >
             <img src={addIcon} alt="" width={19} height={19} />
             Tambah Rencana Kegiatan
@@ -175,10 +175,10 @@ function RencanaKegiatan() {
                     </td>
                     <td className="py-5 pr-4 font-medium">
                       <p>
-                        <span className="font-light">Mulai :</span> {k.mulai}
+                        <span className="font-light">Mulai :</span> {formatTanggal(k.mulai)}
                       </p>
                       <p className="mt-[7px]">
-                        <span className="font-light">Selesai :</span> {k.selesai}
+                        <span className="font-light">Selesai :</span> {formatTanggal(k.selesai)}
                       </p>
                     </td>
                     <td className="py-5 text-center">
@@ -204,8 +204,8 @@ function RencanaKegiatan() {
                           </button>
                         </span>
                       ) : (
-                        <Link to={`/repositori-bukti-dukung/${k.id}`} aria-label={`Lihat bukti dukung ${k.nama}`} className="inline-block rounded-[5px] bg-lime-300 align-middle">
-                          <img src={eyeIcon} alt="" width={24} height={24} />
+                        <Link to={`/repositori-bukti-dukung/${k.id}`} aria-label={`Lihat bukti dukung ${k.nama}`} className="inline-block rounded-[5px] p-1 bg-lime-300 align-middle">
+                          <img src={eyeIcon} alt="" width={15} height={15} />
                         </Link>
                       )}
                     </td>

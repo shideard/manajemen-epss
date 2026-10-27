@@ -4,7 +4,7 @@ import { berkasUrl, usePeriode, useStore } from '../../lib/store'
 import { STORAGE_KEY as KEGIATAN_KEY, toISODate } from '../rencana-kegiatan/kegiatan'
 import { buktiKey, EMPTY_LIST, EMPTY_OBJECT, formatTanggal, indikatorById, isPic, KEYS, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { ChecklistItem, StatusBukti } from '../../components/ui'
+import { BackButton, ChecklistItem, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 import PedomanModal from '../../components/PedomanModal'
 import searchIcon from '../../assets/rencana/search-2-line.svg'
@@ -19,9 +19,9 @@ import levelArrow from '../../assets/icons/arrow-drop-left-level.svg'
 import arrowSmall from '../../assets/icons/arrow-long-small.svg'
 import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 
-// Checklist satu indikator; perubahan disimpan saat "Simpan Draft" / "Ajukan Verifikasi"
+// Checklist satu indikator; tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
 function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, readOnly, onSave }) {
-  const [checked, setChecked] = useState(bukti.checked ?? {})
+  const checked = bukti.checked ?? {}
   const terpenuhi = levelTerpenuhi(indikator.levels, checked)
   const maksLevel = Math.min(terpenuhi + 1, LEVELS.length)
   const [level, setLevel] = useState(maksLevel)
@@ -33,7 +33,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
   const syarat = indikator.levels[level - 1].syarat
 
   function centang(index, value) {
-    setChecked((c) => ({ ...c, [level]: syarat.map((_, i) => (i === index ? value : Boolean(c[level]?.[i]))) }))
+    onSave({ checked: { ...checked, [level]: syarat.map((_, i) => (i === index ? value : Boolean(checked[level]?.[i]))) } })
   }
 
   function ajukan() {
@@ -68,7 +68,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
 
       <div className="flex flex-col gap-3 rounded-[15px] bg-white px-[28px] py-[14px]">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-base leading-[1.2] font-semibold text-heading">Checklist Persyaratan Bukti Dukung (Level {level}) :</p>
+          <p className="text-base leading-[1.2] font-semibold text-grey-500">Checklist Persyaratan Bukti Dukung (Level {level}) :</p>
           <StatusBukti status={bukti.status} className="text-[13px]" />
         </div>
         {bukti.status === 'perbaikan' && bukti.catatan && (
@@ -93,13 +93,13 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
             </button>
           </div>
           <button
-            type="button"
-            onClick={() => setPedoman(true)}
-            className="flex w-[186px] items-center justify-between rounded-[16px] border-[0.7px] border-grey-500 px-[14px] py-[7px] text-[11px] leading-[1.2] text-grey-500"
-          >
-            Lihat Pedoman Indikator
-            <img src={arrowSmall} alt="" width={20} height={10} />
-          </button>
+              type="button"
+              onClick={() => setDibuka(i)}
+              className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 text-sm leading-[1.2] font-medium text-grey-400 hover:scale-102"
+              >
+              <img src={bookIcon} alt="" width={15} height={15} />
+              Pedoman &amp; Syarat
+          </button>  
         </div>
 
         {error && (
@@ -109,11 +109,11 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
         )}
 
         {!terkunci && (
-          <div className="flex flex-wrap justify-end gap-[18px]">
-            <button type="button" onClick={() => onSave({ checked })} className="w-[180px] rounded-[16px] bg-lime-300 py-[10px] text-base leading-[1.2] text-grey-500">
-              Simpan Draft
-            </button>
-            <button type="button" onClick={ajukan} className="rounded-[16px] bg-grey-300 px-[19px] py-[10px] text-base leading-[1.2] text-lime-300">
+          <div className="flex flex-wrap items-center justify-end gap-[18px]">
+            <p role="status" className="text-[13px] text-grey-200">
+              Draft tersimpan otomatis.
+            </p>
+            <button type="button" onClick={ajukan} className="rounded-[16px] bg-grey-300 px-[19px] py-[10px] text-sm leading-[1.2] hover:scale-102 transform transition-300 text-lime-300">
               Ajukan Verifikasi
             </button>
           </div>
@@ -187,9 +187,12 @@ function RepositoriDetail() {
 
   return (
     <div className="flex w-full flex-col gap-[33px]">
-      <div className="flex flex-col gap-[7px] leading-[1.2] text-grey-500">
-        <h1 className="text-[25px] font-semibold">Pengumpulan Bukti Dukung</h1>
-        <p className="text-base">Unggah dan kelola berkas bukti fisik terpusat berdasarkan kegiatan statistik dan indikator EPSS yang telah dipetakan.</p>
+      <div className="flex flex-col items-start gap-[7px] leading-[1.2] text-grey-500">
+        <BackButton fallback="/repositori-bukti-dukung" />
+        <div className="flex flex-col gap-[7px]">
+          <h1 className="text-[25px] font-semibold">Pengumpulan Bukti Dukung</h1>
+          <p className="text-base">Unggah dan kelola berkas bukti fisik terpusat berdasarkan kegiatan statistik dan indikator EPSS yang telah dipetakan.</p>
+        </div>
       </div>
 
       {!bolehEdit && (
@@ -234,14 +237,14 @@ function RepositoriDetail() {
 
         <div className="flex flex-col items-center gap-[50px] rounded-[20px] bg-[#fdfdfd] px-4 py-9 md:px-[39px]">
           <div className="flex w-full flex-col items-center gap-4">
-            <span className="rounded-[16px] border border-grey-500 px-5 py-[10px] text-base leading-[1.2] text-grey-500">Rencana Kegiatan</span>
+            <span className="rounded-[16px] border border-grey-500 px-5 py-1 text-base leading-[1.2] text-grey-500">Rencana Kegiatan</span>
             <h2 className="text-center text-[31px] leading-[1.2] font-bold text-heading">{k.nama}</h2>
             <hr className="w-full border-grey-500" />
             <dl className="grid w-full grid-cols-2 gap-[10px] px-4 text-center text-base leading-[1.2] text-black md:grid-cols-4 md:px-[60px]">
               {[
                 ['OPD', k.opd],
                 ['PIC', k.pic],
-                ['Jadwal', `${k.mulai} s/d ${k.selesai}`],
+                ['Jadwal', `${formatTanggal(k.mulai)} s/d ${formatTanggal(k.selesai)}`],
                 ['Deadline Bukti', formatTanggal(aktif.batas)],
               ].map(([label, value]) => (
                 <div key={label}>
@@ -254,12 +257,30 @@ function RepositoriDetail() {
 
           <p className="flex flex-wrap items-center gap-4 text-base leading-[1.2] font-semibold text-heading">
             Kelengkapan Bukti Kegiatan :
-            <span className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 font-medium text-grey-400">
+            <span className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 text-sm font-medium text-grey-400">
               <img src={bookIcon} alt="" width={15} height={15} />
               {files.length} Berkas Terunggah
             </span>
           </p>
           <hr className="w-full border-grey-500" />
+
+          {/* Target output diisi verifikator di form Rencana Kegiatan */}
+          {k.output?.length > 0 && (
+            <div className="flex w-full flex-col items-start gap-[14px] md:px-[40px]">
+              <h3 className="text-base leading-[1.2] font-bold text-heading">Output Bukti Dukung yang Ditargetkan :</h3>
+              <ul className="flex w-full flex-col gap-[7px]">
+                {k.output.map((o) => (
+                  <li key={o.id} className="flex min-h-[45px] flex-col justify-center rounded-[15px] bg-lime-300 px-5 py-2 text-base leading-[1.2] text-[#4f4f4f]">
+                    <span>
+                      {o.judul}
+                      {o.jenis && <span className="text-[13px]"> ({o.jenis})</span>}
+                    </span>
+                    {o.contoh && <span className="truncate text-[13px] text-grey-200">Contoh dari verifikator: {o.contoh.nama}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="flex w-full flex-col items-start gap-[14px] md:px-[40px]">
             <h3 className="text-base leading-[1.2] font-bold text-heading">Dokumen Bukti yang Terlampir :</h3>
@@ -281,11 +302,11 @@ function RepositoriDetail() {
                     <img src={checkBadge} alt="Terunggah" width={30} height={30} />
                     {url ? (
                       <a href={url} target="_blank" rel="noreferrer" aria-label={`Lihat ${f.nama}`} className="grid size-[30px] place-items-center rounded-[10px] bg-lime-200">
-                        <img src={eyeIcon} alt="" width={24} height={24} />
+                        <img src={eyeIcon} alt="" width={20} height={20} />
                       </a>
                     ) : (
                       <span title="Pratinjau hanya tersedia pada sesi saat berkas diunggah" className="grid size-[30px] place-items-center rounded-[10px] bg-lime-200 opacity-40">
-                        <img src={eyeIcon} alt="" width={24} height={24} />
+                        <img src={eyeIcon} alt="" width={20} height={20} />
                       </span>
                     )}
                     {bolehEdit && (
@@ -308,7 +329,7 @@ function RepositoriDetail() {
             {bolehEdit && (
               <>
                 <input ref={fileInput} type="file" multiple onChange={unggah} className="hidden" />
-                <button type="button" onClick={() => fileInput.current.click()} className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300">
+                <button type="button" onClick={() => fileInput.current.click()} className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300">
                   <img src={addIcon} alt="" width={19} height={19} />
                   Unggah Berkas Baru
                 </button>
@@ -319,8 +340,8 @@ function RepositoriDetail() {
       </section>
 
       <div className="flex flex-col items-center gap-[7px]">
-        <h2 className="text-center text-[31px] leading-[1.2] font-bold text-heading">Indikator tertaut :</h2>
-        <span className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-grey-500 px-5 text-base leading-[1.2] font-medium text-lime-300">
+        <h2 className="text-center text-2xl font-semibold">Indikator tertaut :</h2>
+        <span className="flex items-center gap-[10px] rounded-2xl bg-grey-500 px-5 py-2 text-base font-medium text-lime-300">
           <img src={mindMap} alt="" width={21} height={19} />
           {tertaut.length} Indikator Terpetakan
         </span>

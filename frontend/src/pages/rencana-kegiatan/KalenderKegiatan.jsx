@@ -85,7 +85,7 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
       <div className="flex w-full flex-col gap-[7px] lg:w-[275px] xl:w-[340px]">
         <div className="flex flex-col gap-[6px] rounded-[14px] bg-agenda px-7 py-4">
           <img src={calendarHeader} alt="" width={39} height={39} className="rounded-[5px] bg-white" />
-          <p className="text-[25px] leading-[1.2] font-semibold text-grey-200">Agenda Terdekat</p>
+          <p className="text-xl leading-[1.2] font-semibold text-grey-200">Agenda Terdekat</p>
         </div>
         {agenda.length === 0 && <p className="rounded-[14px] bg-agenda px-7 py-4 text-grey-200">Belum ada agenda terdekat.</p>}
         {agenda.map((k) => (

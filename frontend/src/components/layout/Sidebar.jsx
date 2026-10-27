@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
 import { getMenuForRole, ROLE_LABELS } from '../../config/menu'
@@ -29,12 +29,35 @@ function SectionTitle({ children }) {
   )
 }
 
-function Sidebar({ user, onLogout }) {
+// open/onClose = laci di layar kecil (di bawah lg); di layar besar sidebar selalu tampil
+function Sidebar({ user, onLogout, open, onClose }) {
   const sections = getMenuForRole(user.role)
   const [menuOpen, setMenuOpen] = useState(false)
+  const akunRef = useRef(null)
+
+  // Menu akun tertutup saat klik di luar atau tekan Esc
+  useEffect(() => {
+    if (!menuOpen) return
+    const tutupLuar = (e) => !akunRef.current.contains(e.target) && setMenuOpen(false)
+    const tutupEsc = (e) => e.key === 'Escape' && setMenuOpen(false)
+    document.addEventListener('pointerdown', tutupLuar)
+    document.addEventListener('keydown', tutupEsc)
+    return () => {
+      document.removeEventListener('pointerdown', tutupLuar)
+      document.removeEventListener('keydown', tutupEsc)
+    }
+  }, [menuOpen])
 
   return (
-    <aside className="sticky top-0 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans">
+    <>
+    {open && <div onClick={onClose} aria-hidden className="fixed inset-0 z-30 bg-black/40 lg:hidden" />}
+    {/* Saat tertutup di layar kecil: geser keluar + invisible, jadi tidak bisa difokus keyboard */}
+    <aside
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[242px] shrink-0 flex-col bg-grey-300 font-sans transition-[translate,visibility] duration-300 ease-out-quint lg:sticky lg:top-0 lg:translate-x-0 ${
+        open ? 'translate-x-0' : 'max-lg:invisible -translate-x-full'
+      }`}
+    >
       {/* Logo + nama aplikasi */}
       <div className="mt-[30px] flex h-12 items-center justify-center gap-[7px]">
         <img src={logo} alt="Logo Kota Bogor" className="size-[35px] object-cover" />
@@ -42,7 +65,7 @@ function Sidebar({ user, onLogout }) {
           <img src={logoLine} alt="" width={33} height={1} className="max-w-none rotate-90" />
         </span>
         <div className="flex w-[155px] flex-col gap-[7px] leading-[1.2] text-on-dark">
-          <p className="text-[13px] font-bold">Sistem Manajemen EPPS</p>
+          <p className="text-[13px] font-bold">Sistem Manajemen EPSS</p>
           <p className="text-[10px] font-light">Diskominfo Kota Bogor</p>
         </div>
       </div>
@@ -58,6 +81,7 @@ function Sidebar({ user, onLogout }) {
                 <MotionNavLink
                   key={item.path}
                   to={item.path}
+                  onClick={onClose}
                   layout="position"
                   // NavLink otomatis memberi class "active" pada menu halaman saat ini
                   className="relative flex h-6 w-[196px] shrink-0 items-center px-[7px] text-[13px] leading-[1.2] font-semibold whitespace-nowrap text-on-dark hover:text-white [&.active]:h-[50px]"
@@ -85,7 +109,7 @@ function Sidebar({ user, onLogout }) {
         </nav>
 
         {/* Profil user; klik untuk membuka tombol Keluar */}
-        <div className="relative mt-auto mb-[34px] ml-[19px] w-[196px]">
+        <div ref={akunRef} className="relative mt-auto mb-[34px] ml-[19px] w-[196px]">
           <AnimatePresence>
             {menuOpen && (
               <motion.button
@@ -126,6 +150,7 @@ function Sidebar({ user, onLogout }) {
         </div>
       </MotionConfig>
     </aside>
+    </>
   )
 }
 

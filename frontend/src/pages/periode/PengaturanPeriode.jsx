@@ -57,12 +57,12 @@ export function PeriodeFields({ periode = {}, disabled, namaAside }) {
   )
 }
 
-function TambahPeriode({ onSave, onClose }) {
+function TambahPeriode({ periode, onSave, onClose }) {
   const [error, setError] = useState('')
 
   function handleSubmit(event) {
     event.preventDefault()
-    const { data, error } = validasiPeriode(Object.fromEntries(new FormData(event.currentTarget)))
+    const { data, error } = validasiPeriode(Object.fromEntries(new FormData(event.currentTarget)), periode)
     if (error) return setError(error)
     onSave(data)
   }
@@ -108,13 +108,13 @@ function PengaturanPeriode() {
   const { rows, page: currentPage, pageCount } = paginate(filtered, page, PAGE_SIZE)
 
   return (
-    <div className="flex w-full flex-col gap-[33px]">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-col gap-[7px] leading-[1.2] text-grey-500">
-          <h1 className="text-[31px] font-bold">Pengaturan Periode EPSS Biennial</h1>
-          <p className="text-[25px] font-medium">Konfigurasi siklus 2 tahunan year-agnostic dan penetapan target IPS.</p>
+    <div className="flex w-full flex-col gap-8">
+      <div className="flex flex-wrap items-center justify-between gap-1">
+        <div className="flex flex-col gap-1 text-grey-500">
+          <h1 className="text-2xl font-bold">Pengaturan Periode EPSS Biennial</h1>
+          <p className="text-lg font-regular">Konfigurasi siklus 2 tahunan year-agnostic dan penetapan target IPS.</p>
         </div>
-        <button type="button" onClick={() => setTambah(true)} className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-base leading-[1.2] text-lime-300">
+        <button type="button" onClick={() => setTambah(true)} className="flex items-center gap-[10px] rounded-[16px] bg-grey-300 px-5 py-[10px] text-sm leading-[1.2] text-lime-300 transform transition-transform duration-300 ease-out-quint hover:scale-102">
           <img src={addIcon} alt="" width={19} height={19} />
           Tambah Periode
         </button>
@@ -194,6 +194,7 @@ function PengaturanPeriode() {
 
       {tambah && (
         <TambahPeriode
+          periode={periode}
           onSave={(data) => {
             setPeriode((list) => [{ ...data, id: crypto.randomUUID(), actual: null, terkunci: false }, ...list])
             setTambah(false)
