@@ -2,13 +2,20 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// user
 use App\Http\Controllers\Admin\UserStatusController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\PasswordController;
+
+// versi isntrumen + periode evaluasi
 use App\Http\Controllers\PeriodeEvaluasiController;
 use App\Http\Controllers\AktivasiPeriodeController;
 use App\Http\Controllers\PilihanVersiInstrumenController;
 use App\Http\Controllers\KunciPeriodeController;
+
+// opd
+use App\Http\Controllers\PilihanOpdController;
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
@@ -66,6 +73,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         'update',
         ])->whereUuid('periode')
         ->name('periode-evaluasi.update');
+
+        Route::get('/pilihan/opd', 
+        PilihanOpdController::class)
+        ->name('pilihan.opd');
+
     });
 });
 
