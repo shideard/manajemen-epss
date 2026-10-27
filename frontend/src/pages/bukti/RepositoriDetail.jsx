@@ -157,7 +157,7 @@ function RepositoriDetail() {
   }
 
   function unggah(event) {
-    unggahBerkas(k.id, event.target.files, user.name)
+    unggahBerkas(k.id, event.target.files, user.name, aktif.id)
     event.target.value = ''
   }
 

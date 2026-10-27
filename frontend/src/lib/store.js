@@ -110,23 +110,36 @@ export function useBukti() {
 // ponytail: isi berkas tidak tersimpan setelah reload; simpan ke storage backend saat API unggah siap
 export const berkasUrl = new Map()
 
-// berkas = { kegiatanId: [{ id, nama, ukuran, tanggal, oleh }] }
+// berkas = { kegiatanId: [{ id, nama, ukuran, tanggal, oleh, periodeId }] }
+// Berkas yang sama (id sama) boleh ada di beberapa kegiatan: ditautkan dari Repositori, bukan diunggah ulang.
+// periodeId = periode saat berkas diunggah/ditautkan ke kegiatan itu (folder di Repositori)
 export function useBerkas() {
   const [berkas, setBerkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
   return {
     berkas,
     ...SIAP,
-    unggah(kegiatanId, files, oleh) {
+    unggah(kegiatanId, files, oleh, periodeId) {
       const baru = [...files].map((file) => {
         const id = crypto.randomUUID()
         berkasUrl.set(id, URL.createObjectURL(file))
-        return { id, nama: file.name, ukuran: file.size, tanggal: toISODate(new Date()), oleh }
+        return { id, nama: file.name, ukuran: file.size, tanggal: toISODate(new Date()), oleh, periodeId }
       })
       setBerkas((all) => ({ ...all, [kegiatanId]: [...(all[kegiatanId] ?? []), ...baru] }))
     },
+    kaitkan(kegiatanId, { id, nama, ukuran, tanggal, oleh }, periodeId) {
+      setBerkas((all) =>
+        (all[kegiatanId] ?? []).some((f) => f.id === id)
+          ? all
+          : { ...all, [kegiatanId]: [...(all[kegiatanId] ?? []), { id, nama, ukuran, tanggal, oleh, periodeId }] },
+      )
+    },
     hapus(kegiatanId, berkasId) {
-      URL.revokeObjectURL(berkasUrl.get(berkasId))
-      berkasUrl.delete(berkasId)
+      // Masih ditautkan ke kegiatan lain → pratinjaunya tetap dipakai di sana
+      const dipakaiLagi = Object.entries(berkas).some(([id, list]) => id !== kegiatanId && list.some((f) => f.id === berkasId))
+      if (!dipakaiLagi) {
+        URL.revokeObjectURL(berkasUrl.get(berkasId))
+        berkasUrl.delete(berkasId)
+      }
       setBerkas((all) => ({ ...all, [kegiatanId]: (all[kegiatanId] ?? []).filter((f) => f.id !== berkasId) }))
     },
   }
