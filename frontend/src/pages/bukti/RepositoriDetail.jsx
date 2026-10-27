@@ -92,14 +92,10 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
               <img src={levelArrow} alt="" width={46} height={45} className="-scale-x-100" />
             </button>
           </div>
-          <button
-              type="button"
-              onClick={() => setDibuka(i)}
-              className="flex h-[25px] items-center gap-[10px] rounded-[10px] bg-lime-300 px-5 text-sm leading-[1.2] font-medium text-grey-400 hover:scale-102"
-              >
-              <img src={bookIcon} alt="" width={15} height={15} />
-              Pedoman &amp; Syarat
-          </button>  
+          <button type="button" onClick={() => setPedoman(true)} className={`gap-4! ${buttonClass('outline')}`}>
+            Lihat Pedoman Indikator
+            <img src={arrowSmall} alt="" width={20} height={10} />
+          </button>
         </div>
 
         <FormError>{error}</FormError>
@@ -109,7 +105,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
             <p role="status" className="text-small text-grey-200">
               Draft tersimpan otomatis.
             </p>
-            <button type="button" onClick={ajukan} className="rounded-[16px] bg-grey-300 px-[19px] py-[10px] text-sm leading-[1.2] hover:scale-102 transform transition-300 text-lime-300">
+            <button type="button" onClick={ajukan} className={buttonClass()}>
               Ajukan Verifikasi
             </button>
           </div>
@@ -320,9 +316,9 @@ function RepositoriDetail() {
         </div>
       </section>
 
-      <div className="flex flex-col items-center gap-[7px]">
-        <h2 className="text-center text-2xl font-semibold">Indikator tertaut :</h2>
-        <span className="flex items-center gap-[10px] rounded-2xl bg-grey-500 px-5 py-2 text-base font-medium text-lime-300">
+      <div className="flex flex-col items-center gap-2">
+        <h2 className="text-center text-h2">Indikator Tertaut</h2>
+        <span className="flex h-6 items-center gap-2.5 rounded-sm bg-grey-500 px-5 font-medium text-lime-300">
           <img src={mindMap} alt="" width={21} height={19} />
           {tertaut.length} Indikator Terpetakan
         </span>
