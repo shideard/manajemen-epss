@@ -193,4 +193,59 @@ class CreatePeriodeEvaluasiTest extends TestCase
 
             $this->assertDatabaseCount('periode_evaluasi', 0);
         }
+
+        public function test_period_dates_are_optional(): void
+        {
+            $verifikator = $this->createActor(UserRole::VERIFIKATOR);
+            $basePayload = $this->validPayload();
+
+            unset(
+                $basePayload['tanggal_mulai'],
+                $basePayload['tanggal_selesai']
+            );
+
+            $cases = [
+                'omitted' => [],
+                'explicit_null' => [
+                    'tanggal_mulai' => null,
+                    'tanggal_selesai' => null,
+                ],
+                'start_only' => [
+                    'tanggal_mulai' => '2027-03-01',
+                ],
+                'end_only' => [
+                    'tanggal_selesai' => '2027-06-30',
+                ],
+            ];
+
+            foreach ($cases as $name => $dates) {
+                $payload = array_merge($basePayload, $dates, [
+                    'nama_periode' => 'Periode pengujian ' . $name,
+                ]);
+
+                $expectedStart = $dates['tanggal_mulai'] ?? null;
+                $expectedEnd = $dates['tanggal_selesai'] ?? null;
+
+                $response = $this->actingAs($verifikator, 'web')
+                    ->postJson('/api/periode-evaluasi', $payload);
+
+                $response->assertCreated()
+                    ->assertJsonPath('data.status', 'DRAFT')
+                    ->assertJsonPath('data.tanggal_mulai', $expectedStart)
+                    ->assertJsonPath('data.tanggal_selesai', $expectedEnd);
+
+                $this->assertDatabaseHas('periode_evaluasi', [
+                    'id' => $response->json('data.id'),
+                    'tanggal_mulai' => $expectedStart,
+                    'tanggal_selesai' => $expectedEnd,
+                ]);
+
+                $this->getJson(
+                    '/api/periode-evaluasi/' . $response->json('data.id')
+                )
+                    ->assertOk()
+                    ->assertJsonPath('data.tanggal_mulai', $expectedStart)
+                    ->assertJsonPath('data.tanggal_selesai', $expectedEnd);
+            }
+        }
 }
