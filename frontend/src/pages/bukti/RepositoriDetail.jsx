@@ -75,6 +75,11 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
         {bukti.status === 'perbaikan' && bukti.catatan && (
           <Notice tone="red" className="text-small">Catatan verifikator: {bukti.catatan}</Notice>
         )}
+        {bukti.status === 'menunggu' && (
+          <p role="status" className="text-small text-green-500 bg-green-50 rounded-md px-3 py-2">
+            Ajuan telah terkirim ke verifikator. Silakan cek status ajuan secara berkala.
+          </p>
+        )}
         {syarat.map((item, i) => (
           <ChecklistItem key={item} checked={Boolean(checked[level]?.[i])} onChange={(value) => centang(i, value)} disabled={terkunci}>
             {item}
@@ -93,9 +98,9 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
               <img src={levelArrow} alt="" width={46} height={45} className="-scale-x-100" />
             </button>
           </div>
-            <button
+          <button
                     type="button"
-                    onClick={() => setDibuka(i)}
+                    onClick={() => setPedoman(true)}
                     className={buttonClass('secondary', 'sm')}
                   >
                     <img src={bookIcon} alt="" width={15} height={15} />
