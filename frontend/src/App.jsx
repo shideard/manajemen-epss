@@ -13,6 +13,7 @@ import PengaturanPeriode from './pages/periode/PengaturanPeriode'
 import KonfigurasiPeriode from './pages/periode/KonfigurasiPeriode'
 import RepositoriBukti from './pages/bukti/RepositoriBukti'
 import RepositoriDetail from './pages/bukti/RepositoriDetail'
+import ArsipBukti from './pages/bukti/ArsipBukti'
 import VerifikasiBukti from './pages/bukti/VerifikasiBukti'
 import VerifikasiDetail from './pages/bukti/VerifikasiDetail'
 
@@ -30,6 +31,7 @@ function App() {
         <Route path="/rencana-kegiatan" element={<RencanaKegiatan />} />
         <Route path="/rencana-kegiatan/peta-relasi" element={<PetaRelasiKegiatan />} />
         <Route path="/repositori-bukti-dukung" element={<RepositoriBukti />} />
+        <Route path="/repositori-bukti-dukung/arsip" element={<ArsipBukti />} />
         <Route path="/repositori-bukti-dukung/:kegiatanId" element={<RepositoriDetail />} />
         <Route path="/verifikasi-bukti-dukung" element={<VerifikasiBukti />} />
         <Route path="/verifikasi-bukti-dukung/:kegiatanId/:indikatorId" element={<VerifikasiDetail />} />

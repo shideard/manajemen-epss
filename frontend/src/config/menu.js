@@ -39,7 +39,15 @@ export const menuSections = [
           { label: 'Peta Relasi Kegiatan', path: '/rencana-kegiatan/peta-relasi' },
         ],
       },
-      { label: 'Repositori Bukti Dukung', path: '/repositori-bukti-dukung', icon: folderIcon, roles: [OPERATOR] },
+      {
+        label: 'Bukti Dukung',
+        icon: folderIcon,
+        roles: [OPERATOR],
+        children: [
+          { label: 'Upload Bukti Dukung', path: '/repositori-bukti-dukung' },
+          { label: 'Repositori Bukti Dukung', path: '/repositori-bukti-dukung/arsip' },
+        ],
+      },
       { label: 'Kelola Pengguna', path: '/users', icon: Users, roles: [SUPER_ADMIN_BIDANG] },
       { label: 'Verifikasi Bukti Dukung', path: '/verifikasi-bukti-dukung', icon: scalesIcon, roles: [VERIFIKATOR] },
     ],
