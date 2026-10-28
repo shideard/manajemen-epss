@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserStatusController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
@@ -13,4 +14,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         UserStatusController::class,
         'update',
     ])->name('users.status.update');
+
+    Route::post('/users', [UserController::class, 'store'])
+    ->name('users.save');
 });

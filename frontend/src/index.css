@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 /* Token dari design system Figma (Design.md) */
 @theme {
@@ -9,39 +9,210 @@
   --color-grey-100: #78797b;
   --color-grey-200: #3e3f43;
   --color-grey-300: #17181c;
+  --color-grey-400: #101114;
   --color-grey-500: #0e0f11;
+  --color-grey2-50: #fdfdfd;
   --color-grey2-75: #f6f8f6;
-  --color-lime-100: #f5fcc1;
-  --color-lime-200: #f1fba6;
-  --color-lime-300: #eefa94;
-  --color-lime-500: #878f52;
+  --color-grey2-100: #f2f5f3;
+  --color-grey2-200: #edf1ee;
+  --color-grey2-300: #e9eeea;
+  --color-grey2-400: #a3a7a4;
+  --color-grey2-500: #8e918f;
   --color-green-50: #effdec;
-  --color-heading: #545454;
-  --color-agenda: #e9eeea;
-  --color-on-dark: #f3f3f3;
-  --color-nav-active: rgb(160 160 162 / 0.5);
+  --color-green-75: #bdf5b1;
+  --color-green-100: #a1f191;
+  --color-green-200: #79ea61;
+  --color-green-300: #5de641;
+  --color-green-400: #41a12e;
+  --color-green-500: #398c28;
+  --color-red-50: #fdecec;
+  --color-red-75: #f5b1b1;
+  --color-red-100: #f19191;
+  --color-red-200: #ea6161;
+  --color-red-300: #e64141;
+  --color-red-400: #a12e2e;
+  --color-red-500: #8c2828;
+  --color-yellow-50: #fefbec;
+  --color-yellow-75: #f9edb2;
+  --color-yellow-100: #f6e591;
+  --color-yellow-200: #f3da62;
+  --color-yellow-300: #f0d342;
+  --color-yellow-400: #a8942e;
+  --color-yellow-500: #806104;
+  /* Satu-satunya warna di luar style Figma: status info dari komponen Status Kegiatan */
+  --color-blue-50: #c8ebfa;
+  --color-blue-500: #2b51bb;
 
-  /* Animasi masuk konten halaman saat pindah route */
-  --animate-page-in: page-in 300ms ease-out;
+  /* Toast & page-in animations */
   --animate-toast-progress: toast-progress 3500ms linear forwards;
 
-  @keyframes page-in {
+  /* Tipografi: skala Figma (dasar 16px, rasio 1.25), semua line-height 1.2 */
+  --text-caption: 0.625rem;
+  --text-caption--line-height: 1.2;
+  --text-small: 0.8125rem;
+  --text-small--line-height: 1.2;
+  --text-body: 1rem;
+  --text-body--line-height: 1.2;
+  --text-lead: 1.25rem;
+  --text-lead--line-height: 1.2;
+  --text-h3: 1.25rem;
+  --text-h3--line-height: 1.2;
+  --text-h3--font-weight: 600;
+  --text-h2: 1.5625rem;
+  --text-h2--line-height: 1.2;
+  --text-h2--font-weight: 600;
+  --text-h1: 1.9375rem;
+  --text-h1--line-height: 1.2;
+  --text-h1--font-weight: 700;
+  --text-display-3: 2.4375rem;
+  --text-display-3--line-height: 1.2;
+  --text-display-2: 3.0625rem;
+  --text-display-2--line-height: 1.2;
+  --text-display-1: 3.8125rem;
+  --text-display-1--line-height: 1.2;
+
+  --radius-xs: 5px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 40px;
+
+  --shadow-sm: 0 2px 6px rgb(14 15 17 / 0.08);
+  --shadow-md: 0 8px 20px rgb(14 15 17 / 0.18);
+  --shadow-lg: 0 4px 21px rgb(14 15 17 / 0.25);
+
+  /* Satu kurva untuk semua gerak: cepat di awal, mendarat pelan */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* fill-mode backwards: transform hilang setelah selesai, jadi tidak merusak elemen fixed/sticky di dalamnya */
+  --animate-rise: rise 700ms var(--ease-out-quint) backwards;
+  --animate-pop: pop 220ms var(--ease-out-quint);
+  --animate-reveal-x: reveal-x 1100ms var(--ease-out-quint) backwards;
+  --animate-drop: drop 280ms var(--ease-out-quint) backwards;
+  --animate-settle: settle 2400ms var(--ease-out-quint) backwards;
+
+  @keyframes rise {
     from {
       opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
+      translate: 0 12px;
     }
   }
-
+  @keyframes pop {
+    from {
+      opacity: 0;
+      scale: 0.96;
+      translate: 0 6px;
+    }
+  }
+  @keyframes reveal-x {
+    from {
+      translate: -100% 0;
+    }
+  }
+  @keyframes drop {
+    from {
+      opacity: 0;
+      translate: 0 -6px;
+    }
+  }
+  @keyframes settle {
+    from {
+      opacity: 0;
+      scale: 1.08;
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
   @keyframes toast-progress {
     from {
       width: 100%;
     }
     to {
       width: 0%;
+    }
+  }
+}
+
+/* Di layer base supaya class utility (animate-*, scale-*, transition-*) tetap bisa menimpa */
+@layer base {
+  /* Default teks halaman = text-body, warna teks utama, line-height Figma */
+  body {
+    font-size: var(--text-body);
+    line-height: 1.2;
+    color: var(--color-grey-500);
+  }
+
+  a[href],
+  button:not(:disabled),
+  [role='button'],
+  summary,
+  select:not(:disabled),
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled),
+  input[type='range']:not(:disabled),
+  input[type='file']:not(:disabled),
+  input[type='submit']:not(:disabled),
+  input[type='reset']:not(:disabled),
+  label:has(input[type='checkbox']:not(:disabled), input[type='radio']:not(:disabled)) {
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Blok-blok halaman muncul berurutan (anak langsung dari elemen akar halaman) */
+    .stagger > * > * {
+      animation: var(--animate-rise);
+      animation-delay: 350ms;
+    }
+    .stagger > * > :nth-child(1) { animation-delay: 0ms; }
+    .stagger > * > :nth-child(2) { animation-delay: 70ms; }
+    .stagger > * > :nth-child(3) { animation-delay: 140ms; }
+    .stagger > * > :nth-child(4) { animation-delay: 210ms; }
+    .stagger > * > :nth-child(5) { animation-delay: 280ms; }
+
+    dialog[open] {
+      animation: var(--animate-pop);
+    }
+
+    /* Popover: animasi buka DAN tutup (display/overlay allow-discrete menahan elemen sampai transisi selesai) */
+    [popover] {
+      opacity: 0;
+      scale: 0.96;
+      translate: 0 -6px;
+      transition:
+        opacity 180ms ease-out,
+        scale 220ms var(--ease-out-quint),
+        translate 220ms var(--ease-out-quint),
+        display 220ms allow-discrete,
+        overlay 220ms allow-discrete;
+    }
+    [popover]:popover-open {
+      opacity: 1;
+      scale: 1;
+      translate: 0;
+    }
+    @starting-style {
+      [popover]:popover-open {
+        opacity: 0;
+        scale: 0.96;
+        translate: 0 -6px;
+      }
+    }
+    dialog[open]::backdrop {
+      animation: fade 220ms ease-out;
+    }
+
+    /* Umpan balik tekan + hover warna yang halus di semua tombol */
+    button:not(:disabled) {
+      transition:
+        scale 160ms var(--ease-out-quint),
+        background-color 160ms ease-out,
+        color 160ms ease-out;
+    }
+    button:not(:disabled):active {
+      scale: 0.97;
     }
   }
 }
