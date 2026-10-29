@@ -17,7 +17,6 @@ import eyeIcon from '../../assets/icons/eye-line.svg'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import mindMap from '../../assets/icons/mind-map.svg'
 import levelArrow from '../../assets/icons/arrow-drop-left-level.svg'
-import arrowSmall from '../../assets/icons/arrow-long-small.svg'
 import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 
 // Checklist satu indikator; tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
