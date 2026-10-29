@@ -104,7 +104,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
 
         <FormError>{error}</FormError>
         {bukti.status === 'menunggu' && (
-          <p role="status" className="text-small text-lime-600 text-end py-2">
+          <p role="status" className="text-small text-lime-500 text-end py-2">
             Ajuan telah terkirim ke verifikator. Silakan cek status ajuan secara berkala.
           </p>
         )}
