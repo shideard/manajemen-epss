@@ -6,6 +6,7 @@ use App\Enums\StatusPeriode;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PeriodeEvaluasi extends Model
 {
@@ -49,4 +50,10 @@ class PeriodeEvaluasi extends Model
             'closed_by'
         );
     }
+
+    public function rencanaKegiatan(): HasMany
+    {
+        return $this->hasMany(RencanaKegiatan::class, 'periode_id');
+    }
+
 }

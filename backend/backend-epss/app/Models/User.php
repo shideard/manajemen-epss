@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use App\Enums\UserRole;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -76,5 +77,15 @@ class User extends Authenticatable
         $expiresAt = $this->password_changed_at->addYearNoOverflow();
 
         return now()->greaterThanOrEqualTo($expiresAt);
+    }
+
+    public function rencanaKegiatanDibuat(): HasMany
+    {
+        return $this->hasMany(RencanaKegiatan::class, 'created_by');
+    }
+
+    public function rencanaKegiatanSebagaiPic(): HasMany
+    {
+        return $this->hasMany(RencanaKegiatan::class, 'pic_user_id');
     }
 }
