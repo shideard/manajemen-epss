@@ -1,17 +1,9 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@import "tailwindcss";
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
 /* Token design system. Aturan pemakaiannya ada di frontend/DESIGN.md */
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
@@ -104,6 +96,7 @@
   --shadow-sm: 0 2px 6px rgb(14 15 17 / 0.08);
   --shadow-md: 0 8px 20px rgb(14 15 17 / 0.18);
   --shadow-lg: 0 4px 21px rgb(14 15 17 / 0.25);
+<<<<<<< HEAD
 =======
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -119,13 +112,60 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 >>>>>>> 6838ca491057c051538afd9cd520ecec4964a91c
+=======
+>>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* Satu kurva untuk semua gerak: cepat di awal, mendarat pelan */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* fill-mode backwards: transform hilang setelah selesai, jadi tidak merusak elemen fixed/sticky di dalamnya */
+  --animate-rise: rise 700ms var(--ease-out-quint) backwards;
+  --animate-pop: pop 220ms var(--ease-out-quint);
+  --animate-reveal-x: reveal-x 1100ms var(--ease-out-quint) backwards;
+  --animate-drop: drop 280ms var(--ease-out-quint) backwards;
+  --animate-settle: settle 2400ms var(--ease-out-quint) backwards;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 12px;
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      scale: 0.96;
+      translate: 0 6px;
+    }
+  }
+  @keyframes reveal-x {
+    from {
+      translate: -100% 0;
+    }
+  }
+  @keyframes drop {
+    from {
+      opacity: 0;
+      translate: 0 -6px;
+    }
+  }
+  @keyframes settle {
+    from {
+      opacity: 0;
+      scale: 1.08;
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
   }
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
 /* Di layer base supaya class utility (animate-*, scale-*, transition-*) tetap bisa menimpa */
 @layer base {
   /* Default teks halaman = text-body, warna teks utama, line-height Figma */
@@ -204,6 +244,7 @@
     button:not(:disabled):active {
       scale: 0.97;
     }
+<<<<<<< HEAD
 =======
 @media (prefers-color-scheme: dark) {
   :root {
@@ -223,65 +264,7 @@
   #social .button-icon {
     filter: invert(1) brightness(2);
 >>>>>>> 6838ca491057c051538afd9cd520ecec4964a91c
+=======
+>>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
   }
-}
-
-body {
-  margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }

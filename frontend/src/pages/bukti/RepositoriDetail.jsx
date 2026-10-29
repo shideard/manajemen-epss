@@ -17,7 +17,6 @@ import eyeIcon from '../../assets/icons/eye-line.svg'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import mindMap from '../../assets/icons/mind-map.svg'
 import levelArrow from '../../assets/icons/arrow-drop-left-level.svg'
-import arrowSmall from '../../assets/icons/arrow-long-small.svg'
 import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 
 // Checklist satu indikator; tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
@@ -105,7 +104,11 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
 
         <FormError>{error}</FormError>
         {bukti.status === 'menunggu' && (
+<<<<<<< HEAD
           <p role="status" className="text-small text-lime-600 text-end py-2">
+=======
+          <p role="status" className="text-small text-lime-500 text-end py-2">
+>>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
             Ajuan telah terkirim ke verifikator. Silakan cek status ajuan secara berkala.
           </p>
         )}
