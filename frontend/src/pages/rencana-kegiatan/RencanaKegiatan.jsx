@@ -7,7 +7,7 @@ import { matches } from './kegiatan'
 import { useBukti, useKegiatan, usePeriode } from '../../lib/store'
 import { formatTanggal, paginate, statusOf } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { Dropdown, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
+import { Badge, Dropdown, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
@@ -15,13 +15,16 @@ import userIcon from '../../assets/rencana/user-3-fill.svg'
 import editIcon from '../../assets/rencana/edit-2-fill.svg'
 import eyeIcon from '../../assets/icons/eye-line.svg'
 import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
+import closeCircle from '../../assets/icons/close-circle-line.svg'
+import timeIcon from '../../assets/icons/time-line.svg'
+import checkCircle from '../../assets/icons/checkbox-circle-line.svg'
 
 const PAGE_SIZE = 5
 
-const STATUS_CLASS = {
-  'Belum Mulai': 'bg-grey-50 text-grey-200',
-  Berjalan: 'bg-lime-300 text-grey-500',
-  Selesai: 'bg-grey-200 text-white',
+const STATUS_BADGE = {
+  'Belum Mulai': { tone: 'red', icon: closeCircle },
+  Berjalan: { tone: 'yellow', icon: timeIcon },
+  Selesai: { tone: 'green', icon: checkCircle },
 }
 
 function RencanaKegiatan() {
@@ -157,6 +160,20 @@ function RencanaKegiatan() {
             ]}
             className="w-[220px]"
           />
+          <button
+            type="button"
+            onClick={() => {
+              setQuery('')
+              setTahun('')
+              setOpd('')
+              setPic('')
+              setStatusFilter('')
+              setPage(1)
+            }}
+            className={buttonClass('primary')}
+          >
+            Reset Filter
+          </button>
         </div>
 
         <div className="overflow-x-auto rounded-lg bg-grey2-50 px-5 py-3">
@@ -211,9 +228,7 @@ function RencanaKegiatan() {
                       </p>
                     </td>
                     <td className="py-5 text-center">
-                      <span className={`inline-flex h-6 items-center rounded-sm px-2.5 font-medium whitespace-nowrap ${STATUS_CLASS[status]}`}>
-                        {status}
-                      </span>
+                      <Badge {...STATUS_BADGE[status]} className="text-small">{status}</Badge>
                     </td>
                     <td className="py-5 text-center">
                       {kelola ? (
