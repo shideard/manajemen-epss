@@ -17,7 +17,6 @@ import eyeIcon from '../../assets/icons/eye-line.svg'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import mindMap from '../../assets/icons/mind-map.svg'
 import levelArrow from '../../assets/icons/arrow-drop-left-level.svg'
-import arrowSmall from '../../assets/icons/arrow-long-small.svg'
 import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 
 // Checklist satu indikator; tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
@@ -75,11 +74,6 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
         {bukti.status === 'perbaikan' && bukti.catatan && (
           <Notice tone="red" className="text-small">Catatan verifikator: {bukti.catatan}</Notice>
         )}
-        {bukti.status === 'menunggu' && (
-          <p role="status" className="text-small text-green-500 bg-green-50 rounded-md px-3 py-2">
-            Ajuan telah terkirim ke verifikator. Silakan cek status ajuan secara berkala.
-          </p>
-        )}
         {syarat.map((item, i) => (
           <ChecklistItem key={item} checked={Boolean(checked[level]?.[i])} onChange={(value) => centang(i, value)} disabled={terkunci}>
             {item}
@@ -109,7 +103,11 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
         </div>
 
         <FormError>{error}</FormError>
-
+        {bukti.status === 'menunggu' && (
+          <p role="status" className="text-small text-lime-500 text-end py-2">
+            Ajuan telah terkirim ke verifikator. Silakan cek status ajuan secara berkala.
+          </p>
+        )}
         {!terkunci && (
           <div className="flex flex-wrap items-center justify-end gap-4">
             <p role="status" className="text-small text-grey-200">

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../lib/store'
 import { ROLES } from '../config/menu'
-import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusKegiatan, toISODate } from '../lib/epss'
+import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusOf, toISODate } from '../lib/epss'
 import { ArrowLink, Badge, CountUp, Dropdown, Memuat, PageHeader } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
@@ -10,16 +10,14 @@ import arrowBlack from '../assets/icons/arrow-long-black.svg'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
 import closeCircle from '../assets/icons/close-circle-line.svg'
 import timeIcon from '../assets/icons/time-line.svg'
-import uploadIcon from '../assets/icons/file-upload-line.svg'
 import checkCircle from '../assets/icons/checkbox-circle-line.svg'
 
 const GRADIENT = 'bg-linear-to-b from-green-500 to-grey-500 bg-clip-text font-bold text-transparent'
 
 const STATUS_KEGIATAN = {
-  'Belum dilaksanakan': { tone: 'red', icon: closeCircle },
-  'Sedang dilaksanakan': { tone: 'yellow', icon: timeIcon },
-  'Bukti dukung diunggah': { tone: 'blue', icon: uploadIcon },
-  Terverifikasi: { tone: 'green', icon: checkCircle },
+  'Belum Mulai': { tone: 'red', icon: closeCircle },
+  Berjalan: { tone: 'yellow', icon: timeIcon },
+  Selesai: { tone: 'green', icon: checkCircle },
 }
 
 const angka = (n) => (n == null ? '-' : n.toFixed(2))
@@ -234,12 +232,7 @@ function Dashboard() {
             {/* Baris putih membulat seperti kartu di desain */}
             <tbody className="bg-white text-grey-500 [&>tr:first-child>td:first-child]:rounded-tl-md [&>tr:first-child>td:last-child]:rounded-tr-md [&>tr:last-child>td:first-child]:rounded-bl-md [&>tr:last-child>td:last-child]:rounded-br-md">
               {agendaTerdekat(kegiatan, today).map((k) => {
-                const status = statusKegiatan(
-                  k,
-                  daftarBukti.filter((b) => b.kegiatanId === k.id),
-                  berkas[k.id]?.length ?? 0,
-                  today,
-                )
+                const status = statusOf(k, today)
                 return (
                   <tr key={k.id} className="border-b border-grey-75 last:border-0">
                     <td className="px-5 py-4">{k.nama}</td>

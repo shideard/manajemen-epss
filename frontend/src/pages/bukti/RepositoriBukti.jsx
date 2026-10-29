@@ -117,7 +117,7 @@ function RepositoriBukti() {
                   </span>
                 </span>
               </span>
-              <StatusBukti status={b.status} />
+              <StatusBukti status={b.status} className="text-small"/>
             </Link>
           )
         })}

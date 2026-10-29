@@ -62,7 +62,7 @@ function Login() {
                     onClick={() => setShowPassword((visible) => !visible)}
                     aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                     aria-pressed={showPassword}
-                    className="absolute inset-y-0 right-3 flex items-center justify-center text-grey-300 hover:text-grey-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="absolute inset-y-0 right-3 flex items-center justify-center text-grey-300 hover:text-grey-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-500"
                   >
                     {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
                   </button>
