@@ -16,7 +16,11 @@ function SummaryItem({ label, value }) {
 }
 
 function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
-  const { halamanAwal, blok1, blok2, blok3, blok4, blok6, blok7, blok8 } = formData
+  const { halamanAwal, blok1, blok2, blok3, blok4, blok5, blok6, blok7, blok8 } = formData
+  const isSurvei = halamanAwal.caraPengumpulan === 'Survei'
+  const isBerulang = blok4.frekuensiKegiatan === 'Berulang'
+  const sampel = blok5 || {}
+  const isProbabilitas = sampel.metodePemilihanSampel === 'Sampel Probabilitas'
 
   return (
     <div className="flex flex-col gap-6">
@@ -120,6 +124,9 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
             <span>IV. Desain Kegiatan</span>
           </div>
           <SummaryItem label="Frekuensi Pelaksanaan" value={blok4.frekuensiKegiatan} />
+          {isBerulang && (
+            <SummaryItem label="Frekuensi Penyelenggaraan" value={blok4.frekuensiPenyelenggaraan} />
+          )}
           <SummaryItem label="Tipe Pengumpulan" value={blok4.tipePengumpulan} />
           <SummaryItem label="Cakupan Wilayah" value={blok4.cakupanWilayah} />
           <SummaryItem label="Metode Pengumpulan" value={blok4.metodePengumpulan} />
@@ -136,11 +143,36 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
           <SummaryItem label="Metode Pemeriksaan Kualitas" value={blok6.metodePemeriksaanKualitas} />
           <SummaryItem label="Penyesuaian Nonrespon" value={blok6.penyesuaianNonrespon} />
           <SummaryItem label="Petugas Pengumpulan" value={blok6.petugasPengumpulan} />
-          <SummaryItem label="Supervisor" value={blok6.jumlahSupervisor} />
-          <SummaryItem label="Enumerator" value={blok6.jumlahEnumerator} />
+          <SummaryItem label="Persyaratan Pendidikan Petugas" value={blok6.persyaratanPendidikan} />
+          <SummaryItem label="Jumlah Supervisor / Pengawas" value={blok6.jumlahSupervisor ? `${blok6.jumlahSupervisor} Orang` : ''} />
+          <SummaryItem label="Jumlah Enumerator / Pengumpul Data" value={blok6.jumlahEnumerator ? `${blok6.jumlahEnumerator} Orang` : ''} />
           <SummaryItem label="Pelatihan Petugas" value={blok6.pelatihanPetugas} />
         </div>
       </div>
+
+      {/* Ringkasan Blok V — hanya untuk kegiatan Survei */}
+      {isSurvei && (
+        <div className="rounded-2xl border border-grey-50 bg-white p-6 shadow-xs">
+          <div className="flex items-center gap-2 mb-3 text-grey-300 font-bold text-[15px]">
+            <Sliders size={18} className="text-lime-500" />
+            <span>V. Desain Sampel</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+            <SummaryItem label="Jenis Rancangan Sampel" value={sampel.rancanganSampel} />
+            <SummaryItem label="Metode Pemilihan Sampel Tahap Terakhir" value={sampel.metodePemilihanSampel} />
+            <SummaryItem label="Metode yang Digunakan" value={sampel.metodeSampel} />
+            {isProbabilitas && (
+              <>
+                <SummaryItem label="Kerangka Sampel Tahap Terakhir" value={sampel.kerangkaSampel} />
+                <SummaryItem label="Fraksi Sampel Keseluruhan" value={sampel.fraksiSampel} />
+                <SummaryItem label="Perkiraan Sampling Error Variabel Utama" value={sampel.samplingError} />
+              </>
+            )}
+            <SummaryItem label="Unit Sampel" value={sampel.unitSampel} />
+            <SummaryItem label="Unit Observasi" value={sampel.unitObservasi} />
+          </div>
+        </div>
+      )}
 
       {/* Ringkasan Blok VII & VIII */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

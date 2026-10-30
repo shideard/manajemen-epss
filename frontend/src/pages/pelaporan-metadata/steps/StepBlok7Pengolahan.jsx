@@ -1,7 +1,10 @@
 import { Sparkles } from 'lucide-react'
+import SaranPill from '../components/SaranPill'
+import { getSaranUntukOpsi } from '../lib/saranHelper'
 
-function StepBlok7Pengolahan({ formData, updateBlok7 }) {
+function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan }) {
   const data = formData.blok7
+  const saranUntuk = (field, opsi) => getSaranUntukOpsi(`blok7.${field}`, caraPengumpulan, opsi)
 
   const handleTahapanToggle = (key, value) => {
     updateBlok7('tahapanPengolahan', {
@@ -61,6 +64,7 @@ function StepBlok7Pengolahan({ formData, updateBlok7 }) {
                         className="size-4 text-grey-300 focus:ring-lime-300"
                       />
                       <span>{val}</span>
+                      <SaranPill saran={saranUntuk(`tahapanPengolahan.${key}`, val)} />
                     </label>
                   ))}
                 </div>
@@ -86,6 +90,7 @@ function StepBlok7Pengolahan({ formData, updateBlok7 }) {
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('metodeAnalisis', opt)} />
               </label>
             ))}
           </div>
@@ -126,6 +131,7 @@ function StepBlok7Pengolahan({ formData, updateBlok7 }) {
                   className="size-4 rounded text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('tingkatPenyajian', opt)} />
               </label>
             ))}
           </div>

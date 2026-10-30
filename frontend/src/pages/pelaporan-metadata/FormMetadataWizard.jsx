@@ -12,29 +12,55 @@ import StepBlok1Penyelenggara from './steps/StepBlok1Penyelenggara'
 import StepBlok2PenanggungJawab from './steps/StepBlok2PenanggungJawab'
 import StepBlok3Perencanaan from './steps/StepBlok3Perencanaan'
 import StepBlok4Desain from './steps/StepBlok4Desain'
+import StepBlok5DesainSampel from './steps/StepBlok5DesainSampel'
 import StepBlok6Pengumpulan from './steps/StepBlok6Pengumpulan'
 import StepBlok7Pengolahan from './steps/StepBlok7Pengolahan'
 import StepBlok8Diseminasi from './steps/StepBlok8Diseminasi'
 import StepRingkasan from './steps/StepRingkasan'
 import { INITIAL_METADATA_FORM } from './metadataData'
 
+// Step kondisional: `isVisible(formData)` menentukan apakah step muncul di wizard.
+// Blok V hanya berlaku untuk kegiatan Survei, mengikuti alur BPS INDAH.
 const STEPS = [
   { id: 'awal', label: 'Halaman Awal' },
   { id: 'blok1', label: 'Blok I' },
   { id: 'blok2', label: 'Blok II' },
   { id: 'blok3', label: 'Blok III' },
   { id: 'blok4', label: 'Blok IV' },
+  {
+    id: 'blok5',
+    label: 'Blok V',
+    isVisible: (data) => data.halamanAwal?.caraPengumpulan === 'Survei',
+  },
   { id: 'blok6', label: 'Blok VI' },
   { id: 'blok7', label: 'Blok VII' },
   { id: 'blok8', label: 'Blok VIII' },
   { id: 'ringkasan', label: 'Ringkasan' },
 ]
 
+const getVisibleSteps = (data) => STEPS.filter((step) => !step.isVisible || step.isVisible(data))
+
 function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [currentStepId, setCurrentStepId] = useState('awal')
   const [formData, setFormData] = useState(initialData || INITIAL_METADATA_FORM)
   const [toastMessage, setToastMessage] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Posisi step disimpan sebagai id agar tidak bergeser saat step kondisional
+  // (mis. Blok V) muncul atau hilang. Jika id aktif jadi tidak terlihat,
+  // posisi di-clamp ke step terdekat yang masih berlaku.
+  const visibleSteps = getVisibleSteps(formData)
+  const activeIndex = (() => {
+    const found = visibleSteps.findIndex((step) => step.id === currentStepId)
+    if (found !== -1) return found
+    const lastIndex = STEPS.findIndex((step) => step.id === currentStepId)
+    const fallback = STEPS.slice(0, Math.max(lastIndex, 0))
+      .reverse()
+      .find((step) => visibleSteps.some((s) => s.id === step.id))
+    return fallback ? visibleSteps.findIndex((s) => s.id === fallback.id) : 0
+  })()
+  const currentStep = visibleSteps[activeIndex]
+  const isLastStep = activeIndex === visibleSteps.length - 1
 
   const showToast = (msg, type = 'success') => {
     setToastMessage({ msg, type })
@@ -74,6 +100,13 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
     setFormData((prev) => ({
       ...prev,
       blok4: { ...prev.blok4, [field]: val },
+    }))
+  }
+
+  const updateBlok5 = (field, val) => {
+    setFormData((prev) => ({
+      ...prev,
+      blok5: { ...(prev.blok5 || {}), [field]: val },
     }))
   }
 
@@ -176,18 +209,19 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
     }, 900)
   }
 
+  const goToStep = (id) => {
+    setCurrentStepId(id)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const nextStep = () => {
-    if (currentStepIndex < STEPS.length - 1) {
-      setCurrentStepIndex((prev) => prev + 1)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    const next = visibleSteps[activeIndex + 1]
+    if (next) goToStep(next.id)
   }
 
   const prevStep = () => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    const prev = visibleSteps[activeIndex - 1]
+    if (prev) goToStep(prev.id)
   }
 
   return (
@@ -241,8 +275,8 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
           <button
             type="button"
             onClick={() => {
-              if (currentStepIndex !== STEPS.length - 1) {
-                setCurrentStepIndex(STEPS.length - 1)
+              if (!isLastStep) {
+                goToStep(visibleSteps[visibleSteps.length - 1].id)
               } else {
                 handleSubmitForm()
               }
@@ -250,22 +284,22 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
             className="flex items-center gap-1.5 rounded-full bg-grey-300 px-5 py-2 text-[13px] font-bold text-lime-300 shadow hover:bg-grey-500 transition"
           >
             <Send size={16} />
-            {currentStepIndex === STEPS.length - 1 ? 'Submit Laporan' : 'Periksa & Submit'}
+            {isLastStep ? 'Submit Laporan' : 'Periksa & Submit'}
           </button>
         </div>
       </div>
 
       {/* Modern Stepper Tabs */}
       <div className="flex overflow-x-auto gap-2 p-1.5 rounded-2xl bg-grey2-75 border border-grey-50 no-scrollbar">
-        {STEPS.map((step, idx) => {
-          const isActive = idx === currentStepIndex
-          const isPassed = idx < currentStepIndex
+        {visibleSteps.map((step, idx) => {
+          const isActive = idx === activeIndex
+          const isPassed = idx < activeIndex
 
           return (
             <button
               key={step.id}
               type="button"
-              onClick={() => setCurrentStepIndex(idx)}
+              onClick={() => goToStep(step.id)}
               className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold transition ${
                 isActive
                   ? 'bg-grey-300 text-lime-300 shadow-sm'
@@ -293,35 +327,38 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
 
       {/* Main Step Body */}
       <div className="min-h-[460px]">
-        {currentStepIndex === 0 && (
+        {currentStep?.id === 'awal' && (
           <StepHalamanAwal
             formData={formData}
             updateHalamanAwal={updateHalamanAwal}
             applyPrediction={applyPrediction}
           />
         )}
-        {currentStepIndex === 1 && (
+        {currentStep?.id === 'blok1' && (
           <StepBlok1Penyelenggara formData={formData} updateBlok1={updateBlok1} />
         )}
-        {currentStepIndex === 2 && (
+        {currentStep?.id === 'blok2' && (
           <StepBlok2PenanggungJawab formData={formData} updateBlok2={updateBlok2} />
         )}
-        {currentStepIndex === 3 && (
+        {currentStep?.id === 'blok3' && (
           <StepBlok3Perencanaan formData={formData} updateBlok3={updateBlok3} />
         )}
-        {currentStepIndex === 4 && (
-          <StepBlok4Desain formData={formData} updateBlok4={updateBlok4} />
+        {currentStep?.id === 'blok4' && (
+          <StepBlok4Desain formData={formData} updateBlok4={updateBlok4} caraPengumpulan={formData.halamanAwal?.caraPengumpulan} />
         )}
-        {currentStepIndex === 5 && (
-          <StepBlok6Pengumpulan formData={formData} updateBlok6={updateBlok6} />
+        {currentStep?.id === 'blok5' && (
+          <StepBlok5DesainSampel formData={formData} updateBlok5={updateBlok5} />
         )}
-        {currentStepIndex === 6 && (
-          <StepBlok7Pengolahan formData={formData} updateBlok7={updateBlok7} />
+        {currentStep?.id === 'blok6' && (
+          <StepBlok6Pengumpulan formData={formData} updateBlok6={updateBlok6} caraPengumpulan={formData.halamanAwal?.caraPengumpulan} />
         )}
-        {currentStepIndex === 7 && (
-          <StepBlok8Diseminasi formData={formData} updateBlok8={updateBlok8} />
+        {currentStep?.id === 'blok7' && (
+          <StepBlok7Pengolahan formData={formData} updateBlok7={updateBlok7} caraPengumpulan={formData.halamanAwal?.caraPengumpulan} />
         )}
-        {currentStepIndex === 8 && (
+        {currentStep?.id === 'blok8' && (
+          <StepBlok8Diseminasi formData={formData} updateBlok8={updateBlok8} caraPengumpulan={formData.halamanAwal?.caraPengumpulan} />
+        )}
+        {currentStep?.id === 'ringkasan' && (
           <StepRingkasan
             formData={formData}
             onSaveDraft={handleSaveDraft}
@@ -336,7 +373,7 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
         <button
           type="button"
           onClick={prevStep}
-          disabled={currentStepIndex === 0}
+          disabled={activeIndex === 0}
           className="flex items-center gap-2 rounded-full border border-grey-75 bg-white px-5 py-2.5 text-[13px] font-bold text-grey-300 hover:bg-grey2-75 transition disabled:opacity-40 disabled:pointer-events-none"
         >
           <ArrowLeft size={16} />
@@ -344,10 +381,10 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
         </button>
 
         <span className="text-[13px] text-grey-100 font-medium">
-          Langkah <strong className="text-grey-300">{currentStepIndex + 1}</strong> dari {STEPS.length}
+          Langkah <strong className="text-grey-300">{activeIndex + 1}</strong> dari {visibleSteps.length}
         </span>
 
-        {currentStepIndex < STEPS.length - 1 ? (
+        {!isLastStep ? (
           <button
             type="button"
             onClick={nextStep}

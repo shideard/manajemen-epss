@@ -65,6 +65,8 @@ export const INITIAL_METADATA_FORM = {
   // Blok IV: Desain Kegiatan
   blok4: {
     frekuensiKegiatan: 'Berulang', // 'Hanya Sekali' | 'Berulang'
+    // Hanya relevan jika frekuensiKegiatan === 'Berulang'
+    frekuensiPenyelenggaraan: 'Tahunan', // 'Harian' | 'Minggu' | 'Bulanan' | 'Triwulanan' | 'Empat Bulanan' | 'Semesteran' | 'Tahunan' | 'Lebih Dari Dua Tahunan'
     tipePengumpulan: 'Cross Sectional', // 'Longitudinal Panel' | 'Longitudinal Cross Sectional' | 'Cross Sectional'
     cakupanWilayah: 'Sebagian Wilayah Indonesia', // 'Seluruh Wilayah Indonesia' | 'Sebagian Wilayah Indonesia'
     metodePengumpulan: ['Wawancara', 'Mengisi Kuesioner Sendiri'], // Array of checkboxes
@@ -72,15 +74,29 @@ export const INITIAL_METADATA_FORM = {
     unitPengumpulan: ['Individu', 'Rumah Tangga'],
   },
 
+  // Blok V: Desain Sampel (hanya untuk kegiatan Survei)
+  blok5: {
+    rancanganSampel: 'Multi Stage Atau Phase', // 'Single Stage Atau Phase' | 'Multi Stage Atau Phase'
+    metodePemilihanSampel: 'Sampel Probabilitas', // 'Sampel Probabilitas' | 'Sampel Nonprobabilitas'
+    metodeSampel: 'Stratified Random Sampling', // Probabilitas: 'Simple Random Sampling' | 'Systematic Random Sampling' | 'Stratified Random Sampling' | 'Cluster Sampling' | 'Probability Proportional to Size Sampling'
+    // Nonprobabilitas: 'Quota Sampling' | 'Accidental Sampling' | 'Purposive Sampling' | 'Snowball Sampling' | 'Saturation Sampling'
+    kerangkaSampel: 'List Frame', // 'List Frame' | 'Area Frame'
+    fraksiSampel: '0,05 (5 persen dari populasi terpilih)', // teks bebas
+    samplingError: 'RSE ≤ 5% pada tingkat kepercayaan 95%', // teks bebas
+    unitSampel: 'Individu penerima layanan publik yang terpilih',
+    unitObservasi: 'Individu penerima layanan publik',
+  },
+
   // Blok VI: Pengumpulan Data
   blok6: {
     pilotSurvey: 'Ya', // 'Ya' | 'Tidak'
     metodePemeriksaanKualitas: ['Supervisi', 'Kunjungan Kembali'],
     penyesuaianNonrespon: 'Ya', // 'Ya' | 'Tidak'
-    petugasPengumpulan: 'Staf OPD dan Mitra Statistik Terlatih',
-    persyaratanPendidikan: 'Minimal D3 / S1',
-    jumlahSupervisor: '4 Orang',
-    jumlahEnumerator: '16 Orang',
+    petugasPengumpulan:
+      'Staf Instansi Penyelenggara Dan Mitra Atau Tenaga Kontrak', // 'Staf Instansi Penyelenggara' | 'Mitra Atau Tenaga Kontrak' | 'Staf Instansi Penyelenggara Dan Mitra Atau Tenaga Kontrak'
+    persyaratanPendidikan: 'Diploma IV Atau S1 Atau S2 Atau S3', // 'Kurang Dari Atau Sama Dengan SMP' | 'SMA Atau SMK' | 'Diploma I Atau II Atau III' | 'Diploma IV Atau S1 Atau S2 Atau S3'
+    jumlahSupervisor: '4', // jumlah dalam satuan Orang
+    jumlahEnumerator: '16', // jumlah dalam satuan Orang
     pelatihanPetugas: 'Ya', // 'Ya' | 'Tidak'
   },
 

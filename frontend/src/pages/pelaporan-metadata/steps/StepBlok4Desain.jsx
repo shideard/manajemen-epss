@@ -1,7 +1,10 @@
 import { Sparkles } from 'lucide-react'
+import SaranPill from '../components/SaranPill'
+import { getSaranUntukOpsi } from '../lib/saranHelper'
 
-function StepBlok4Desain({ formData, updateBlok4 }) {
+function StepBlok4Desain({ formData, updateBlok4, caraPengumpulan }) {
   const data = formData.blok4
+  const saranUntuk = (field, opsi) => getSaranUntukOpsi(`blok4.${field}`, caraPengumpulan, opsi)
 
   const handleCheckboxToggle = (field, item) => {
     const list = data[field] || []
@@ -45,10 +48,44 @@ function StepBlok4Desain({ formData, updateBlok4 }) {
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('frekuensiKegiatan', opt)} />
               </label>
             ))}
           </div>
         </div>
+
+        {/* 4.2. Frekuensi Penyelenggaraan (hanya jika 4.1 = Berulang) */}
+        {data.frekuensiKegiatan === 'Berulang' && (
+          <div className="border-t border-grey-50 pt-5">
+            <label className="block text-[14px] font-bold text-grey-300 mb-2">
+              4.2. Frekuensi Penyelenggaraan:
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {[
+                'Harian',
+                'Minggu',
+                'Bulanan',
+                'Triwulanan',
+                'Empat Bulanan',
+                'Semesteran',
+                'Tahunan',
+                'Lebih Dari Dua Tahunan',
+              ].map((opt) => (
+                <label key={opt} className="flex items-center gap-2.5 cursor-pointer text-[14px] font-medium text-grey-200">
+                  <input
+                    type="radio"
+                    name="frekuensiPenyelenggaraan"
+                    value={opt}
+                    checked={data.frekuensiPenyelenggaraan === opt}
+                    onChange={(e) => updateBlok4('frekuensiPenyelenggaraan', e.target.value)}
+                    className="size-4 text-grey-300 focus:ring-lime-300"
+                  />
+                  <span>{opt}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 4.3. Tipe Pengumpulan Data */}
         <div className="border-t border-grey-50 pt-5">
@@ -67,6 +104,7 @@ function StepBlok4Desain({ formData, updateBlok4 }) {
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('tipePengumpulan', opt)} />
               </label>
             ))}
           </div>
@@ -89,6 +127,7 @@ function StepBlok4Desain({ formData, updateBlok4 }) {
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('cakupanWilayah', opt)} />
               </label>
             ))}
           </div>
@@ -115,6 +154,7 @@ function StepBlok4Desain({ formData, updateBlok4 }) {
                   className="size-4 rounded text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('metodePengumpulan', opt)} />
               </label>
             ))}
           </div>
@@ -162,6 +202,7 @@ function StepBlok4Desain({ formData, updateBlok4 }) {
                   className="size-4 rounded text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('unitPengumpulan', opt)} />
               </label>
             ))}
           </div>

@@ -1,7 +1,10 @@
 import { Sparkles } from 'lucide-react'
+import SaranPill from '../components/SaranPill'
+import { getSaranUntukOpsi } from '../lib/saranHelper'
 
-function StepBlok6Pengumpulan({ formData, updateBlok6 }) {
+function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan }) {
   const data = formData.blok6
+  const saranUntuk = (field, opsi) => getSaranUntukOpsi(`blok6.${field}`, caraPengumpulan, opsi)
 
   const handleQualityToggle = (item) => {
     const list = data.metodePemeriksaanKualitas || []
@@ -65,6 +68,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6 }) {
                   className="size-4 rounded text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('metodePemeriksaanKualitas', opt)} />
               </label>
             ))}
           </div>
@@ -87,64 +91,98 @@ function StepBlok6Pengumpulan({ formData, updateBlok6 }) {
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('penyesuaianNonrespon', opt)} />
               </label>
             ))}
           </div>
         </div>
 
-        {/* 6.4 - 6.6 Petugas Pengumpulan Data */}
-        <div className="border-t border-grey-50 pt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-[13px] font-bold text-grey-300 mb-1">
-              6.4. Petugas Pengumpulan Data
-            </label>
-            <input
-              type="text"
-              placeholder="Contoh: Staf Internal OPD / Mitra"
-              value={data.petugasPengumpulan}
-              onChange={(e) => updateBlok6('petugasPengumpulan', e.target.value)}
-              className="w-full rounded-xl border border-grey-75/60 px-4 py-2 text-[14px] text-grey-300 outline-none focus:border-grey-300"
-            />
+        {/* 6.4. Petugas Pengumpulan Data */}
+        <div className="border-t border-grey-50 pt-5">
+          <label className="block text-[14px] font-bold text-grey-300 mb-2">
+            6.4. Petugas Pengumpulan Data:
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {[
+              'Staf Instansi Penyelenggara',
+              'Mitra Atau Tenaga Kontrak',
+              'Staf Instansi Penyelenggara Dan Mitra Atau Tenaga Kontrak',
+            ].map((opt) => (
+              <label key={opt} className="flex items-center gap-2.5 cursor-pointer text-[14px] font-medium text-grey-200">
+                <input
+                  type="radio"
+                  name="petugasPengumpulan"
+                  value={opt}
+                  checked={data.petugasPengumpulan === opt}
+                  onChange={(e) => updateBlok6('petugasPengumpulan', e.target.value)}
+                  className="size-4 text-grey-300 focus:ring-lime-300"
+                />
+                <span>{opt}</span>
+              </label>
+            ))}
           </div>
-          <div>
-            <label className="block text-[13px] font-bold text-grey-300 mb-1">
-              6.5. Persyaratan Pendidikan Terendah Petugas
-            </label>
-            <input
-              type="text"
-              placeholder="Contoh: Minimal SMA/SMK atau D3/S1"
-              value={data.persyaratanPendidikan}
-              onChange={(e) => updateBlok6('persyaratanPendidikan', e.target.value)}
-              className="w-full rounded-xl border border-grey-75/60 px-4 py-2 text-[14px] text-grey-300 outline-none focus:border-grey-300"
-            />
+        </div>
+
+        {/* 6.5. Persyaratan Pendidikan Terendah Petugas */}
+        <div className="border-t border-grey-50 pt-5">
+          <label className="block text-[14px] font-bold text-grey-300 mb-2">
+            6.5. Persyaratan Pendidikan Terendah Petugas Pengumpulan Data:
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {[
+              'Kurang Dari Atau Sama Dengan SMP',
+              'SMA Atau SMK',
+              'Diploma I Atau II Atau III',
+              'Diploma IV Atau S1 Atau S2 Atau S3',
+            ].map((opt) => (
+              <label key={opt} className="flex items-center gap-2.5 cursor-pointer text-[14px] font-medium text-grey-200">
+                <input
+                  type="radio"
+                  name="persyaratanPendidikan"
+                  value={opt}
+                  checked={data.persyaratanPendidikan === opt}
+                  onChange={(e) => updateBlok6('persyaratanPendidikan', e.target.value)}
+                  className="size-4 text-grey-300 focus:ring-lime-300"
+                />
+                <span>{opt}</span>
+              </label>
+            ))}
           </div>
         </div>
 
         {/* 6.6 Jumlah Petugas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="border-t border-grey-50 pt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-[13px] font-bold text-grey-300 mb-1">
-              6.6.a. Jumlah Supervisor / Pengawas
+              6.6. Jumlah Petugas: Supervisor / Penyelia / Pengawas
             </label>
-            <input
-              type="text"
-              placeholder="Contoh: 4 Orang"
-              value={data.jumlahSupervisor}
-              onChange={(e) => updateBlok6('jumlahSupervisor', e.target.value)}
-              className="w-full rounded-xl border border-grey-75/60 px-4 py-2 text-[14px] text-grey-300 outline-none focus:border-grey-300"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="4"
+                value={data.jumlahSupervisor}
+                onChange={(e) => updateBlok6('jumlahSupervisor', e.target.value)}
+                className="w-full rounded-xl border border-grey-75/60 px-4 py-2 text-[14px] text-grey-300 outline-none focus:border-grey-300"
+              />
+              <span className="shrink-0 text-[13px] font-medium text-grey-100">Orang</span>
+            </div>
           </div>
           <div>
             <label className="block text-[13px] font-bold text-grey-300 mb-1">
-              6.6.b. Jumlah Enumerator / Pengumpul Data
+              6.6. Jumlah Petugas: Pengumpul Data / Enumerator
             </label>
-            <input
-              type="text"
-              placeholder="Contoh: 16 Orang"
-              value={data.jumlahEnumerator}
-              onChange={(e) => updateBlok6('jumlahEnumerator', e.target.value)}
-              className="w-full rounded-xl border border-grey-75/60 px-4 py-2 text-[14px] text-grey-300 outline-none focus:border-grey-300"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="16"
+                value={data.jumlahEnumerator}
+                onChange={(e) => updateBlok6('jumlahEnumerator', e.target.value)}
+                className="w-full rounded-xl border border-grey-75/60 px-4 py-2 text-[14px] text-grey-300 outline-none focus:border-grey-300"
+              />
+              <span className="shrink-0 text-[13px] font-medium text-grey-100">Orang</span>
+            </div>
           </div>
         </div>
 
@@ -165,6 +203,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6 }) {
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('pelatihanPetugas', opt)} />
               </label>
             ))}
           </div>

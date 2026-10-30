@@ -1,7 +1,10 @@
 import { Sparkles } from 'lucide-react'
+import SaranPill from '../components/SaranPill'
+import { getSaranUntukOpsi } from '../lib/saranHelper'
 
-function StepBlok8Diseminasi({ formData, updateBlok8 }) {
+function StepBlok8Diseminasi({ formData, updateBlok8, caraPengumpulan }) {
   const data = formData.blok8
+  const saranUntuk = (field, opsi) => getSaranUntukOpsi(`blok8.produkUmum.${field}`, caraPengumpulan, opsi)
 
   const handleProdukToggle = (key, value) => {
     updateBlok8('produkUmum', {
@@ -50,6 +53,7 @@ function StepBlok8Diseminasi({ formData, updateBlok8 }) {
                         className="size-4 text-grey-300 focus:ring-lime-300"
                       />
                       <span>{val}</span>
+                      <SaranPill saran={saranUntuk(key, val)} />
                     </label>
                   ))}
                 </div>
