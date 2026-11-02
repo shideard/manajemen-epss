@@ -866,4 +866,55 @@ class StoreRencanaKegiatanTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_activity_detail_includes_mapped_indicators(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $domain = DomainEPSS::create([
+            'versi_instrumen_id' => $scenario['periode']->versi_instrumen_id,
+            'kode' => '2',
+            'nama' => 'Kualitas Data',
+            'bobot' => '24.0000',
+        ]);
+
+        $aspek = AspekEPSS::create([
+            'domain_id' => $domain->id,
+            'kode' => '201',
+            'nama' => 'Relevansi',
+            'bobot' => '30.0000',
+        ]);
+
+        $indikator = IndikatorEPSS::create([
+            'aspek_id' => $aspek->id,
+            'kode' => '20101',
+            'nama' => 'Relevansi Data terhadap Pengguna',
+            'deskripsi' => 'Mengukur relevansi data terhadap kebutuhan pengguna.',
+            'bobot' => '40.0000',
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->putJson(
+                '/api/rencana-kegiatan/' . $activityId . '/indikator',
+                ['indikator_ids' => [$indikator->id]]
+            )
+            ->assertNoContent();
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson('/api/rencana-kegiatan/' . $activityId)
+            ->assertOk()
+            ->assertJsonPath('data.indikator.0.id', $indikator->id)
+            ->assertJsonPath('data.indikator.0.kode', '20101')
+            ->assertJsonPath(
+                'data.indikator.0.nama',
+                'Relevansi Data terhadap Pengguna'
+            );
+    }
+
 }
