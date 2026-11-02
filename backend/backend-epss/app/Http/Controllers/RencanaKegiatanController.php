@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\Planning\UpdateRencanaKegiatanRequest;
+use App\Http\Requests\Planning\SyncKegiatanIndikatorRequest;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class RencanaKegiatanController extends Controller
 {
@@ -51,6 +54,49 @@ class RencanaKegiatanController extends Controller
 
         return (new RencanaKegiatanResource($rencanaKegiatan))
             ->response();
+    }
+
+    public function syncIndikator(SyncKegiatanIndikatorRequest $request, RencanaKegiatan $rencanaKegiatan): Response 
+    {
+        $indikatorIds = $request->validated('indikator_ids');
+        $userId = $request->user()->id;
+
+        DB::transaction(function () use (
+            $rencanaKegiatan,
+            $indikatorIds,
+            $userId
+        ): void {
+            $indikatorSaatIni = $rencanaKegiatan
+                ->indikatorMappings()
+                ->pluck('indikator_id')
+                ->all();
+
+            $indikatorUntukDihapus = array_diff(
+                $indikatorSaatIni,
+                $indikatorIds
+            );
+
+            if ($indikatorUntukDihapus !== []) {
+                $rencanaKegiatan
+                    ->indikatorMappings()
+                    ->whereIn('indikator_id', $indikatorUntukDihapus)
+                    ->delete();
+            }
+
+            $indikatorUntukDitambahkan = array_diff(
+                $indikatorIds,
+                $indikatorSaatIni
+            );
+
+            foreach ($indikatorUntukDitambahkan as $indikatorId) {
+                $rencanaKegiatan->indikatorMappings()->create([
+                    'indikator_id' => $indikatorId,
+                    'created_by' => $userId,
+                ]);
+            }
+        });
+
+        return response()->noContent();
     }
 
     public function index(Request $request): AnonymousResourceCollection

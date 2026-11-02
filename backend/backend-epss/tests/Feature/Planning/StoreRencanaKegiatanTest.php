@@ -9,6 +9,10 @@ use App\Models\Opd;
 use App\Models\PeriodeEvaluasi;
 use App\Models\User;
 use App\Models\VersiInstrumenEPSS;
+use App\Models\AspekEPSS;
+use App\Models\DomainEPSS;
+use App\Models\IndikatorEPSS;
+use App\Models\KegiatanIndikator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -531,4 +535,236 @@ class StoreRencanaKegiatanTest extends TestCase
             'nama_kegiatan' => 'Kegiatan Pengujian',
         ]);
     }
+
+    public function test_verifikator_can_map_indicator_to_activity(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $domain = DomainEPSS::create([
+            'versi_instrumen_id' => $scenario['periode']->versi_instrumen_id,
+            'kode' => '2',
+            'nama' => 'Kualitas Data',
+            'bobot' => '24.0000',
+        ]);
+
+        $aspek = AspekEPSS::create([
+            'domain_id' => $domain->id,
+            'kode' => '201',
+            'nama' => 'Relevansi',
+            'bobot' => '30.0000',
+        ]);
+
+        $indikator = IndikatorEPSS::create([
+            'aspek_id' => $aspek->id,
+            'kode' => '20101',
+            'nama' => 'Relevansi Data terhadap Pengguna',
+            'deskripsi' => 'Mengukur relevansi data terhadap kebutuhan pengguna.',
+            'bobot' => '40.0000',
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->putJson(
+                '/api/rencana-kegiatan/' . $activityId . '/indikator',
+                ['indikator_ids' => [$indikator->id]]
+            )
+            ->assertNoContent();
+
+        $this->assertDatabaseHas('kegiatan_indikator', [
+            'kegiatan_id' => $activityId,
+            'indikator_id' => $indikator->id,
+            'created_by' => $verifikator->id,
+        ]);
+    }
+
+
+    public function test_operator_and_super_admin_cannot_map_indicators_to_activity(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        foreach ([
+            UserRole::OPERATOR,
+            UserRole::SUPER_ADMIN_BIDANG,
+        ] as $role) {
+            $actor = $this->createUser($role);
+
+            $this->app['auth']->forgetGuards();
+
+            $this->actingAs($actor, 'web')
+                ->getJson('/api/user')
+                ->assertOk()
+                ->assertJsonPath('id', $actor->id);
+
+            $this->actingAs($actor, 'web')
+                ->putJson(
+                    '/api/rencana-kegiatan/' . $activityId . '/indikator',
+                    ['indikator_ids' => []]
+                )
+                ->assertForbidden();
+        }
+
+        $this->assertDatabaseCount('kegiatan_indikator', 0);
+    }
+
+    public function test_verifikator_cannot_map_indicator_from_another_instrument_version(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $versiLain = VersiInstrumenEPSS::create([
+            'nama' => 'Instrumen Versi Lain',
+            'versi' => 'LAIN-' . Str::uuid(),
+            'berlaku_mulai' => '2026-01-01',
+            'berlaku_sampai' => null,
+            'status' => StatusVersiInstrumen::ACTIVE,
+        ]);
+
+        $domainLain = DomainEPSS::create([
+            'versi_instrumen_id' => $versiLain->id,
+            'kode' => '2',
+            'nama' => 'Kualitas Data',
+            'bobot' => '24.0000',
+        ]);
+
+        $aspekLain = AspekEPSS::create([
+            'domain_id' => $domainLain->id,
+            'kode' => '201',
+            'nama' => 'Relevansi',
+            'bobot' => '30.0000',
+        ]);
+
+        $indikatorLain = IndikatorEPSS::create([
+            'aspek_id' => $aspekLain->id,
+            'kode' => '20101',
+            'nama' => 'Indikator dari versi lain',
+            'deskripsi' => 'Indikator ini tidak termasuk versi periode kegiatan.',
+            'bobot' => '40.0000',
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->putJson(
+                '/api/rencana-kegiatan/' . $activityId . '/indikator',
+                ['indikator_ids' => [$indikatorLain->id]]
+            )
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['indikator_ids']);
+
+        $this->assertDatabaseCount('kegiatan_indikator', 0);
+    }
+
+    public function test_mapping_update_adds_removes_and_preserves_existing_pairs(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $domain = DomainEPSS::create([
+            'versi_instrumen_id' => $scenario['periode']->versi_instrumen_id,
+            'kode' => '2',
+            'nama' => 'Kualitas Data',
+            'bobot' => '24.0000',
+        ]);
+
+        $aspek = AspekEPSS::create([
+            'domain_id' => $domain->id,
+            'kode' => '201',
+            'nama' => 'Relevansi',
+            'bobot' => '30.0000',
+        ]);
+
+        $indikatorSatu = IndikatorEPSS::create([
+            'aspek_id' => $aspek->id,
+            'kode' => '20101',
+            'nama' => 'Indikator pertama',
+            'deskripsi' => 'Indikator pertama untuk pengujian.',
+            'bobot' => '40.0000',
+        ]);
+
+        $indikatorDua = IndikatorEPSS::create([
+            'aspek_id' => $aspek->id,
+            'kode' => '20102',
+            'nama' => 'Indikator kedua',
+            'deskripsi' => 'Indikator kedua untuk pengujian.',
+            'bobot' => '60.0000',
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->putJson(
+                '/api/rencana-kegiatan/' . $activityId . '/indikator',
+                ['indikator_ids' => [$indikatorSatu->id]]
+            )
+            ->assertNoContent();
+
+        $mappingSatuAwal = KegiatanIndikator::query()
+            ->where('kegiatan_id', $activityId)
+            ->where('indikator_id', $indikatorSatu->id)
+            ->firstOrFail();
+
+        $this->actingAs($verifikator, 'web')
+            ->putJson(
+                '/api/rencana-kegiatan/' . $activityId . '/indikator',
+                ['indikator_ids' => [$indikatorSatu->id, $indikatorDua->id]]
+            )
+            ->assertNoContent();
+
+        $mappingSatuSetelahUpdate = KegiatanIndikator::query()
+            ->where('kegiatan_id', $activityId)
+            ->where('indikator_id', $indikatorSatu->id)
+            ->firstOrFail();
+
+        $mappingDua = KegiatanIndikator::query()
+            ->where('kegiatan_id', $activityId)
+            ->where('indikator_id', $indikatorDua->id)
+            ->firstOrFail();
+
+        $this->assertSame($mappingSatuAwal->id, $mappingSatuSetelahUpdate->id);
+        $this->assertSame($verifikator->id, $mappingSatuSetelahUpdate->created_by);
+        $this->assertSame($verifikator->id, $mappingDua->created_by);
+        $this->assertDatabaseCount('kegiatan_indikator', 2);
+
+        $this->actingAs($verifikator, 'web')
+            ->putJson(
+                '/api/rencana-kegiatan/' . $activityId . '/indikator',
+                ['indikator_ids' => [$indikatorDua->id]]
+            )
+            ->assertNoContent();
+
+        $mappingDuaSetelahUpdate = KegiatanIndikator::query()
+            ->where('kegiatan_id', $activityId)
+            ->where('indikator_id', $indikatorDua->id)
+            ->firstOrFail();
+
+        $this->assertSame($mappingDua->id, $mappingDuaSetelahUpdate->id);
+        $this->assertDatabaseMissing('kegiatan_indikator', [
+            'kegiatan_id' => $activityId,
+            'indikator_id' => $indikatorSatu->id,
+        ]);
+        $this->assertDatabaseCount('kegiatan_indikator', 1);
+    }
+
+
 }

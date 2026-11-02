@@ -20,6 +20,7 @@ use App\Http\Controllers\PilihanPicController;
 
 // rencana kegiatan
 use App\Http\Controllers\RencanaKegiatanController;
+use Illuminate\Http\Response;
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
@@ -105,7 +106,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ])->whereUuid('rencanaKegiatan')
         ->name('rencana-kegiatan.update');
 
-
+        Route::put('/rencana-kegiatan/{rencanaKegiatan}/indikator',
+        [RencanaKegiatanController::class, 'syncIndikator']
+        )->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.indikator.sync');
     });
 });
 
