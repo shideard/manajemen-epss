@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KriteriaLevel extends Model
 {
@@ -29,5 +30,10 @@ class KriteriaLevel extends Model
     public function indikator(): BelongsTo
     {
         return $this->belongsTo(IndikatorEPSS::class, 'indikator_id');
+    }
+
+    public function kriteriaPemenuhan(): HasMany
+    {
+        return $this->hasMany(KriteriaPemenuhan::class, 'kriteria_level_id');
     }
 }
