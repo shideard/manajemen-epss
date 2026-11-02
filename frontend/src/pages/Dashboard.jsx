@@ -3,7 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import { useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../lib/store'
 import { ROLES } from '../config/menu'
 import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusOf, toISODate } from '../lib/epss'
-import { ArrowLink, Badge, CountUp, Dropdown, Memuat, PageHeader } from '../components/ui'
+import { ArrowLink, Badge, Collapse, CountUp, Dropdown, Memuat, PageHeader } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
 import arrowBlack from '../assets/icons/arrow-long-black.svg'
@@ -74,6 +74,7 @@ function Dashboard() {
   const muat = [useSkor(), useBukti(), useBerkas(), useKegiatan()]
   const [{ levels }, { bukti }, { berkas }, { kegiatan }] = muat
   const [simulasi, setSimulasi] = useState([{ indikatorId: '', level: 1 }])
+  const [infoSimulasi, setInfoSimulasi] = useState(false)
   const today = toISODate(new Date())
 
   const ips = hitungIps(INDIKATOR, levels)
@@ -295,7 +296,41 @@ function Dashboard() {
         </section>
 
         <section className="flex flex-col gap-6">
-          <PageHeader as="h2" title="Simulasi Perubahan Level & Gap Analysis" />
+          <div>
+            <PageHeader as="h2" title="Simulasi Perubahan Level & Gap Analysis">
+              <button
+                type="button"
+                onClick={() => setInfoSimulasi((buka) => !buka)}
+                aria-expanded={infoSimulasi}
+                aria-controls="info-simulasi"
+                aria-label="Penjelasan simulasi dan gap analysis"
+                title="Penjelasan"
+                className={`grid size-8 place-items-center rounded-full border text-body font-bold transition-colors ${
+                  infoSimulasi ? 'border-grey-500 bg-grey-500 text-lime-300' : 'border-grey-200 text-grey-500 hover:bg-white'
+                }`}
+              >
+                i
+              </button>
+            </PageHeader>
+            <Collapse open={infoSimulasi}>
+              <div id="info-simulasi" className="mt-4 flex flex-col gap-2 rounded-md border border-blue-500 bg-blue-50 px-5 py-4 text-small text-blue-500">
+                <p>
+                  <strong>Simulasi perubahan level</strong> menghitung ulang IPS Bayangan seolah-olah indikator yang Anda pilih sudah mencapai level tujuannya.
+                  Pilih indikator, lalu klik level tujuan (L1–L5). Level di bawah level saat ini tidak bisa dipilih karena simulasinya untuk peningkatan.
+                </p>
+                <ul className="flex list-disc flex-col gap-1 pl-5">
+                  <li>IPS = jumlah (bobot × level) semua indikator ÷ jumlah bobot. Indikator yang belum terverifikasi dihitung level 1.</li>
+                  <li>Angka hijau di tiap baris adalah kenaikan IPS dari indikator itu saja; &quot;Hasil simulasi&quot; adalah gabungan semua baris.</li>
+                  <li>Indikator berbobot besar menaikkan skor lebih banyak, jadi bandingkan dampaknya untuk menentukan prioritas.</li>
+                </ul>
+                <p>
+                  <strong>Gap analysis</strong> membandingkan hasil simulasi dengan target periode: &quot;Kurang x ke target&quot; berarti skor masih perlu naik
+                  sebanyak x, &quot;Target tercapai&quot; berarti peningkatan yang disimulasikan sudah cukup.
+                </p>
+                <p>Simulasi hanya perkiraan dan tidak menyimpan atau mengubah skor yang sebenarnya.</p>
+              </div>
+            </Collapse>
+          </div>
           <div className="flex flex-1 flex-col gap-5 rounded-lg bg-white p-6">
             {/* Hasil di atas, jadi langsung terlihat setiap kali level diubah */}
             <div className="flex flex-wrap items-end gap-x-6 gap-y-3 rounded-md bg-grey-500 px-5 py-4 text-white">
