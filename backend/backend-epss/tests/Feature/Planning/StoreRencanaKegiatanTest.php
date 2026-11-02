@@ -407,4 +407,128 @@ class StoreRencanaKegiatanTest extends TestCase
             ->assertJsonPath('data.0.id', $targetResponse->json('data.id'))
             ->assertJsonPath('data.0.status_kegiatan', 'BERJALAN');
     }
+
+    public function test_verifikator_can_view_activity_detail(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson('/api/rencana-kegiatan/' . $activityId)
+            ->assertOk()
+            ->assertJsonPath('data.id', $activityId)
+            ->assertJsonPath('data.nama_kegiatan', 'Kegiatan Pengujian')
+            ->assertJsonPath('data.nama_opd', $scenario['opd']->nama)
+            ->assertJsonPath('data.nama_pic', $scenario['pic']->name);
+    }
+
+    public function test_operator_can_view_activity_detail_as_reference(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $operatorLain = $this->createUser(UserRole::OPERATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $this->actingAs($operatorLain, 'web')
+            ->getJson('/api/rencana-kegiatan/' . $activityId)
+            ->assertOk()
+            ->assertJsonPath('data.id', $activityId)
+            ->assertJsonPath('data.pic_user_id', $scenario['pic']->id);
+    }
+
+    public function test_verifikator_can_update_activity_in_active_period(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $this->actingAs($verifikator, 'web')
+            ->patchJson('/api/rencana-kegiatan/' . $activityId, [
+                'nama_kegiatan' => 'Nama kegiatan diperbarui',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.id', $activityId)
+            ->assertJsonPath('data.nama_kegiatan', 'Nama kegiatan diperbarui');
+    }
+
+    public function test_locked_period_activity_cannot_be_updated(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $scenario['periode']->status = StatusPeriode::TERKUNCI;
+        $scenario['periode']->save();
+
+        $this->actingAs($verifikator, 'web')
+            ->patchJson('/api/rencana-kegiatan/' . $activityId, [
+                'nama_kegiatan' => 'Tidak boleh berubah',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('rencana_kegiatan', [
+            'id' => $activityId,
+            'nama_kegiatan' => 'Kegiatan Pengujian',
+        ]);
+    }
+
+    public function test_operator_and_super_admin_cannot_update_activity(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        foreach ([
+            UserRole::OPERATOR,
+            UserRole::SUPER_ADMIN_BIDANG,
+        ] as $role) {
+            $actor = $this->createUser($role);
+
+            $this->app['auth']->forgetGuards();
+
+            $this->assertSame($role, $actor->fresh()->role);
+
+            $this->actingAs($actor, 'web')
+                ->getJson('/api/user')
+                ->assertOk()
+                ->assertJsonPath('id', $actor->id);
+
+            $this->actingAs($actor, 'web')
+                ->patchJson('/api/rencana-kegiatan/' . $activityId, [
+                    'nama_kegiatan' => 'Perubahan tidak diizinkan',
+                ])
+                ->assertForbidden();
+        }
+
+        $this->assertDatabaseHas('rencana_kegiatan', [
+            'id' => $activityId,
+            'nama_kegiatan' => 'Kegiatan Pengujian',
+        ]);
+    }
 }

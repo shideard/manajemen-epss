@@ -92,6 +92,20 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ])->name('rencana-kegiatan.store');
 
         Route::get('/rencana-kegiatan', [RencanaKegiatanController::class, 'index']);
+
+        Route::get('/rencana-kegiatan/{rencanaKegiatan}', [
+        RencanaKegiatanController::class,
+        'show',
+        ])->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.show');
+
+        Route::patch('/rencana-kegiatan/{rencanaKegiatan}', [
+        RencanaKegiatanController::class,
+        'update',
+        ])->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.update');
+
+
     });
 });
 

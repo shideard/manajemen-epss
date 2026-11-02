@@ -10,6 +10,7 @@ use App\Enums\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\Planning\UpdateRencanaKegiatanRequest;
 
 class RencanaKegiatanController extends Controller
 {
@@ -23,6 +24,33 @@ class RencanaKegiatanController extends Controller
         return (new RencanaKegiatanResource($kegiatan))
             ->response()
             ->setStatusCode(201);
+    }
+
+    public function show(RencanaKegiatan $rencanaKegiatan): JsonResponse
+    {
+        Gate::authorize('view', $rencanaKegiatan);
+
+        $rencanaKegiatan->load([
+            'opd:id,nama',
+            'pic:id,name',
+        ]);
+
+        return (new RencanaKegiatanResource($rencanaKegiatan))
+            ->response();
+    }
+
+    public function update(UpdateRencanaKegiatanRequest $request, RencanaKegiatan $rencanaKegiatan): JsonResponse 
+    {
+        $rencanaKegiatan->fill($request->validated());
+        $rencanaKegiatan->save();
+
+        $rencanaKegiatan->load([
+            'opd:id,nama',
+            'pic:id,name',
+        ]);
+
+        return (new RencanaKegiatanResource($rencanaKegiatan))
+            ->response();
     }
 
     public function index(Request $request): AnonymousResourceCollection
