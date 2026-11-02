@@ -177,4 +177,50 @@ class StoreRencanaKegiatanTest extends TestCase
 
         $this->assertDatabaseCount('rencana_kegiatan', 0);
     }
+
+    public function test_verifikator_can_list_activities_in_a_period(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson('/api/rencana-kegiatan?periode_id=' . $scenario['periode']->id)
+            ->assertOk()
+            ->assertJsonPath('data.0.periode_id', $scenario['periode']->id);
+    }
+
+    public function test_operator_can_view_activities_assigned_to_other_users(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+        $operatorLain = $this->createUser(UserRole::OPERATOR);
+
+        $payloadOperatorLain = [
+            ...$scenario['payload'],
+            'pic_user_id' => $operatorLain->id,
+            'nama_kegiatan' => 'Kegiatan milik operator lain',
+        ];
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $payloadOperatorLain)
+            ->assertCreated();
+
+        $this->actingAs($scenario['pic'], 'web')
+            ->getJson('/api/rencana-kegiatan?periode_id=' . $scenario['periode']->id)
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment([
+                'pic_user_id' => $operatorLain->id,
+            ]);
+    }
+
+    
 }

@@ -91,6 +91,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         'store',
         ])->name('rencana-kegiatan.store');
 
+        Route::get('/rencana-kegiatan', [RencanaKegiatanController::class, 'index']);
     });
 });
 

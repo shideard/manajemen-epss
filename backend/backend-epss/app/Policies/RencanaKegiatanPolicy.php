@@ -11,4 +11,13 @@ class RencanaKegiatanPolicy
     {
         return $user->role === UserRole::VERIFIKATOR && $user->status_aktif;
     }
+
+    public function viewAny(User $user): bool
+    {
+        return $user->status_aktif
+            && in_array($user->role, [
+                UserRole::VERIFIKATOR,
+                UserRole::OPERATOR,
+            ], true);
+    }
 }
