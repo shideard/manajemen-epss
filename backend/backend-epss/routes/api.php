@@ -18,6 +18,9 @@ use App\Http\Controllers\KunciPeriodeController;
 use App\Http\Controllers\PilihanOpdController;
 use App\Http\Controllers\PilihanPicController;
 
+// rencana kegiatan
+use App\Http\Controllers\RencanaKegiatanController;
+
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
         return $request->user();
@@ -82,6 +85,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/pilihan/pic', 
         PilihanPicController::class)
         ->name('pilihan.pic');
+
+        Route::post('/rencana-kegiatan', [
+        RencanaKegiatanController::class,
+        'store',
+        ])->name('rencana-kegiatan.store');
 
     });
 });
