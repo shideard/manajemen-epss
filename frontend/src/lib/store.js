@@ -10,7 +10,6 @@ import {
   notifikasi,
   SEED_PENGINGAT,
   SEED_PERIODE,
-  SEED_USERS,
   sinkronPemetaan,
   toISODate,
   WARNA,
@@ -192,7 +191,7 @@ export function usePeriode() {
 }
 
 export function useUsers() {
-  const [users, setUsers] = useStore(KEYS.users, SEED_USERS)
+  const [users, setUsers] = useStore(KEYS.users, EMPTY_LIST)
   return {
     users,
     ...SIAP,

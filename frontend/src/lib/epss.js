@@ -39,11 +39,6 @@ export const SEED_PERIODE = [
   { id: 'p2025', nama: 'Evaluasi EPSS Kota Bogor Siklus 2025–2026', tahun1: '2025', tahun2: '2026', batas: '2026-05-30', target: 2.85, actual: null, terkunci: false },
   { id: 'p2023', nama: 'Evaluasi EPSS Kota Bogor Siklus 2023–2024', tahun1: '2023', tahun2: '2024', batas: '2024-05-30', target: 2.5, actual: 2.32, terkunci: true },
 ]
-export const SEED_USERS = [
-  { id: 'u1', username: 'budi1234', email: 'budi1234@gmail.com', role: 'VERIFIKATOR' },
-  { id: 'u2', username: 'ani1234', email: 'ani1234@gmail.com', role: 'OPERATOR' },
-  { id: 'u3', username: 'deshi1234', email: 'deshi1234@gmail.com', role: 'VERIFIKATOR' },
-]
 // Sama dengan User::requiresPasswordChange di backend: akun baru/direset, atau password sudah berumur 1 tahun.
 // Backend tetap penentunya (403 PASSWORD_CHANGE_REQUIRED); ini supaya user langsung diarahkan ke Ganti Password
 // ponytail: 29 Feb + 1 tahun jadi 1 Mar di JS (backend: 28 Feb), selisih sehari hanya di tahun kabisat
