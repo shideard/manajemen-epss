@@ -21,6 +21,7 @@ use App\Http\Controllers\PilihanPicController;
 // rencana kegiatan
 use App\Http\Controllers\RencanaKegiatanController;
 use Illuminate\Http\Response;
+use App\Http\Controllers\PeriodeIndikatorController;
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
@@ -110,6 +111,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         [RencanaKegiatanController::class, 'syncIndikator']
         )->whereUuid('rencanaKegiatan')
         ->name('rencana-kegiatan.indikator.sync');
+
+        Route::get('/periode-evaluasi/{periode}/indikator', PeriodeIndikatorController::class
+        )->whereUuid('periode')
+        ->name('periode-evaluasi.indikator.index');
     });
 });
 

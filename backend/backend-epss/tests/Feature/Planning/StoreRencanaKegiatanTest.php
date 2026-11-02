@@ -766,5 +766,104 @@ class StoreRencanaKegiatanTest extends TestCase
         $this->assertDatabaseCount('kegiatan_indikator', 1);
     }
 
+    public function test_verifikator_can_list_indicators_for_period_version(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $domain = DomainEPSS::create([
+            'versi_instrumen_id' => $scenario['periode']->versi_instrumen_id,
+            'kode' => '2',
+            'nama' => 'Kualitas Data',
+            'bobot' => '24.0000',
+        ]);
+
+        $aspek = AspekEPSS::create([
+            'domain_id' => $domain->id,
+            'kode' => '201',
+            'nama' => 'Relevansi',
+            'bobot' => '30.0000',
+        ]);
+
+        $indikatorPeriode = IndikatorEPSS::create([
+            'aspek_id' => $aspek->id,
+            'kode' => '20101',
+            'nama' => 'Relevansi Data terhadap Pengguna',
+            'deskripsi' => 'Mengukur relevansi data terhadap kebutuhan pengguna.',
+            'bobot' => '40.0000',
+        ]);
+
+        $versiLain = VersiInstrumenEPSS::create([
+            'nama' => 'Instrumen Versi Lain',
+            'versi' => 'LAIN-' . Str::uuid(),
+            'berlaku_mulai' => '2026-01-01',
+            'berlaku_sampai' => null,
+            'status' => StatusVersiInstrumen::ACTIVE,
+        ]);
+
+        $domainLain = DomainEPSS::create([
+            'versi_instrumen_id' => $versiLain->id,
+            'kode' => '2',
+            'nama' => 'Kualitas Data Versi Lain',
+            'bobot' => '24.0000',
+        ]);
+
+        $aspekLain = AspekEPSS::create([
+            'domain_id' => $domainLain->id,
+            'kode' => '201',
+            'nama' => 'Aspek Versi Lain',
+            'bobot' => '30.0000',
+        ]);
+
+        IndikatorEPSS::create([
+            'aspek_id' => $aspekLain->id,
+            'kode' => '20101',
+            'nama' => 'Indikator versi lain',
+            'deskripsi' => 'Tidak termasuk versi instrumen periode.',
+            'bobot' => '40.0000',
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson(
+                '/api/periode-evaluasi/'
+                . $scenario['periode']->id
+                . '/indikator'
+            )
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $indikatorPeriode->id)
+            ->assertJsonPath('data.0.kode', '20101')
+            ->assertJsonPath('data.0.nama', 'Relevansi Data terhadap Pengguna')
+            ->assertJsonPath('data.0.aspek.nama', 'Relevansi')
+            ->assertJsonPath('data.0.domain.nama', 'Kualitas Data');
+    }
+
+    public function test_operator_can_view_active_period_indicators_but_super_admin_cannot(): void
+    {
+        $scenario = $this->createScenario();
+        $url = '/api/periode-evaluasi/'
+            . $scenario['periode']->id
+            . '/indikator';
+
+        $operator = $this->createUser(UserRole::OPERATOR);
+
+        $this->actingAs($operator, 'web')
+            ->getJson($url)
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        $superAdmin = $this->createUser(UserRole::SUPER_ADMIN_BIDANG);
+
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($superAdmin, 'web')
+            ->getJson('/api/user')
+            ->assertOk()
+            ->assertJsonPath('id', $superAdmin->id);
+
+        $this->actingAs($superAdmin, 'web')
+            ->getJson($url)
+            ->assertForbidden();
+    }
 
 }
