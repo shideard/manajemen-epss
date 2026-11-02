@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class IndikatorEPSS extends Model
 {
@@ -32,6 +33,14 @@ class IndikatorEPSS extends Model
         return $this->belongsTo(
             AspekEPSS::class,
             'aspek_id'
+        );
+    }
+
+    public function kegiatanMappings(): HasMany
+    {
+        return $this->hasMany(
+            KegiatanIndikator::class,
+            'indikator_id'
         );
     }
 }
