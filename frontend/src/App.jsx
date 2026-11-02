@@ -3,6 +3,7 @@ import AppLayout from './components/layout/AppLayout'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Login from './pages/Login'
+import GantiPassword from './pages/GantiPassword'
 import PilihPeriode from './pages/PilihPeriode'
 import Notifikasi from './pages/Notifikasi'
 import PedomanIndikator from './pages/PedomanIndikator'
@@ -22,6 +23,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/ganti-password" element={<GantiPassword />} />
       <Route element={<AppLayout bare />}>
         <Route path="/pilih-periode" element={<PilihPeriode />} />
       </Route>

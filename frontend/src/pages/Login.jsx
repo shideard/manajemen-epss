@@ -5,20 +5,25 @@ import { useAuth } from '../lib/store'
 import background from '../assets/login/login-bg.png'
 import logoLine from '../assets/login/logo-line.svg'
 import logo from '../assets/sidebar/logo-kota-bogor.png'
-import { Field, FormError, Input } from '../components/ui'
+import { Field, FormError, Input, Spinner } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
 function Login() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [mengirim, setMengirim] = useState(false)
   const { login } = useAuth()
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const { username, password } = Object.fromEntries(new FormData(event.currentTarget))
-    const gagal = login(username, password)
+    setMengirim(true)
+    setError('')
+    const gagal = await login(username, password)
+    setMengirim(false)
     if (gagal) return setError(gagal)
+    // Akun yang wajib ganti password dialihkan AppLayout ke halaman Ganti Password
     navigate('/pilih-periode', { replace: true })
   }
 
@@ -62,11 +67,7 @@ function Login() {
                     onClick={() => setShowPassword((visible) => !visible)}
                     aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                     aria-pressed={showPassword}
-<<<<<<< HEAD
-                    className="absolute inset-y-0 right-3 flex items-center justify-center text-grey-300 hover:text-grey-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-=======
                     className="absolute inset-y-0 right-3 flex items-center justify-center text-grey-300 hover:text-grey-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-500"
->>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
                   >
                     {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
                   </button>
@@ -74,8 +75,9 @@ function Login() {
               </Field>
               <FormError>{error}</FormError>
             </div>
-            <button type="submit" className={`w-full font-semibold ${buttonClass()}`}>
-              Masuk
+            <button type="submit" disabled={mengirim} aria-busy={mengirim} className={`w-full font-semibold ${buttonClass()}`}>
+              {mengirim && <Spinner />}
+              {mengirim ? 'Memproses...' : 'Masuk'}
             </button>
           </div>
         </form>

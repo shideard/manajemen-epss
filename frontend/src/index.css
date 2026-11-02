@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
 /* Token design system. Aturan pemakaiannya ada di frontend/DESIGN.md */
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
@@ -96,24 +92,6 @@
   --shadow-sm: 0 2px 6px rgb(14 15 17 / 0.08);
   --shadow-md: 0 8px 20px rgb(14 15 17 / 0.18);
   --shadow-lg: 0 4px 21px rgb(14 15 17 / 0.25);
-<<<<<<< HEAD
-=======
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
->>>>>>> 6838ca491057c051538afd9cd520ecec4964a91c
-=======
->>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
 
   /* Satu kurva untuk semua gerak: cepat di awal, mendarat pelan */
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
@@ -162,10 +140,6 @@
   }
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
 /* Di layer base supaya class utility (animate-*, scale-*, transition-*) tetap bisa menimpa */
 @layer base {
   /* Default teks halaman = text-body, warna teks utama, line-height Figma */
@@ -244,27 +218,5 @@
     button:not(:disabled):active {
       scale: 0.97;
     }
-<<<<<<< HEAD
-=======
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
->>>>>>> 6838ca491057c051538afd9cd520ecec4964a91c
-=======
->>>>>>> 2c1a9ea91fa4a59869cf47543ecb6380f6b1631c
   }
 }
