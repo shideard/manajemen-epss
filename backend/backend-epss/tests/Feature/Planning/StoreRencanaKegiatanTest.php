@@ -222,6 +222,22 @@ class StoreRencanaKegiatanTest extends TestCase
             ]);
     }
 
+    public function test_activity_list_includes_opd_and_pic_names(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson('/api/rencana-kegiatan?periode_id=' . $scenario['periode']->id)
+            ->assertOk()
+            ->assertJsonPath('data.0.nama_opd', $scenario['opd']->nama)
+            ->assertJsonPath('data.0.nama_pic', $scenario['pic']->name);
+    }
+
     public function test_activity_list_can_search_by_description(): void
     {
         $verifikator = $this->createUser(UserRole::VERIFIKATOR);

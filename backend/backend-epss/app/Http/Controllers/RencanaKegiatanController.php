@@ -73,6 +73,10 @@ class RencanaKegiatanController extends Controller
         ]);
 
         $query = RencanaKegiatan::query()
+            ->with([
+                'opd:id,nama',
+                'pic:id,name',
+            ])
             ->where('periode_id', $validated['periode_id'])
             ->orderBy('tanggal_mulai_rencana')
             ->orderBy('id');
