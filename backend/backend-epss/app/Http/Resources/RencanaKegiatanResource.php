@@ -15,6 +15,8 @@ class RencanaKegiatanResource extends JsonResource
             'created_by' => $this->created_by,
             'pic_user_id' => $this->pic_user_id,
             'opd_id' => $this->opd_id,
+            'nama_opd' => $this->opd?->nama,
+            'nama_pic' => $this->pic?->name,
             'nama_kegiatan' => $this->nama_kegiatan,
             'deskripsi' => $this->deskripsi,
             'tahun_kegiatan' => $this->tahun_kegiatan,

@@ -20,6 +20,8 @@ use App\Http\Controllers\PilihanPicController;
 
 // rencana kegiatan
 use App\Http\Controllers\RencanaKegiatanController;
+use Illuminate\Http\Response;
+use App\Http\Controllers\PeriodeIndikatorController;
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
@@ -92,6 +94,27 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ])->name('rencana-kegiatan.store');
 
         Route::get('/rencana-kegiatan', [RencanaKegiatanController::class, 'index']);
+
+        Route::get('/rencana-kegiatan/{rencanaKegiatan}', [
+        RencanaKegiatanController::class,
+        'show',
+        ])->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.show');
+
+        Route::patch('/rencana-kegiatan/{rencanaKegiatan}', [
+        RencanaKegiatanController::class,
+        'update',
+        ])->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.update');
+
+        Route::put('/rencana-kegiatan/{rencanaKegiatan}/indikator',
+        [RencanaKegiatanController::class, 'syncIndikator']
+        )->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.indikator.sync');
+
+        Route::get('/periode-evaluasi/{periode}/indikator', PeriodeIndikatorController::class
+        )->whereUuid('periode')
+        ->name('periode-evaluasi.indikator.index');
     });
 });
 

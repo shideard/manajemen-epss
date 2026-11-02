@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RencanaKegiatan extends Model
 {
@@ -51,6 +52,21 @@ class RencanaKegiatan extends Model
         );
     }
 
+    public function statusKegiatan(): string
+    {
+        $today = today();
+
+        if ($today->lt($this->tanggal_mulai_rencana)) {
+            return 'BELUM_MULAI';
+        }
+
+        if ($today->gt($this->tanggal_selesai_rencana)) {
+            return 'SELESAI';
+        }
+
+        return 'BERJALAN';
+    }
+
     public function periode(): BelongsTo
     {
         return $this->belongsTo(PeriodeEvaluasi::class, 'periode_id');
@@ -71,20 +87,12 @@ class RencanaKegiatan extends Model
         return $this->belongsTo(Opd::class, 'opd_id');
     }
 
-    public function statusKegiatan(): string
+    public function indikatorMappings(): HasMany
     {
-        $today = today();
-
-        if ($today->lt($this->tanggal_mulai_rencana)) {
-            return 'BELUM_MULAI';
-        }
-
-        if ($today->gt($this->tanggal_selesai_rencana)) {
-            return 'SELESAI';
-        }
-
-        return 'BERJALAN';
+        return $this->hasMany(
+            KegiatanIndikator::class,
+            'kegiatan_id'
+        );
     }
 
-    
 }
