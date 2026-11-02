@@ -222,5 +222,173 @@ class StoreRencanaKegiatanTest extends TestCase
             ]);
     }
 
-    
+    public function test_activity_list_can_search_by_description(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $targetResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $payloadLain = [
+            ...$scenario['payload'],
+            'nama_kegiatan' => 'Kegiatan lainnya',
+            'deskripsi' => 'Deskripsi yang tidak cocok.',
+        ];
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $payloadLain)
+            ->assertCreated();
+
+        $query = http_build_query([
+            'periode_id' => $scenario['periode']->id,
+            'q' => 'Deskripsi kegiatan untuk pengujian',
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson('/api/rencana-kegiatan?' . $query)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $targetResponse->json('data.id'));
+    }
+
+    public function test_activity_list_can_filter_by_year(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $tanggalMulaiTahunDepan = today()->addYear();
+        $payloadTahunDepan = [
+            ...$scenario['payload'],
+            'nama_kegiatan' => 'Kegiatan tahun depan',
+            'tanggal_mulai_rencana' => $tanggalMulaiTahunDepan->toDateString(),
+            'tanggal_selesai_rencana' => $tanggalMulaiTahunDepan
+                ->copy()
+                ->addDays(10)
+                ->toDateString(),
+        ];
+
+        $targetResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $payloadTahunDepan)
+            ->assertCreated();
+
+        $query = http_build_query([
+            'periode_id' => $scenario['periode']->id,
+            'tahun' => $tanggalMulaiTahunDepan->year,
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson('/api/rencana-kegiatan?' . $query)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $targetResponse->json('data.id'));
+    }
+
+    public function test_activity_list_can_filter_by_opd(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $targetResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $opdLain = new Opd([
+            'kode' => 'UJI-' . Str::uuid(),
+            'nama' => 'OPD Lain',
+        ]);
+        $opdLain->status_aktif = true;
+        $opdLain->save();
+
+        $payloadOpdLain = [
+            ...$scenario['payload'],
+            'opd_id' => $opdLain->id,
+            'nama_kegiatan' => 'Kegiatan OPD lain',
+        ];
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $payloadOpdLain)
+            ->assertCreated();
+
+        $query = http_build_query([
+            'periode_id' => $scenario['periode']->id,
+            'opd_id' => $scenario['opd']->id,
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson('/api/rencana-kegiatan?' . $query)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $targetResponse->json('data.id'));
+    }
+
+    public function test_activity_list_can_filter_by_pic(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+        $picLain = $this->createUser(UserRole::OPERATOR);
+
+        $targetResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $payloadPicLain = [
+            ...$scenario['payload'],
+            'pic_user_id' => $picLain->id,
+            'nama_kegiatan' => 'Kegiatan PIC lain',
+        ];
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $payloadPicLain)
+            ->assertCreated();
+
+        $query = http_build_query([
+            'periode_id' => $scenario['periode']->id,
+            'pic_user_id' => $scenario['pic']->id,
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson('/api/rencana-kegiatan?' . $query)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $targetResponse->json('data.id'));
+    }
+
+    public function test_activity_list_can_filter_by_status(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $payloadBerjalan = [
+            ...$scenario['payload'],
+            'nama_kegiatan' => 'Kegiatan yang sedang berjalan',
+            'tanggal_mulai_rencana' => today()->subDay()->toDateString(),
+            'tanggal_selesai_rencana' => today()->addDay()->toDateString(),
+        ];
+
+        $targetResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $payloadBerjalan)
+            ->assertCreated();
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $query = http_build_query([
+            'periode_id' => $scenario['periode']->id,
+            'status' => 'BERJALAN',
+        ]);
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson('/api/rencana-kegiatan?' . $query)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $targetResponse->json('data.id'))
+            ->assertJsonPath('data.0.status_kegiatan', 'BERJALAN');
+    }
 }
