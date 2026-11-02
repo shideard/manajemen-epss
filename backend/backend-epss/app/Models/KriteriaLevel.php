@@ -36,4 +36,9 @@ class KriteriaLevel extends Model
     {
         return $this->hasMany(KriteriaPemenuhan::class, 'kriteria_level_id');
     }
+
+    public function persyaratanBukti(): HasMany
+    {
+        return $this->hasMany(PersyaratanBukti::class, 'kriteria_level_id');
+    }
 }
