@@ -190,16 +190,23 @@ export function usePeriode() {
   }
 }
 
+// Akun dibuat & diaktifkan/dinonaktifkan lewat API; error validasi (error.errors) dilempar ke pemanggil.
+// ponytail: backend belum punya GET /api/users, jadi daftar = akun yang dibuat dari browser ini (disimpan lokal); ambil dari API saat endpoint-nya ada
 export function useUsers() {
   const [users, setUsers] = useStore(KEYS.users, EMPTY_LIST)
   return {
     users,
     ...SIAP,
-    // id kosong = akun baru
-    simpan: (id, data) => setUsers((list) => (id ? list.map((u) => (u.id === id ? { ...u, ...data } : u)) : [...list, { ...data, id: crypto.randomUUID() }])),
-    hapus: (id) => setUsers((list) => list.filter((u) => u.id !== id)),
-    // Sama dengan status_aktif di backend (PATCH /api/users/{user}/status): akun nonaktif tidak bisa login
-    setStatus: (id, status_aktif) => setUsers((list) => list.map((u) => (u.id === id ? { ...u, status_aktif } : u))),
+    // data = { name, username, email, password, password_confirmation, role }
+    async tambah(data) {
+      const { data: akun } = await api('/api/users', { method: 'POST', body: data })
+      setUsers((list) => [...list, akun])
+    },
+    // Akun nonaktif tidak bisa login
+    async setStatus(id, status_aktif) {
+      await api(`/api/users/${id}/status`, { method: 'PATCH', body: { status_aktif } })
+      setUsers((list) => list.map((u) => (u.id === id ? { ...u, status_aktif } : u)))
+    },
   }
 }
 
