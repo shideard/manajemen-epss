@@ -19,7 +19,7 @@ export function PeriodeFields({ periode = {}, disabled, namaAside }) {
   return (
     <>
       <Field label="Nama Periode" aside={namaAside}>
-        <Input name="nama" required disabled={disabled} defaultValue={periode.nama} placeholder="Contoh: Evaluasi EPSS Kota Bogor Siklus 2027–2028" />
+        <Input name="nama" required disabled={disabled} defaultValue={periode.nama} placeholder="Contoh: EPSS Kota Bogor Siklus 2027–2028" />
       </Field>
       <div className="grid gap-6 sm:grid-cols-2">
         <Field label="Tahun Pertama">
