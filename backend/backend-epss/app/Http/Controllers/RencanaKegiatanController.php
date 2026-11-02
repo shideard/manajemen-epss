@@ -36,6 +36,7 @@ class RencanaKegiatanController extends Controller
         $rencanaKegiatan->load([
             'opd:id,nama',
             'pic:id,name',
+            'indikatorMappings.indikator:id,kode,nama',
         ]);
 
         return (new RencanaKegiatanResource($rencanaKegiatan))

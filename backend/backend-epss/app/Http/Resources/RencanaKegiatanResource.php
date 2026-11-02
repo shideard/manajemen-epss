@@ -27,6 +27,16 @@ class RencanaKegiatanResource extends JsonResource
             'status_kegiatan' => $this->statusKegiatan(),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
+            'indikator' => $this->whenLoaded(
+                'indikatorMappings',
+                fn () => $this->indikatorMappings
+                    ->map(fn ($mapping) => [
+                        'id' => $mapping->indikator->id,
+                        'kode' => $mapping->indikator->kode,
+                        'nama' => $mapping->indikator->nama,
+                    ])
+                    ->values()
+            ),
         ];
     }
 }
