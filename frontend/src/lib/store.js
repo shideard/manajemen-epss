@@ -1,8 +1,7 @@
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import { api } from './api'
 import {
-  cariAkun,
   contohKegiatan,
-  DEMO_PASSWORD,
   EMPTY_LIST,
   EMPTY_OBJECT,
   hitungIps,
@@ -205,22 +204,53 @@ export function useUsers() {
   }
 }
 
-// Akun yang sedang login (null = belum login, atau akunnya dihapus di Kelola Pengguna)
-// ponytail: login hanya di frontend dan semua akun memakai DEMO_PASSWORD; ganti dengan POST /login + GET /api/user Laravel
+// Sesi login Laravel (cookie Sanctum). Satu salinan di memori untuk semua komponen, dimuat sekali dari GET /api/user
+let sesi = { user: null, loading: true, error: null }
+const sesiListeners = new Set()
+const subscribeSesi = (listener) => {
+  sesiListeners.add(listener)
+  return () => sesiListeners.delete(listener)
+}
+function setSesi(perubahan) {
+  sesi = { ...sesi, ...perubahan }
+  sesiListeners.forEach((listener) => listener())
+}
+// 401 = belum login; 403 = akun dinonaktifkan (backend sudah mengeluarkannya). Keduanya berarti tanpa sesi, bukan error
+const muatSesi = () =>
+  api('/api/user').then(
+    (user) => setSesi({ user, loading: false, error: null }),
+    (error) => setSesi([401, 403].includes(error.status) ? { user: null, loading: false, error: null } : { loading: false, error }),
+  )
+let sesiDimuat = false
+
+// Akun yang sedang login (null = belum login)
 export function useAuth() {
-  const [sesi, setSesi] = useStore(KEYS.sesi, null)
-  const [users] = useStore(KEYS.users, SEED_USERS)
+  const state = useSyncExternalStore(subscribeSesi, () => sesi)
+  useEffect(() => {
+    if (sesiDimuat) return
+    sesiDimuat = true
+    muatSesi()
+  }, [])
   return {
-    user: cariAkun(users, sesi),
-    ...SIAP,
+    ...state,
     // Mengembalikan pesan error, atau undefined jika berhasil
-    login(username, password) {
-      const akun = cariAkun(users, username.trim())
-      if (!akun || password !== DEMO_PASSWORD) return 'Username atau password salah.'
-      if (akun.status_aktif === false) return 'Akun Anda dinonaktifkan. Hubungi Super Admin Bidang.'
-      setSesi(akun.username)
+    async login(username, password) {
+      try {
+        await api('/login', { method: 'POST', body: { username: username.trim(), password } })
+      } catch (error) {
+        return error.message
+      }
+      await muatSesi()
     },
-    logout: () => setSesi(null),
+    async logout() {
+      await api('/logout', { method: 'POST' })
+      setSesi({ user: null })
+    },
+    // data = { current_password, password, password_confirmation }; error validasi (error.errors) dilempar ke pemanggil
+    async gantiPassword(data) {
+      await api('/api/user/password', { method: 'PATCH', body: data })
+      await muatSesi()
+    },
   }
 }
 
