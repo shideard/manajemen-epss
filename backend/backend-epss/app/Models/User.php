@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use App\Enums\UserRole;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -51,6 +52,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'status_aktif' => 'boolean',
+            'must_change_password' => 'boolean',
+            'password_changed_at' => 'immutable_datetime',
         ];
     }
 
@@ -59,5 +62,30 @@ class User extends Authenticatable
         return Attribute::make(
             set: fn (string $value): string => Str::lower($value),
         );
+    }
+
+    public function requiresPasswordChange(): bool
+    {
+        if ($this->must_change_password) {
+            return true;
+        }
+
+        if ($this->password_changed_at === null) {
+            return true;
+        }
+
+        $expiresAt = $this->password_changed_at->addYearNoOverflow();
+
+        return now()->greaterThanOrEqualTo($expiresAt);
+    }
+
+    public function rencanaKegiatanDibuat(): HasMany
+    {
+        return $this->hasMany(RencanaKegiatan::class, 'created_by');
+    }
+
+    public function rencanaKegiatanSebagaiPic(): HasMany
+    {
+        return $this->hasMany(RencanaKegiatan::class, 'pic_user_id');
     }
 }

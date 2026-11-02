@@ -5,20 +5,25 @@ import { useAuth } from '../lib/store'
 import background from '../assets/login/login-bg.png'
 import logoLine from '../assets/login/logo-line.svg'
 import logo from '../assets/sidebar/logo-kota-bogor.png'
-import { Field, FormError, Input } from '../components/ui'
+import { Field, FormError, Input, Spinner } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
 function Login() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [mengirim, setMengirim] = useState(false)
   const { login } = useAuth()
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const { username, password } = Object.fromEntries(new FormData(event.currentTarget))
-    const gagal = login(username, password)
+    setMengirim(true)
+    setError('')
+    const gagal = await login(username, password)
+    setMengirim(false)
     if (gagal) return setError(gagal)
+    // Akun yang wajib ganti password dialihkan AppLayout ke halaman Ganti Password
     navigate('/pilih-periode', { replace: true })
   }
 
@@ -70,8 +75,9 @@ function Login() {
               </Field>
               <FormError>{error}</FormError>
             </div>
-            <button type="submit" className={`w-full font-semibold ${buttonClass()}`}>
-              Masuk
+            <button type="submit" disabled={mengirim} aria-busy={mengirim} className={`w-full font-semibold ${buttonClass()}`}>
+              {mengirim && <Spinner />}
+              {mengirim ? 'Memproses...' : 'Masuk'}
             </button>
           </div>
         </form>
