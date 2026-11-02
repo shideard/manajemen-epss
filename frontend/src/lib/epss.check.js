@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -153,5 +153,12 @@ assert.equal(statusOf(k, '2026-09-21'), 'Selesai')
 const lama = { ...k, mulai: '2026-01-01', selesai: '2026-01-31' }
 const nanti = { ...k, mulai: '2026-12-01', selesai: '2026-12-05' }
 assert.deepEqual(agendaTerdekat([nanti, lama, k], '2026-09-15'), [k, nanti])
+
+// Ganti password: akun baru, belum pernah ganti, atau sudah 1 tahun
+const gantiSaat = (user, now) => wajibGantiPassword(user, new Date(now))
+assert.equal(gantiSaat({ must_change_password: true, password_changed_at: '2026-10-01T00:00:00Z' }, '2026-10-02T00:00:00Z'), true)
+assert.equal(gantiSaat({ must_change_password: false, password_changed_at: null }, '2026-10-02T00:00:00Z'), true)
+assert.equal(gantiSaat({ must_change_password: false, password_changed_at: '2026-10-01T00:00:00Z' }, '2027-09-30T23:59:59Z'), false)
+assert.equal(gantiSaat({ must_change_password: false, password_changed_at: '2026-10-01T00:00:00Z' }, '2027-10-01T00:00:00Z'), true)
 
 console.log('epss.check (akses): OK')

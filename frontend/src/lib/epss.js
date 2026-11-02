@@ -32,27 +32,21 @@ export const KEYS = {
   snapshot: 'epss.snapshot',
   notifDibaca: 'epss.notif-dibaca',
   pengingat: 'epss.pengingat',
-  users: 'epss.users',
-  sesi: 'epss.sesi', // username akun yang sedang login
+  users: 'epss.akun', // akun dari POST /api/users; key baru supaya akun lama yang hanya ada di browser tidak ikut tampil
 }
 
 export const SEED_PERIODE = [
   { id: 'p2025', nama: 'Evaluasi EPSS Kota Bogor Siklus 2025–2026', tahun1: '2025', tahun2: '2026', batas: '2026-05-30', target: 2.85, actual: null, terkunci: false },
   { id: 'p2023', nama: 'Evaluasi EPSS Kota Bogor Siklus 2023–2024', tahun1: '2023', tahun2: '2024', batas: '2024-05-30', target: 2.5, actual: 2.32, terkunci: true },
 ]
-export const SEED_USERS = [
-  { id: 'u1', username: 'budi1234', email: 'budi1234@gmail.com', role: 'VERIFIKATOR' },
-  { id: 'u2', username: 'ani1234', email: 'ani1234@gmail.com', role: 'OPERATOR' },
-  { id: 'u3', username: 'deshi1234', email: 'deshi1234@gmail.com', role: 'VERIFIKATOR' },
-]
-// ponytail: login hanya di frontend dan semua akun memakai DEMO_PASSWORD; ganti dengan POST /login Laravel saat backend dipakai
-export const DEMO_PASSWORD = 'password'
-// Super admin tidak tampil di Kelola Pengguna supaya tidak bisa menghapus/menonaktifkan dirinya sendiri
-export const SUPER_ADMIN = { id: 'admin', username: 'admin', name: 'Super Admin', role: 'SUPER_ADMIN_BIDANG' }
-// Akun dari Kelola Pengguna belum punya nama; username dipakai untuk sapaan & PIC
-export const cariAkun = (users, username) => {
-  const akun = [SUPER_ADMIN, ...users].find((u) => u.username === username)
-  return akun && { name: akun.username, ...akun }
+// Sama dengan User::requiresPasswordChange di backend: akun baru/direset, atau password sudah berumur 1 tahun.
+// Backend tetap penentunya (403 PASSWORD_CHANGE_REQUIRED); ini supaya user langsung diarahkan ke Ganti Password
+// ponytail: 29 Feb + 1 tahun jadi 1 Mar di JS (backend: 28 Feb), selisih sehari hanya di tahun kabisat
+export function wajibGantiPassword(user, now = new Date()) {
+  if (user.must_change_password || !user.password_changed_at) return true
+  const kedaluwarsa = new Date(user.password_changed_at)
+  kedaluwarsa.setFullYear(kedaluwarsa.getFullYear() + 1)
+  return now >= kedaluwarsa
 }
 export const SEED_PENGINGAT = [1, 7, 14, 30]
 export const EMPTY_OBJECT = {}

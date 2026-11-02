@@ -5,6 +5,7 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import { menuPathsForRole } from '../../config/menu'
 import { useAuth } from '../../lib/store'
+import { wajibGantiPassword } from '../../lib/epss'
 import { Memuat } from '../ui'
 import { useConfirm } from '../useConfirm'
 import accountIcon from '../../assets/sidebar/account-circle-fill.svg'
@@ -52,10 +53,10 @@ function AppLayout({ bare = false }) {
   // Sesi masih dicek → jangan lempar ke login dulu
   if (!user && (auth.loading || auth.error)) return <Memuat dari={[auth]} />
 
-  // Belum login, atau akunnya dihapus/dinonaktifkan di Kelola Pengguna → ke halaman login
+  // Belum login, atau akunnya dinonaktifkan → ke halaman login
   if (!user || user.status_aktif === false) return <Navigate to="/login" replace />
-
-
+  // Backend menolak semua menu sampai password diganti
+  if (wajibGantiPassword(user)) return <Navigate to="/ganti-password" replace />
   // Halaman di luar menu role ini → ke menu pertama (mis. superadmin → Kelola Pengguna)
   const menuPaths = menuPathsForRole(user.role)
   const allowed = [...menuPaths, ...COMMON_PATHS].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))
