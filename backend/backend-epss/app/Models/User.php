@@ -88,4 +88,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(RencanaKegiatan::class, 'pic_user_id');
     }
+
+    public function dokumenBuktiDiunggah(): HasMany
+    {
+        return $this->hasMany(DokumenBukti::class, 'uploaded_by');
+    }
 }

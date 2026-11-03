@@ -95,4 +95,9 @@ class RencanaKegiatan extends Model
         );
     }
 
+    public function dokumenBukti(): HasMany
+    {
+        return $this->hasMany(DokumenBukti::class, 'kegiatan_id');
+    }
+
 }

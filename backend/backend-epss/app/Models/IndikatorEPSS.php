@@ -43,4 +43,9 @@ class IndikatorEPSS extends Model
             'indikator_id'
         );
     }
+
+    public function kriteriaLevels(): HasMany
+    {
+        return $this->hasMany(KriteriaLevel::class, 'indikator_id');
+    }
 }
