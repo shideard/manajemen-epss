@@ -77,14 +77,28 @@ function Dashboard() {
   const [infoSimulasi, setInfoSimulasi] = useState(false)
   const today = toISODate(new Date())
 
+  if (!aktif) {
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <PageHeader
+        title="Belum Ada Periode Evaluasi"
+        subtitle="Belum tersedia periode evaluasi aktif yang dapat digunakan."
+      />
+    </div>
+    )
+  } 
+
   const ips = hitungIps(INDIKATOR, levels)
   const sebelumnya = periode.filter((p) => p.actual != null && p.tahun2 < aktif.tahun1).sort((a, b) => b.tahun2.localeCompare(a.tahun2))[0]
   const terverifikasi = INDIKATOR.filter((i) => levels[i.id]).length
   const daftarBukti = Object.values(bukti)
   const ajuan = new Set(daftarBukti.filter((b) => b.status === 'menunggu').map((b) => b.indikatorId)).size
-  const sisaHari = Math.max(0, selisihHari(today, aktif.batas))
-  const buktiLink = verifikator ? '/verifikasi-bukti-dukung' : '/repositori-bukti-dukung'
 
+  const sisaHari = aktif.batas
+    ? Math.max(0, selisihHari(today, aktif.batas))
+    : null
+  
+  const buktiLink = verifikator ? '/verifikasi-bukti-dukung' : '/repositori-bukti-dukung'
   const levelSimulasi = { ...levels }
   for (const s of simulasi) if (s.indikatorId) levelSimulasi[s.indikatorId] = s.level
   const hasilSimulasi = hitungIps(INDIKATOR, levelSimulasi)

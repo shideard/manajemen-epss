@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { api } from './api'
 import {
   contohKegiatan,
@@ -175,19 +175,159 @@ export function usePeriode() {
   const [periode, setPeriode] = useStore(KEYS.periode, SEED_PERIODE)
   const [aktifId, setAktifId] = useStore(KEYS.periodeAktif, null)
   const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
-  const aktif = periode.find((p) => p.id === aktifId) ?? periode.find((p) => !p.terkunci) ?? periode[0]
+  const aktif = periode.find((p) => p.id === aktifId && p.status === 'AKTIF')
+    ?? periode.find((p) => p.status === 'AKTIF')
+    ?? null
+
+  // Mengambil daftar periode dari Laravel
+  const muat = useCallback(async () => {
+    const response = await api('/api/pengelolaan/periode-evaluasi')
+
+    const daftarPeriode = (response.data ?? []).map((p) => ({
+      id: p.id,
+      nama: p.nama_periode,
+      tahun1: p.tahun_mulai,
+      tahun2: p.tahun_selesai,
+      tanggal_mulai: p.tanggal_mulai,
+      tanggal_selesai: p.tanggal_selesai,
+      versi_instrumen_id: p.versi_instrumen_id,
+      status: p.status,
+      terkunci: p.status === 'TERKUNCI',
+    }))
+
+    setPeriode(daftarPeriode)
+    return daftarPeriode
+  }, [setPeriode])
+
+    const muatPilihan = useCallback(async () => {
+      const response = await api('/api/periode-evaluasi')
+
+      const daftarPeriode = (response.data ?? []).map((p) => ({
+        id: p.id,
+        nama: p.nama_periode,
+        tahun1: p.tahun_mulai,
+        tahun2: p.tahun_selesai,
+        tanggal_mulai: p.tanggal_mulai,
+        tanggal_selesai: p.tanggal_selesai,
+        versi_instrumen_id: p.versi_instrumen_id,
+        status: p.status,
+        terkunci: p.status === 'TERKUNCI',
+      }))
+
+      setPeriode(daftarPeriode)
+      return daftarPeriode
+    }, [setPeriode])
+
   return {
     periode,
     aktif,
-    ...SIAP,
+    loading: false,
+    error: null,
+    muat,
+    muatPilihan,
     setAktifId,
-    tambah: (data) => setPeriode((list) => [{ ...data, id: crypto.randomUUID(), actual: null, terkunci: false }, ...list]),
-    ubah: (id, perubahan) => setPeriode((list) => list.map((p) => (p.id === id ? { ...p, ...perubahan } : p))),
+    
+    tambah: async (data) => {
+      const response = await api('/api/periode-evaluasi', {
+        method: 'POST',
+        body: data,
+      })
+
+      const p = response.data
+
+      const periodeBaru = {
+        id: p.id,
+        nama: p.nama_periode,
+        tahun1: p.tahun_mulai,
+        tahun2: p.tahun_selesai,
+        tanggal_mulai: p.tanggal_mulai,
+        tanggal_selesai: p.tanggal_selesai,
+        versi_instrumen_id: p.versi_instrumen_id,
+        status: p.status,
+        terkunci: p.status === 'TERKUNCI',
+      }
+
+      setPeriode((list) => [periodeBaru, ...list])
+
+      return periodeBaru
+    },
+    
+    ubah: async (id, perubahan) => {
+      const response = await api(`/api/periode-evaluasi/${id}`, {
+        method: 'PATCH',
+        body: perubahan,
+      })
+
+      const p = response.data
+
+      const periodeTerbaru = {
+        id: p.id,
+        nama: p.nama_periode,
+        tahun1: p.tahun_mulai,
+        tahun2: p.tahun_selesai,
+        tanggal_mulai: p.tanggal_mulai,
+        tanggal_selesai: p.tanggal_selesai,
+        versi_instrumen_id: p.versi_instrumen_id,
+        status: p.status,
+        terkunci: p.status === 'TERKUNCI',
+      }
+
+      setPeriode((list) =>
+        list.map((item) => item.id === id ? periodeTerbaru : item)
+      )
+
+      return periodeTerbaru
+    },
+    
     hapus(id) {
       setPeriode((list) => list.filter((p) => p.id !== id))
       setSnapshot((list) => list.filter((s) => s.periodeId !== id))
     },
+
+    aktifkan: async (id) => {
+      await api(`/api/periode-evaluasi/${id}/aktivasi`, {
+        method: 'PATCH',
+      })
+
+      await muat()
+    },
+
+    kunci: async (id) => {
+      await api(`/api/periode-evaluasi/${id}/kunci`, {
+        method: 'PATCH',
+      })
+
+      await muat()
+    },
+
   }
+}
+
+// Versi instrumen yang bisa dipilih saat membuat periode.
+export function useVersiInstrumen() {
+  const [daftar, setDaftar] = useStore('epss.versi-instrumen', EMPTY_LIST)
+  const [state, setState] = useState(SIAP)
+
+  const muat = useCallback(async () => {
+    setState({ loading: true, error: null })
+    try {
+      const response = await api('/api/pilihan/versi-instrumen')
+      const versi = (response.data ?? []).map((item) => ({
+        id: item.id,
+        nama: item.nama,
+        versi: item.versi,
+      }))
+      setDaftar(versi)
+      setState(SIAP)
+      return versi
+    } catch (error) {
+      setState({ loading: false, error })
+      return []
+    }
+  }, [setDaftar])
+
+  useEffect(() => { muat() }, [muat])
+  return { daftar, ...state, muat }
 }
 
 // Akun dibuat & diaktifkan/dinonaktifkan lewat API; error validasi (error.errors) dilempar ke pemanggil.

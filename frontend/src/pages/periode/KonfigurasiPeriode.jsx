@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { PeriodeFields } from './PengaturanPeriode'
-import { usePeriode, useSkor } from '../../lib/store'
+import { usePeriode, useSkor, useVersiInstrumen } from '../../lib/store'
 import { hitungIps, INDIKATOR, predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
 import { Badge, Memuat, PageHeader } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -11,8 +11,12 @@ const formatWaktu = (iso) => new Date(iso).toLocaleString('sv-SE', { dateStyle: 
 
 function KonfigurasiPeriode() {
   const { id } = useParams()
-  const muat = [usePeriode(), useSkor()]
-  const [{ periode, ubah: ubahPeriode }, { levels, snapshot }] = muat
+  const muat = [usePeriode(), useSkor(), useVersiInstrumen()]
+  const [{
+    periode,
+    ubah: ubahPeriode,
+    kunci: kunciPeriode,
+  }, { levels, snapshot }, versiInstrumen] = muat
   const [pesan, setPesan] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
@@ -24,15 +28,25 @@ function KonfigurasiPeriode() {
   const riwayat = snapshot.filter((s) => s.periodeId === id)
   const ubah = (perubahan) => ubahPeriode(id, perubahan)
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
+
     const { data, error } = validasiPeriode(
       Object.fromEntries(new FormData(event.currentTarget)),
       periode.filter((item) => item.id !== id),
     )
-    if (error) return setPesan(error)
-    ubah(data)
-    setPesan('Konfigurasi tersimpan.')
+
+    if (error) {
+      setPesan(error)
+      return
+    }
+
+    try {
+      await ubah(data)
+      setPesan('Konfigurasi berhasil disimpan.')
+    } catch (error) {
+      setPesan(error.message || 'Gagal menyimpan konfigurasi.')
+    }
   }
 
   function kunci() {
@@ -41,9 +55,13 @@ function KonfigurasiPeriode() {
       message: `Kunci periode "${p.nama}"? Data dan skor IPS akan dibekukan dan tidak bisa diubah lagi.`,
       confirmLabel: 'Kunci Periode',
       danger: true,
-      onConfirm: () => {
-        ubah({ terkunci: true, actual: Math.round(hitungIps(INDIKATOR, levels) * 100) / 100 })
-        setPesan('Periode dikunci.')
+      onConfirm: async () => {
+        try {
+          await kunciPeriode(p.id)
+          setPesan('Periode berhasil dikunci.')
+        } catch (error) {
+          setPesan(error.message || 'Gagal mengunci periode.')
+        }
       },
     })
   }
@@ -62,10 +80,24 @@ function KonfigurasiPeriode() {
         <form key={p.id} onSubmit={handleSubmit} className="flex flex-col gap-6 rounded-lg bg-white p-6">
           <PeriodeFields
             periode={p}
+            versiInstrumen={versiInstrumen}
             disabled={p.terkunci}
             namaAside={
-              <Badge tone={p.terkunci ? 'red' : 'green'} className="text-small font-normal">
-                {p.terkunci ? 'Periode terkunci' : 'Periode Aktif'}
+              <Badge
+                tone={
+                  p.status === 'TERKUNCI'
+                    ? 'red'
+                    : p.status === 'AKTIF'
+                      ? 'green'
+                      : 'yellow'
+                }
+                className="text-small font-normal"
+              >
+                {p.status === 'TERKUNCI'
+                  ? 'Periode terkunci'
+                  : p.status === 'AKTIF'
+                    ? 'Periode Aktif'
+                    : 'Belum Diaktifkan'}
               </Badge>
             }
           />
@@ -79,9 +111,16 @@ function KonfigurasiPeriode() {
               <button type="submit" className={buttonClass()}>
                 Simpan konfigurasi
               </button>
-              <button type="button" onClick={kunci} className={buttonClass('danger')}>
-                Kunci Periode (Freeze Data)
-              </button>
+
+              {p.status === 'AKTIF' && (
+                <button
+                  type="button"
+                  onClick={kunci}
+                  className={buttonClass('danger')}
+                >
+                  Kunci Periode (Freeze Data)
+                </button>
+              )}
             </div>
           )}
         </form>
