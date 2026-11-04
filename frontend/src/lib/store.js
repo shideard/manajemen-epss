@@ -204,8 +204,33 @@ export function usePeriode() {
     error: null,
     muat,
     setAktifId,
-    tambah: (data) => setPeriode((list) => [{ ...data, id: crypto.randomUUID(), actual: null, terkunci: false }, ...list]),
+    
+    tambah: async (data) => {
+      const response = await api('/api/periode-evaluasi', {
+        method: 'POST',
+        body: data,
+      })
+
+      const p = response.data
+
+      const periodeBaru = {
+        id: p.id,
+        nama: p.nama_periode,
+        tahun1: p.tahun_mulai,
+        tahun2: p.tahun_selesai,
+        tanggal_mulai: p.tanggal_mulai,
+        tanggal_selesai: p.tanggal_selesai,
+        versi_instrumen_id: p.versi_instrumen_id,
+        terkunci: p.status === 'TERKUNCI',
+      }
+
+      setPeriode((list) => [periodeBaru, ...list])
+
+      return periodeBaru
+    },
+    
     ubah: (id, perubahan) => setPeriode((list) => list.map((p) => (p.id === id ? { ...p, ...perubahan } : p))),
+    
     hapus(id) {
       setPeriode((list) => list.filter((p) => p.id !== id))
       setSnapshot((list) => list.filter((s) => s.periodeId !== id))
