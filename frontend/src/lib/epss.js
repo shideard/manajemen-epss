@@ -348,9 +348,9 @@ export function validasiPeriode(form, periodeLain = []) {
   if (Number(form.tahun2) !== Number(form.tahun1) + 1) return { error: 'Tahun kedua harus satu tahun setelah tahun pertama (siklus 2 tahunan).' }
   const bentrok = periodeLain.find((p) => form.tahun1 <= p.tahun2 && p.tahun1 <= form.tahun2)
   if (bentrok) return { error: `Tahun ${form.tahun1}-${form.tahun2} beririsan dengan periode "${bentrok.nama}" (${bentrok.tahun1}-${bentrok.tahun2}).` }
-  if (form.batas < `${form.tahun1}-01-01` || form.batas > `${form.tahun2}-12-31`) return { error: `Batas akhir unggah bukti harus di antara tahun ${form.tahun1} dan ${form.tahun2}.` }
+  if (!form.versi_instrumen_id) return { error: 'Versi instrumen wajib dipilih.' }
   if (!(target >= 1 && target <= 5)) return { error: 'Target skor harus antara 1.00 dan 5.00.' }
-  return { data: { nama: form.nama.trim(), tahun1: form.tahun1, tahun2: form.tahun2, batas: form.batas, target } }
+  return { data: { nama: form.nama.trim(), tahun1: form.tahun1, tahun2: form.tahun2, versi_instrumen_id: form.versi_instrumen_id, target } }
 }
 
 export const PREDIKAT_TONE = { Kurang: 'red', Cukup: 'blue', Baik: 'green', 'Sangat Baik': 'green', Memuaskan: 'green' }

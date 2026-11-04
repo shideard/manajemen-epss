@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { PeriodeFields } from './PengaturanPeriode'
-import { usePeriode, useSkor } from '../../lib/store'
+import { usePeriode, useSkor, useVersiInstrumen } from '../../lib/store'
 import { hitungIps, INDIKATOR, predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
 import { Badge, Memuat, PageHeader } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -11,8 +11,8 @@ const formatWaktu = (iso) => new Date(iso).toLocaleString('sv-SE', { dateStyle: 
 
 function KonfigurasiPeriode() {
   const { id } = useParams()
-  const muat = [usePeriode(), useSkor()]
-  const [{ periode, ubah: ubahPeriode }, { levels, snapshot }] = muat
+  const muat = [usePeriode(), useSkor(), useVersiInstrumen()]
+  const [{ periode, ubah: ubahPeriode }, { levels, snapshot }, versiInstrumen] = muat
   const [pesan, setPesan] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
@@ -62,6 +62,7 @@ function KonfigurasiPeriode() {
         <form key={p.id} onSubmit={handleSubmit} className="flex flex-col gap-6 rounded-lg bg-white p-6">
           <PeriodeFields
             periode={p}
+            versiInstrumen={versiInstrumen}
             disabled={p.terkunci}
             namaAside={
               <Badge tone={p.terkunci ? 'red' : 'green'} className="text-small font-normal">

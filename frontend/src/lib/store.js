@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { api } from './api'
 import {
   contohKegiatan,
@@ -176,10 +176,33 @@ export function usePeriode() {
   const [aktifId, setAktifId] = useStore(KEYS.periodeAktif, null)
   const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
   const aktif = periode.find((p) => p.id === aktifId) ?? periode.find((p) => !p.terkunci) ?? periode[0]
+
+  // Mengambil daftar periode dari Laravel
+  const muat = useCallback(async () => {
+    const response = await api('/api/periode-evaluasi')
+
+    // Laravel Resource Collection membungkus daftar dalam properti data
+    const daftarPeriode = (response.data ?? []).map((p) => ({
+      id: p.id,
+      nama: p.nama_periode,
+      tahun1: p.tahun_mulai,
+      tahun2: p.tahun_selesai,
+      batas: p.tanggal_selesai,
+      terkunci: p.status === 'TERKUNCI',
+    })) 
+
+    // Mengganti data lokal dengan data dari backend
+    setPeriode(daftarPeriode)
+
+    return daftarPeriode
+  }, [setPeriode])
+
   return {
     periode,
     aktif,
-    ...SIAP,
+    loading: false,
+    error: null,
+    muat,
     setAktifId,
     tambah: (data) => setPeriode((list) => [{ ...data, id: crypto.randomUUID(), actual: null, terkunci: false }, ...list]),
     ubah: (id, perubahan) => setPeriode((list) => list.map((p) => (p.id === id ? { ...p, ...perubahan } : p))),
@@ -188,6 +211,33 @@ export function usePeriode() {
       setSnapshot((list) => list.filter((s) => s.periodeId !== id))
     },
   }
+}
+
+// Versi instrumen yang bisa dipilih saat membuat periode.
+export function useVersiInstrumen() {
+  const [daftar, setDaftar] = useStore('epss.versi-instrumen', EMPTY_LIST)
+  const [state, setState] = useState(SIAP)
+
+  const muat = useCallback(async () => {
+    setState({ loading: true, error: null })
+    try {
+      const response = await api('/api/pilihan/versi-instrumen')
+      const versi = (response.data ?? []).map((item) => ({
+        id: item.id,
+        nama: item.nama,
+        versi: item.versi,
+      }))
+      setDaftar(versi)
+      setState(SIAP)
+      return versi
+    } catch (error) {
+      setState({ loading: false, error })
+      return []
+    }
+  }, [setDaftar])
+
+  useEffect(() => { muat() }, [muat])
+  return { daftar, ...state, muat }
 }
 
 // Akun dibuat & diaktifkan/dinonaktifkan lewat API; error validasi (error.errors) dilempar ke pemanggil.
