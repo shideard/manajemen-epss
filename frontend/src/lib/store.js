@@ -252,7 +252,32 @@ export function usePeriode() {
       return periodeBaru
     },
     
-    ubah: (id, perubahan) => setPeriode((list) => list.map((p) => (p.id === id ? { ...p, ...perubahan } : p))),
+    ubah: async (id, perubahan) => {
+      const response = await api(`/api/periode-evaluasi/${id}`, {
+        method: 'PATCH',
+        body: perubahan,
+      })
+
+      const p = response.data
+
+      const periodeTerbaru = {
+        id: p.id,
+        nama: p.nama_periode,
+        tahun1: p.tahun_mulai,
+        tahun2: p.tahun_selesai,
+        tanggal_mulai: p.tanggal_mulai,
+        tanggal_selesai: p.tanggal_selesai,
+        versi_instrumen_id: p.versi_instrumen_id,
+        status: p.status,
+        terkunci: p.status === 'TERKUNCI',
+      }
+
+      setPeriode((list) =>
+        list.map((item) => item.id === id ? periodeTerbaru : item)
+      )
+
+      return periodeTerbaru
+    },
     
     hapus(id) {
       setPeriode((list) => list.filter((p) => p.id !== id))
@@ -266,7 +291,7 @@ export function usePeriode() {
 
       await muat()
     },
-    
+
     kunci: async (id) => {
       await api(`/api/periode-evaluasi/${id}/kunci`, {
         method: 'PATCH',

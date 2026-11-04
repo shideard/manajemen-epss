@@ -28,15 +28,25 @@ function KonfigurasiPeriode() {
   const riwayat = snapshot.filter((s) => s.periodeId === id)
   const ubah = (perubahan) => ubahPeriode(id, perubahan)
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
+
     const { data, error } = validasiPeriode(
       Object.fromEntries(new FormData(event.currentTarget)),
       periode.filter((item) => item.id !== id),
     )
-    if (error) return setPesan(error)
-    ubah(data)
-    setPesan('Konfigurasi tersimpan.')
+
+    if (error) {
+      setPesan(error)
+      return
+    }
+
+    try {
+      await ubah(data)
+      setPesan('Konfigurasi berhasil disimpan.')
+    } catch (error) {
+      setPesan(error.message || 'Gagal menyimpan konfigurasi.')
+    }
   }
 
   function kunci() {
