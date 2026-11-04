@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { usePeriode, useVersiInstrumen } from '../../lib/store'
 import { includesText, paginate, validasiPeriode } from '../../lib/epss'
-import { Dropdown, Field, FormError, Input, Memuat, Modal, ModalActions, PageHeader, Pagination, SearchBox, Select } from '../../components/ui'
+import { Badge, Dropdown, Field, FormError, Input, Memuat, Modal, ModalActions, PageHeader, Pagination, SearchBox, Select } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
@@ -231,21 +231,12 @@ function PengaturanPeriode() {
                   <td className="px-4 py-3.5">{p.nama}</td>
                   <td className="py-3.5">{p.versi_instrumen_nama ?? versiInstrumen.daftar.find((versi) => versi.id === p.versi_instrumen_id)?.nama ?? '-'}</td>
                   <td className="py-3.5">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        p.status === 'AKTIF'
-                          ? 'bg-green-100 text-green-700'
-                          : p.status === 'TERKUNCI'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                      }`}
+                    <Badge
+                      tone={p.status === 'AKTIF' ? 'green' : p.status === 'TERKUNCI' ? 'red' : 'yellow'}
+                      className="text-small"
                     >
-                      {p.status === 'AKTIF'
-                        ? 'Aktif'
-                        : p.status === 'TERKUNCI'
-                          ? 'Terkunci'
-                          : 'Draft'}
-                    </span>
+                      {p.status === 'AKTIF' ? 'Aktif' : p.status === 'TERKUNCI' ? 'Terkunci' : 'Draft'}
+                    </Badge>
                   </td>                  
                   <td className="py-3.5">{p.target?.toFixed(2) ?? '-'}</td>
                   <td className="py-3.5">{p.actual?.toFixed(2) ?? '-'}</td>
