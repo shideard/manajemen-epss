@@ -12,7 +12,11 @@ const formatWaktu = (iso) => new Date(iso).toLocaleString('sv-SE', { dateStyle: 
 function KonfigurasiPeriode() {
   const { id } = useParams()
   const muat = [usePeriode(), useSkor(), useVersiInstrumen()]
-  const [{ periode, ubah: ubahPeriode }, { levels, snapshot }, versiInstrumen] = muat
+  const [{
+    periode,
+    ubah: ubahPeriode,
+    kunci: kunciPeriode,
+  }, { levels, snapshot }, versiInstrumen] = muat
   const [pesan, setPesan] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
@@ -41,9 +45,13 @@ function KonfigurasiPeriode() {
       message: `Kunci periode "${p.nama}"? Data dan skor IPS akan dibekukan dan tidak bisa diubah lagi.`,
       confirmLabel: 'Kunci Periode',
       danger: true,
-      onConfirm: () => {
-        ubah({ terkunci: true, actual: Math.round(hitungIps(INDIKATOR, levels) * 100) / 100 })
-        setPesan('Periode dikunci.')
+      onConfirm: async () => {
+        try {
+          await kunciPeriode(p.id)
+          setPesan('Periode berhasil dikunci.')
+        } catch (error) {
+          setPesan(error.message || 'Gagal mengunci periode.')
+        }
       },
     })
   }
@@ -93,9 +101,16 @@ function KonfigurasiPeriode() {
               <button type="submit" className={buttonClass()}>
                 Simpan konfigurasi
               </button>
-              <button type="button" onClick={kunci} className={buttonClass('danger')}>
-                Kunci Periode (Freeze Data)
-              </button>
+
+              {p.status === 'AKTIF' && (
+                <button
+                  type="button"
+                  onClick={kunci}
+                  className={buttonClass('danger')}
+                >
+                  Kunci Periode (Freeze Data)
+                </button>
+              )}
             </div>
           )}
         </form>

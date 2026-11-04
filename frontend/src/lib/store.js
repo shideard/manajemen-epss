@@ -266,6 +266,15 @@ export function usePeriode() {
 
       await muat()
     },
+    
+    kunci: async (id) => {
+      await api(`/api/periode-evaluasi/${id}/kunci`, {
+        method: 'PATCH',
+      })
+
+      await muat()
+    },
+
   }
 }
 
