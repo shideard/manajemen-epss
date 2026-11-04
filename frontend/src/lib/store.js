@@ -175,7 +175,9 @@ export function usePeriode() {
   const [periode, setPeriode] = useStore(KEYS.periode, SEED_PERIODE)
   const [aktifId, setAktifId] = useStore(KEYS.periodeAktif, null)
   const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
-  const aktif = periode.find((p) => p.id === aktifId) ?? periode.find((p) => !p.terkunci) ?? periode[0]
+  const aktif = periode.find((p) => p.id === aktifId && p.status === 'AKTIF')
+    ?? periode.find((p) => p.status === 'AKTIF')
+    ?? null
 
   // Mengambil daftar periode dari Laravel
   const muat = useCallback(async () => {
@@ -189,6 +191,7 @@ export function usePeriode() {
       tanggal_mulai: p.tanggal_mulai,
       tanggal_selesai: p.tanggal_selesai,
       versi_instrumen_id: p.versi_instrumen_id,
+      status: p.status,
       terkunci: p.status === 'TERKUNCI',
     }))
 
@@ -196,12 +199,32 @@ export function usePeriode() {
     return daftarPeriode
   }, [setPeriode])
 
+    const muatPilihan = useCallback(async () => {
+      const response = await api('/api/periode-evaluasi')
+
+      const daftarPeriode = (response.data ?? []).map((p) => ({
+        id: p.id,
+        nama: p.nama_periode,
+        tahun1: p.tahun_mulai,
+        tahun2: p.tahun_selesai,
+        tanggal_mulai: p.tanggal_mulai,
+        tanggal_selesai: p.tanggal_selesai,
+        versi_instrumen_id: p.versi_instrumen_id,
+        status: p.status,
+        terkunci: p.status === 'TERKUNCI',
+      }))
+
+      setPeriode(daftarPeriode)
+      return daftarPeriode
+    }, [setPeriode])
+
   return {
     periode,
     aktif,
     loading: false,
     error: null,
     muat,
+    muatPilihan,
     setAktifId,
     
     tambah: async (data) => {
@@ -220,6 +243,7 @@ export function usePeriode() {
         tanggal_mulai: p.tanggal_mulai,
         tanggal_selesai: p.tanggal_selesai,
         versi_instrumen_id: p.versi_instrumen_id,
+        status: p.status,
         terkunci: p.status === 'TERKUNCI',
       }
 
@@ -233,6 +257,14 @@ export function usePeriode() {
     hapus(id) {
       setPeriode((list) => list.filter((p) => p.id !== id))
       setSnapshot((list) => list.filter((s) => s.periodeId !== id))
+    },
+
+    aktifkan: async (id) => {
+      await api(`/api/periode-evaluasi/${id}/aktivasi`, {
+        method: 'PATCH',
+      })
+
+      await muat()
     },
   }
 }

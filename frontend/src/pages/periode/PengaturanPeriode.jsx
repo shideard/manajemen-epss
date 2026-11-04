@@ -135,6 +135,7 @@ function PengaturanPeriode() {
     muat,
     tambah: tambahPeriode,
     hapus: hapusPeriode,
+    aktifkan: aktifkanPeriode,
   }] = dataHooks
 
   const [, versiInstrumen] = dataHooks
@@ -156,6 +157,17 @@ function PengaturanPeriode() {
       danger: true,
       onConfirm: async () => {
         hapusPeriode(p.id)
+      },
+    })
+  }
+
+  function aktifkan(p) {
+    konfirmasi({
+      title: 'Aktifkan Periode?',
+      message: `Apakah kamu yakin ingin mengaktifkan periode "${p.nama}"?`,
+      confirmLabel: 'Aktifkan',
+      onConfirm: async () => {
+        await aktifkanPeriode(p.id)
       },
     })
   }
@@ -197,6 +209,7 @@ function PengaturanPeriode() {
                 <th className="w-[123px] py-4">Periode Penilaian</th>
                 <th className="py-4">Nama Siklus</th>
                 <th className="py-4">Versi Instrumen</th>
+                <th className="py-4">Status</th>
                 <th className="py-4">Target IPS</th>
                 <th className="py-4">Actual IPS</th>
                 <th className="py-4">Aksi</th>
@@ -205,7 +218,7 @@ function PengaturanPeriode() {
             <tbody className="font-medium">
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-16 text-grey-200">
+                  <td colSpan={7} className="py-16 text-grey-200">
                     Tidak ada periode yang cocok dengan pencarian.
                   </td>
                 </tr>
@@ -217,10 +230,36 @@ function PengaturanPeriode() {
                   </td>
                   <td className="px-4 py-3.5">{p.nama}</td>
                   <td className="py-3.5">{p.versi_instrumen_nama ?? versiInstrumen.daftar.find((versi) => versi.id === p.versi_instrumen_id)?.nama ?? '-'}</td>
+                  <td className="py-3.5">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        p.status === 'AKTIF'
+                          ? 'bg-green-100 text-green-700'
+                          : p.status === 'TERKUNCI'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                      }`}
+                    >
+                      {p.status === 'AKTIF'
+                        ? 'Aktif'
+                        : p.status === 'TERKUNCI'
+                          ? 'Terkunci'
+                          : 'Draft'}
+                    </span>
+                  </td>                  
                   <td className="py-3.5">{p.target?.toFixed(2) ?? '-'}</td>
                   <td className="py-3.5">{p.actual?.toFixed(2) ?? '-'}</td>
                   <td className="py-3.5">
                     <span className="flex justify-center gap-2">
+                      {p.status === 'DRAFT' && (
+                        <button
+                          type="button"
+                          onClick={() => aktifkan(p)}
+                          className="rounded-xs bg-lime-300 px-3 py-1 text-xs font-semibold hover:bg-lime-400"
+                        >
+                          Aktivasi
+                        </button>
+                      )}                      
                       <Link to={`/pengaturan-periode/${p.id}`} aria-label={`Konfigurasi ${p.nama}`} className="rounded-xs bg-lime-300">
                         <img src={editIcon} alt="" width={24} height={24} />
                       </Link>

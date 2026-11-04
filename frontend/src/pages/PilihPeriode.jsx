@@ -16,7 +16,7 @@ function PilihPeriode() {
   const { user, home } = useOutletContext()
   const navigate = useNavigate()
 
-  const { periode, setAktifId, muat } = usePeriode()
+  const { periode, setAktifId, muatPilihan } = usePeriode()
 
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -26,8 +26,7 @@ function PilihPeriode() {
     async function ambilPeriode() {
       try {
         setLoading(true)
-        setError(null)
-        await muat()
+        await muatPilihan()
       } catch (err) {
         setError(err.message)
       } finally {
@@ -36,7 +35,7 @@ function PilihPeriode() {
     }
 
     ambilPeriode()
-  }, [muat])
+  }, [muatPilihan])
 
   // Superadmin tidak bekerja per periode
   if (user.role === ROLES.SUPER_ADMIN_BIDANG) return <Navigate to={home} replace />

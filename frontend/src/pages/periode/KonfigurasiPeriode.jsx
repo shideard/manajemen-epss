@@ -65,8 +65,21 @@ function KonfigurasiPeriode() {
             versiInstrumen={versiInstrumen}
             disabled={p.terkunci}
             namaAside={
-              <Badge tone={p.terkunci ? 'red' : 'green'} className="text-small font-normal">
-                {p.terkunci ? 'Periode terkunci' : 'Periode Aktif'}
+              <Badge
+                tone={
+                  p.status === 'TERKUNCI'
+                    ? 'red'
+                    : p.status === 'AKTIF'
+                      ? 'green'
+                      : 'yellow'
+                }
+                className="text-small font-normal"
+              >
+                {p.status === 'TERKUNCI'
+                  ? 'Periode terkunci'
+                  : p.status === 'AKTIF'
+                    ? 'Periode Aktif'
+                    : 'Belum Diaktifkan'}
               </Badge>
             }
           />
