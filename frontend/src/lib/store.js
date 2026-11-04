@@ -179,21 +179,20 @@ export function usePeriode() {
 
   // Mengambil daftar periode dari Laravel
   const muat = useCallback(async () => {
-    const response = await api('/api/periode-evaluasi')
+    const response = await api('/api/pengelolaan/periode-evaluasi')
 
-    // Laravel Resource Collection membungkus daftar dalam properti data
     const daftarPeriode = (response.data ?? []).map((p) => ({
       id: p.id,
       nama: p.nama_periode,
       tahun1: p.tahun_mulai,
       tahun2: p.tahun_selesai,
-      batas: p.tanggal_selesai,
+      tanggal_mulai: p.tanggal_mulai,
+      tanggal_selesai: p.tanggal_selesai,
+      versi_instrumen_id: p.versi_instrumen_id,
       terkunci: p.status === 'TERKUNCI',
-    })) 
+    }))
 
-    // Mengganti data lokal dengan data dari backend
     setPeriode(daftarPeriode)
-
     return daftarPeriode
   }, [setPeriode])
 

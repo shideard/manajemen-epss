@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { usePeriode, useVersiInstrumen } from '../../lib/store'
 import { includesText, paginate, validasiPeriode } from '../../lib/epss'
@@ -128,22 +128,35 @@ function TambahPeriode({ periode, versiInstrumen, onSave, onClose }) {
 }
 
 function PengaturanPeriode() {
-  const muat = [usePeriode(), useVersiInstrumen()]
-  const [{ periode, tambah: tambahPeriode, hapus: hapusPeriode }] = muat
-  const [, versiInstrumen] = muat
+  const dataHooks = [usePeriode(), useVersiInstrumen()]
+
+  const [{
+    periode,
+    muat,
+    tambah: tambahPeriode,
+    hapus: hapusPeriode,
+  }] = dataHooks
+
+  const [, versiInstrumen] = dataHooks
+
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [tambah, setTambah] = useState(false)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
-  // Periode terkunci = arsip skor resmi, jadi hanya periode yang belum dikunci yang bisa dihapus
+  useEffect(() => {
+    muat()
+  }, [muat])  
+
   function hapus(p) {
     konfirmasi({
-      title: 'Hapus Periode',
-      message: `Hapus periode "${p.nama}"? Riwayat snapshot skor periode ini ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
+      title: 'Hapus Periode?',
+      message: `Apakah kamu yakin ingin menghapus periode "${p.nama}"?`,
       confirmLabel: 'Hapus',
       danger: true,
-      onConfirm: () => hapusPeriode(p.id),
+      onConfirm: async () => {
+        hapusPeriode(p.id)
+      },
     })
   }
 
@@ -152,7 +165,7 @@ function PengaturanPeriode() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={dataHooks} />
       <PageHeader title="Pengaturan Periode EPSS Biennial" subtitle="Konfigurasi siklus 2 tahunan year-agnostic dan penetapan target IPS.">
         <button type="button" onClick={() => setTambah(true)} className={buttonClass()}>
           <img src={addIcon} alt="" width={19} height={19} />

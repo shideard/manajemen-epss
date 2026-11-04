@@ -248,9 +248,22 @@ export function Memuat({ dari }) {
     )
   if (!dari.some((d) => d.loading)) return null
   return (
-    <p role="status" className="flex items-center gap-2">
-      <Spinner /> Memuat data…
-    </p>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-grey-500/40 p-4">
+      <section
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+        className="w-full max-w-[520px] overflow-hidden rounded-lg bg-white font-sans shadow-lg"
+      >
+        <header className="flex min-h-16 items-center bg-grey-500 px-8.5 py-4">
+          <h2 className="text-h3 text-white">Memuat Data</h2>
+        </header>
+        <div className="flex min-h-36 items-center justify-center gap-3 px-8.5 py-7 text-body text-grey-500">
+          <Spinner className="size-5" />
+          <span>Memuat data…</span>
+        </div>
+      </section>
+    </div>
   )
 }
 
