@@ -57,6 +57,16 @@ class RencanaKegiatanController extends Controller
             ->response();
     }
 
+    public function destroy(Request $request, RencanaKegiatan $rencanaKegiatan) 
+    {
+        Gate::forUser($request->user())
+            ->authorize('delete', $rencanaKegiatan);
+
+        $rencanaKegiatan->delete();
+
+        return response()->noContent();
+    }
+
     public function syncIndikator(SyncKegiatanIndikatorRequest $request, RencanaKegiatan $rencanaKegiatan): Response 
     {
         $indikatorIds = $request->validated('indikator_ids');

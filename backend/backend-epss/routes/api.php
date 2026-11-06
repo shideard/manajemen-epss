@@ -120,6 +120,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
             PeriodeEvaluasiController::class, 
             'destroy']
         )->name('periode-evaluasi.destroy');
+
+        Route::delete('/rencana-kegiatan/{rencanaKegiatan}',
+        [RencanaKegiatanController::class, 'destroy']
+        );
     });
 });
 

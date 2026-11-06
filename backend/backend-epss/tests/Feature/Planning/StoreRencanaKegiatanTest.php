@@ -13,8 +13,10 @@ use App\Models\AspekEPSS;
 use App\Models\DomainEPSS;
 use App\Models\IndikatorEPSS;
 use App\Models\KegiatanIndikator;
+use App\Models\DokumenBukti;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class StoreRencanaKegiatanTest extends TestCase
@@ -915,6 +917,100 @@ class StoreRencanaKegiatanTest extends TestCase
                 'data.indikator.0.nama',
                 'Relevansi Data terhadap Pengguna'
             );
+    }
+
+    public function test_verifikator_can_delete_activity(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload']);
+
+        $createResponse
+            ->assertCreated()
+            ->assertJsonPath('data.created_by', $verifikator->id)
+            ->assertJsonPath(
+                'data.tahun_kegiatan',
+                (int) substr($scenario['payload']['tanggal_mulai_rencana'], 0, 4)
+            )
+            ->assertJsonPath('data.status_kegiatan', 'BELUM_MULAI');
+
+        $this->assertDatabaseHas('rencana_kegiatan', [
+            'periode_id' => $scenario['periode']->id,
+            'created_by' => $verifikator->id,
+            'pic_user_id' => $scenario['pic']->id,
+            'opd_id' => $scenario['opd']->id,
+            'tahun_kegiatan' => (int) substr(
+                $scenario['payload']['tanggal_mulai_rencana'],
+                0,
+                4
+            ),
+        ]);
+
+        $activityId = $createResponse->json('data.id');
+
+        $document = (new DokumenBukti())->forceFill([
+            'kegiatan_id' => $activityId,
+            'uploaded_by' => $scenario['pic']->id,
+            'version_number' => 1,
+            'is_current' => true,
+            'evidence_date' => '2026-11-06',
+            'nama_file' => 'bukti-pengujian.pdf',
+            'storage_key' => 'evidence/pengujian/bukti-pengujian.pdf',
+            'mime_type' => 'application/pdf',
+            'size_bytes' => 1024,
+            'sha256_hash' => hash('sha256', 'isi file pengujian'),
+        ]);
+        $document->save();
+
+        $this->actingAs($verifikator, 'web')
+            ->deleteJson("/api/rencana-kegiatan/{$activityId}")
+            ->assertNoContent();
+
+        $this->assertSoftDeleted('rencana_kegiatan', [
+            'id' => $activityId,
+        ]);
+
+        $this->assertDatabaseHas('dokumen_bukti', [
+            'id' => $document->id,
+            'kegiatan_id' => $activityId,
+            'uploaded_by' => $scenario['pic']->id,
+        ]);
+    }
+
+    public function test_operator_and_super_admin_cannot_delete_activity(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $createResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        foreach ([
+            UserRole::OPERATOR,
+            UserRole::SUPER_ADMIN_BIDANG,
+        ] as $role) {
+            // Buang guard Sanctum yang mungkin masih menyimpan user request sebelumnya.
+            $this->app['auth']->forgetGuards();
+
+            $actor = $this->createUser($role);
+            $this->actingAs($actor, 'web');
+
+            $this->deleteJson("/api/rencana-kegiatan/{$activityId}")
+                ->assertForbidden();
+        }
+
+        $this->assertDatabaseHas('rencana_kegiatan', [
+            'id' => $activityId,
+            'deleted_at' => null,
+        ]);
     }
 
 }

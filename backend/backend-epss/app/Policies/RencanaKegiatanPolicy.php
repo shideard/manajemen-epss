@@ -40,4 +40,9 @@ class RencanaKegiatanPolicy
                 ->where('status', StatusPeriode::AKTIF->value)
                 ->exists();
     }
+
+    public function delete(User $user, RencanaKegiatan $rencanaKegiatan): bool
+    {
+        return $user->role === UserRole::VERIFIKATOR;
+    }
 }
