@@ -29,7 +29,6 @@ class PeriodeEvaluasiController extends Controller
                 StatusPeriode::TERKUNCI->value,
             ])
             ->orderByDesc('tahun_mulai')
-            ->orderByDesc('tanggal_mulai')
             ->orderBy('id')
             ->paginate(6);
 
@@ -70,7 +69,7 @@ class PeriodeEvaluasiController extends Controller
 
         $periode = PeriodeEvaluasi::query()
             ->orderByDesc('tahun_mulai')
-            ->orderByDesc('tanggal_mulai')
+            ->orderByDesc('tahun_selesai')
             ->orderBy('id')
             ->paginate(7);
 
@@ -107,21 +106,11 @@ class PeriodeEvaluasiController extends Controller
             $effective = array_replace([
                 'tahun_mulai' => $lockedPeriode->tahun_mulai,
                 'tahun_selesai' => $lockedPeriode->tahun_selesai,
-                'tanggal_mulai' => $lockedPeriode->tanggal_mulai?->toDateString(),
-                'tanggal_selesai' => $lockedPeriode->tanggal_selesai?->toDateString(),
             ], $validated);
 
             Validator::make($effective, [
                 'tahun_selesai' => [
                     'gte:tahun_mulai',
-                ],
-                'tanggal_selesai' => [
-                    'nullable',
-                    'date_format:Y-m-d',
-                    Rule::when(
-                        $effective['tanggal_mulai'] !== null,
-                        ['after_or_equal:tanggal_mulai']
-                    ),
                 ],
             ])->validate();
 

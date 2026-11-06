@@ -38,18 +38,6 @@ class StorePeriodeEvaluasiRequest extends FormRequest
                 'between:1000,9999',
                 'gte:tahun_mulai',
             ],
-            'tanggal_mulai' => [
-                'nullable',
-                'date_format:Y-m-d',
-            ],
-            'tanggal_selesai' => [
-                'nullable',
-                'date_format:Y-m-d',
-                Rule::when(
-                    $this->filled('tanggal_mulai'),
-                    ['after_or_equal:tanggal_mulai']
-                ),
-            ],
             'status' => ['missing'],
             'closed_by' => ['missing'],
             'closed_at' => ['missing'],
