@@ -40,8 +40,6 @@ class UpdatePeriodeEvaluasiTest extends TestCase
             'nama_periode' => 'Nama awal',
             'tahun_mulai' => 2025,
             'tahun_selesai' => 2026,
-            'tanggal_mulai' => '2027-03-01',
-            'tanggal_selesai' => '2027-06-30',
         ])->refresh();
     }
 
@@ -65,38 +63,15 @@ class UpdatePeriodeEvaluasiTest extends TestCase
                 ])
                 ->assertOk()
                 ->assertJsonPath('data.nama_periode', $name)
-                ->assertJsonPath('data.status', $status->value)
-                ->assertJsonPath('data.tanggal_mulai', '2027-03-01');
+                ->assertJsonPath('data.status', $status->value);
 
             $this->assertDatabaseHas('periode_evaluasi', [
                 'id' => $periode->id,
                 'nama_periode' => $name,
                 'tahun_mulai' => 2025,
                 'tahun_selesai' => 2026,
-                'tanggal_selesai' => '2027-06-30',
             ]);
         }
-    }
-
-    public function test_verifikator_can_clear_optional_dates(): void
-    {
-        $verifikator = $this->createActor(UserRole::VERIFIKATOR);
-        $periode = $this->createPeriod();
-
-        $this->actingAs($verifikator, 'web')
-            ->patchJson("/api/periode-evaluasi/{$periode->id}", [
-                'tanggal_mulai' => null,
-                'tanggal_selesai' => null,
-            ])
-            ->assertOk()
-            ->assertJsonPath('data.tanggal_mulai', null)
-            ->assertJsonPath('data.tanggal_selesai', null);
-
-        $this->assertDatabaseHas('periode_evaluasi', [
-            'id' => $periode->id,
-            'tanggal_mulai' => null,
-            'tanggal_selesai' => null,
-        ]);
     }
 
     public function test_partial_update_validates_ranges_against_stored_values(): void
@@ -107,18 +82,15 @@ class UpdatePeriodeEvaluasiTest extends TestCase
         $this->actingAs($verifikator, 'web')
             ->patchJson("/api/periode-evaluasi/{$periode->id}", [
                 'tahun_mulai' => 2028,
-                'tanggal_mulai' => '2027-07-01',
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
                 'tahun_selesai',
-                'tanggal_selesai',
             ]);
 
         $this->assertDatabaseHas('periode_evaluasi', [
             'id' => $periode->id,
             'tahun_mulai' => 2025,
-            'tanggal_mulai' => '2027-03-01',
         ]);
     }
 

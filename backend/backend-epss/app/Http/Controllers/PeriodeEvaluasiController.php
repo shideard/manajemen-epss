@@ -16,7 +16,6 @@ use App\Http\Requests\Periode\UpdatePeriodeEvaluasiRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-
 class PeriodeEvaluasiController extends Controller
 {
     public function index(): AnonymousResourceCollection
@@ -29,7 +28,6 @@ class PeriodeEvaluasiController extends Controller
                 StatusPeriode::TERKUNCI->value,
             ])
             ->orderByDesc('tahun_mulai')
-            ->orderByDesc('tanggal_mulai')
             ->orderBy('id')
             ->paginate(6);
 
@@ -70,7 +68,7 @@ class PeriodeEvaluasiController extends Controller
 
         $periode = PeriodeEvaluasi::query()
             ->orderByDesc('tahun_mulai')
-            ->orderByDesc('tanggal_mulai')
+            ->orderByDesc('tahun_selesai')
             ->orderBy('id')
             ->paginate(7);
 
@@ -84,6 +82,21 @@ class PeriodeEvaluasiController extends Controller
         $periode->load('versiInstrumen');
 
         return new PeriodeEvaluasiResource($periode);
+    }
+
+    public function destroy(PeriodeEvaluasi $periode)
+    {
+        Gate::authorize('delete', $periode);
+
+        if ($periode->rencanaKegiatan()->exists()) {
+            return response()->json([
+                'message' => 'Periode tidak dapat dihapus karena masih memiliki rencana kegiatan.',
+            ], 409);
+        }
+
+        $periode->delete();
+
+        return response()->noContent();
     }
 
     public function update(UpdatePeriodeEvaluasiRequest $request, PeriodeEvaluasi $periode): PeriodeEvaluasiResource 
@@ -107,21 +120,11 @@ class PeriodeEvaluasiController extends Controller
             $effective = array_replace([
                 'tahun_mulai' => $lockedPeriode->tahun_mulai,
                 'tahun_selesai' => $lockedPeriode->tahun_selesai,
-                'tanggal_mulai' => $lockedPeriode->tanggal_mulai?->toDateString(),
-                'tanggal_selesai' => $lockedPeriode->tanggal_selesai?->toDateString(),
             ], $validated);
 
             Validator::make($effective, [
                 'tahun_selesai' => [
                     'gte:tahun_mulai',
-                ],
-                'tanggal_selesai' => [
-                    'nullable',
-                    'date_format:Y-m-d',
-                    Rule::when(
-                        $effective['tanggal_mulai'] !== null,
-                        ['after_or_equal:tanggal_mulai']
-                    ),
                 ],
             ])->validate();
 

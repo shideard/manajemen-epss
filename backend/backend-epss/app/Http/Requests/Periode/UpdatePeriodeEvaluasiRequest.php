@@ -35,15 +35,12 @@ class UpdatePeriodeEvaluasiRequest extends FormRequest
                 'integer',
                 'between:1000,9999',
             ],
-            'tanggal_mulai' => [
+            'target_ips' => [
                 'sometimes',
-                'nullable',
-                'date_format:Y-m-d',
-            ],
-            'tanggal_selesai' => [
-                'sometimes',
-                'nullable',
-                'date_format:Y-m-d',
+                'required',
+                'numeric',
+                'between:0,5',
+                'decimal:0,2',
             ],
             'versi_instrumen_id' => ['missing'],
             'status' => ['missing'],

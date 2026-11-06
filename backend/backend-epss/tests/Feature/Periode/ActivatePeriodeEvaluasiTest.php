@@ -40,8 +40,6 @@ class ActivatePeriodeEvaluasiTest extends TestCase
             'nama_periode' => 'Periode pengujian aktivasi',
             'tahun_mulai' => 2025,
             'tahun_selesai' => 2026,
-            'tanggal_mulai' => '2027-03-01',
-            'tanggal_selesai' => '2027-06-30',
         ]);
 
         return $periode->refresh();

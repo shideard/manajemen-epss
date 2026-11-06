@@ -31,8 +31,7 @@ class CreatePeriodeEvaluasiTest extends TestCase
             'nama_periode' => 'Evaluasi kegiatan 2025–2026',
             'tahun_mulai' => 2025,
             'tahun_selesai' => 2026,
-            'tanggal_mulai' => '2027-03-01',
-            'tanggal_selesai' => '2027-06-30',
+            'target_ips' => '2.85',
         ];
     }
 
@@ -57,7 +56,8 @@ class CreatePeriodeEvaluasiTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('data.nama_periode', $payload['nama_periode'])
             ->assertJsonPath('data.status', 'DRAFT')
-            ->assertJsonPath('data.closed_at', null);
+            ->assertJsonPath('data.closed_at', null)
+            ->assertJsonPath('data.target_ips', '2.85');
 
         $periode = PeriodeEvaluasi::findOrFail(
             $response->json('data.id')
@@ -87,26 +87,7 @@ class CreatePeriodeEvaluasiTest extends TestCase
 
         $this->assertDatabaseCount('periode_evaluasi', 0);
     }
-
-    public function test_reversed_year_and_date_ranges_are_rejected(): void
-    {
-        $verifikator = $this->createActor(UserRole::VERIFIKATOR);
-        $payload = $this->validPayload();
-
-        $payload['tahun_selesai'] = 2024;
-        $payload['tanggal_selesai'] = '2027-02-28';
-
-        $this->actingAs($verifikator, 'web')
-            ->postJson('/api/periode-evaluasi', $payload)
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors([
-                'tahun_selesai',
-                'tanggal_selesai',
-            ]);
-
-        $this->assertDatabaseCount('periode_evaluasi', 0);
-    }
-
+    
     public function test_client_cannot_set_status_or_closure_metadata(): void
     {
         $verifikator = $this->createActor(UserRole::VERIFIKATOR);
@@ -153,7 +134,8 @@ class CreatePeriodeEvaluasiTest extends TestCase
             ->assertJsonPath(
                 'data.versi_instrumen_id',
                 $versi->id
-            );
+            )
+            ->assertJsonPath('data.target_ips', '2.85');
 
         $this->assertSame(
             StatusVersiInstrumen::ACTIVE,
@@ -166,86 +148,4 @@ class CreatePeriodeEvaluasiTest extends TestCase
             'status' => 'DRAFT',
         ]);
     }
-
-    public function test_invalid_period_does_not_reactivate_archived_instrument(): void
-        {
-            $verifikator = $this->createActor(UserRole::VERIFIKATOR);
-            $payload = $this->validPayload();
-
-            $versi = VersiInstrumenEPSS::findOrFail(
-                $payload['versi_instrumen_id']
-            );
-
-            $versi->status = StatusVersiInstrumen::ARCHIVED;
-            $versi->save();
-
-            $payload['tanggal_selesai'] = '2027-02-28';
-
-            $this->actingAs($verifikator, 'web')
-                ->postJson('/api/periode-evaluasi', $payload)
-                ->assertUnprocessable()
-                ->assertJsonValidationErrors(['tanggal_selesai']);
-
-            $this->assertSame(
-                StatusVersiInstrumen::ARCHIVED,
-                $versi->fresh()->status
-            );
-
-            $this->assertDatabaseCount('periode_evaluasi', 0);
-        }
-
-        public function test_period_dates_are_optional(): void
-        {
-            $verifikator = $this->createActor(UserRole::VERIFIKATOR);
-            $basePayload = $this->validPayload();
-
-            unset(
-                $basePayload['tanggal_mulai'],
-                $basePayload['tanggal_selesai']
-            );
-
-            $cases = [
-                'omitted' => [],
-                'explicit_null' => [
-                    'tanggal_mulai' => null,
-                    'tanggal_selesai' => null,
-                ],
-                'start_only' => [
-                    'tanggal_mulai' => '2027-03-01',
-                ],
-                'end_only' => [
-                    'tanggal_selesai' => '2027-06-30',
-                ],
-            ];
-
-            foreach ($cases as $name => $dates) {
-                $payload = array_merge($basePayload, $dates, [
-                    'nama_periode' => 'Periode pengujian ' . $name,
-                ]);
-
-                $expectedStart = $dates['tanggal_mulai'] ?? null;
-                $expectedEnd = $dates['tanggal_selesai'] ?? null;
-
-                $response = $this->actingAs($verifikator, 'web')
-                    ->postJson('/api/periode-evaluasi', $payload);
-
-                $response->assertCreated()
-                    ->assertJsonPath('data.status', 'DRAFT')
-                    ->assertJsonPath('data.tanggal_mulai', $expectedStart)
-                    ->assertJsonPath('data.tanggal_selesai', $expectedEnd);
-
-                $this->assertDatabaseHas('periode_evaluasi', [
-                    'id' => $response->json('data.id'),
-                    'tanggal_mulai' => $expectedStart,
-                    'tanggal_selesai' => $expectedEnd,
-                ]);
-
-                $this->getJson(
-                    '/api/periode-evaluasi/' . $response->json('data.id')
-                )
-                    ->assertOk()
-                    ->assertJsonPath('data.tanggal_mulai', $expectedStart)
-                    ->assertJsonPath('data.tanggal_selesai', $expectedEnd);
-            }
-        }
 }

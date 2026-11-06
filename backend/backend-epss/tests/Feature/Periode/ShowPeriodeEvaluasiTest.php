@@ -41,8 +41,6 @@ class ShowPeriodeEvaluasiTest extends TestCase
             'nama_periode' => 'Evaluasi kegiatan 2025–2026',
             'tahun_mulai' => 2025,
             'tahun_selesai' => 2026,
-            'tanggal_mulai' => '2027-03-01',
-            'tanggal_selesai' => '2027-06-30',
         ])->refresh();
     }
 
@@ -57,7 +55,6 @@ class ShowPeriodeEvaluasiTest extends TestCase
             ->assertJsonPath('data.id', $periode->id)
             ->assertJsonPath('data.status', 'DRAFT')
             ->assertJsonPath('data.tahun_mulai', 2025)
-            ->assertJsonPath('data.tanggal_mulai', '2027-03-01')
             ->assertJsonPath(
                 'data.versi_instrumen.id',
                 $periode->versi_instrumen_id

@@ -43,8 +43,6 @@ class ManagePeriodeEvaluasiTest extends TestCase
                 'nama_periode' => 'Periode ' . $status->value,
                 'tahun_mulai' => 2025,
                 'tahun_selesai' => 2026,
-                'tanggal_mulai' => '2027-03-01',
-                'tanggal_selesai' => '2027-06-30',
             ]);
 
             $periode->status = $status;

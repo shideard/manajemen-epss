@@ -115,6 +115,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/periode-evaluasi/{periode}/indikator', PeriodeIndikatorController::class
         )->whereUuid('periode')
         ->name('periode-evaluasi.indikator.index');
+
+        Route::delete('/periode-evaluasi/{periode}', [
+            PeriodeEvaluasiController::class, 
+            'destroy']
+        )->name('periode-evaluasi.destroy');
     });
 });
 
