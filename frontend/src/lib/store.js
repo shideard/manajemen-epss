@@ -289,7 +289,11 @@ export function usePeriode() {
       return periodeTerbaru
     },
     
-    hapus(id) {
+    hapus: async (id) => {
+      await api(`/api/periode-evaluasi/${id}`, {
+        method: 'DELETE',
+      })
+
       setPeriode((list) => list.filter((p) => p.id !== id))
       setSnapshot((list) => list.filter((s) => s.periodeId !== id))
     },
