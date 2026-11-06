@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { KOLOM_KANBAN, kartuKanban } from './kegiatan'
 import { formatTanggal, INDIKATOR, toISODate } from '../../lib/epss'
+import { useBukti, useSemuaKegiatan } from '../../lib/store'
+import { Memuat } from '../../components/ui'
 import focusIcon from '../../assets/kanban/focus-3-line.svg'
 import calendarIcon from '../../assets/kanban/calendar-line.svg'
 import attachmentIcon from '../../assets/kanban/attachment-line.svg'
@@ -80,13 +82,18 @@ function KartuKegiatan({ kartu, warna, href }) {
   )
 }
 
-// Kanban otomatis: kegiatan masuk kolom sesuai jadwal & status buktinya, tidak bisa dipindah manual
-function KanbanKegiatan({ kegiatan, bukti, berkas, hrefOf }) {
-  const kolom = kartuKanban(kegiatan, bukti, berkas, toISODate(new Date()))
+// Kanban otomatis: kegiatan masuk kolom sesuai jadwal & status buktinya, tidak bisa dipindah manual.
+// Memuat sendiri semua kegiatan periode (tabel di halaman dipaginasi server); cocok = filter dari toolbar halaman.
+// Dimuat ulang tiap kali tampilan kanban dibuka, jadi perubahan dari tabel ikut terbawa.
+function KanbanKegiatan({ periodeId, cocok, hrefOf }) {
+  const semua = useSemuaKegiatan(periodeId)
+  const { bukti } = useBukti()
+  const kolom = kartuKanban(semua.kegiatan.filter(cocok), bukti, toISODate(new Date()))
   const [terbuka, setTerbuka] = useState([]) // status kolom yang sedang menampilkan semua kartu
   const toggle = (status) => setTerbuka((list) => (list.includes(status) ? list.filter((s) => s !== status) : [...list, status]))
   return (
     <div className="overflow-x-auto rounded-lg bg-white p-4">
+      <Memuat dari={[semua]} />
       <div className="grid min-w-[920px] grid-cols-4 gap-3">
         {KOLOM_KANBAN.map((status) => {
           const warna = KOLOM[status]

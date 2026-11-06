@@ -4,8 +4,9 @@ import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
 import KanbanKegiatan from './KanbanKegiatan'
-import { useBerkas, useBukti, usePeriode, useRencanaKegiatan } from '../../lib/store'
+import { usePeriode, useRencanaKegiatan } from '../../lib/store'
 import { formatTanggal, statusOf } from '../../lib/epss'
+import { matches } from './kegiatan'
 import { bolehUbah } from '../../config/menu'
 import { Badge, Dropdown, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -106,7 +107,6 @@ function RencanaKegiatan() {
   const statusApi = { 'Belum Mulai': 'BELUM_MULAI', Berjalan: 'BERJALAN', Selesai: 'SELESAI' }
   const rencana = useRencanaKegiatan(aktif?.id, { page, q: query, tahun, opd_id: opd, pic_user_id: pic, status: statusApi[statusFilter] })
   const kegiatan = rencana.kegiatan
-  const [{ bukti }, { berkas }] = [useBukti(), useBerkas()]
   const muat = [rencana]
   const [editing, setEditing] = useState(null) // null = form tertutup, {} = tambah baru
   const [kegiatanBaruId, setKegiatanBaruId] = useState(null)
@@ -260,9 +260,14 @@ function RencanaKegiatan() {
 
         {tampilan === 'kanban' ? (
           <KanbanKegiatan
-            kegiatan={filtered}
-            bukti={bukti}
-            berkas={berkas}
+            periodeId={aktif?.id}
+            cocok={(k) =>
+              matches(k, query) &&
+              (!tahun || k.tahun === tahun) &&
+              (!opd || String(k.opd_id) === String(opd)) &&
+              (!pic || String(k.pic_user_id) === String(pic)) &&
+              (!statusFilter || statusOf(k) === statusFilter)
+            }
             hrefOf={(k) => `/rencana-kegiatan/${k.id}`}
           />
         ) : (

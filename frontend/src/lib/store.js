@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
-import { api } from './api'
+import { api, unduh } from './api'
 import {
   contohKegiatan,
   EMPTY_LIST,
@@ -105,6 +105,8 @@ const mapRencanaKegiatan = (item) => ({
   selesai: item.tanggal_selesai_rencana,
   tahun: String(item.tahun_kegiatan),
   indikator: item.indikator ?? [],
+  // Indikator API → id instrumen lokal (kode = nomor indikator); checklist & status bukti masih memakai id lokal
+  indikatorIds: (item.indikator ?? []).map((i) => INDIKATOR.find((l) => String(l.nomor) === String(i.kode))?.id).filter(Boolean),
 })
 
 async function apiAll(path) {
@@ -250,6 +252,102 @@ export function useBerkas() {
         berkasUrl.delete(berkasId)
       }
       setBerkas((all) => ({ ...all, [kegiatanId]: (all[kegiatanId] ?? []).filter((f) => f.id !== berkasId) }))
+    },
+  }
+}
+
+// Hasil GET yang ditandai dengan key permintaannya: loading = hasil yang ada belum milik key ini.
+// Tanpa setState sinkron di effect, jadi pindah halaman langsung kembali ke loading.
+function useMuat(key, ambil) {
+  const [hasil, setHasil] = useState({ key: null })
+  useEffect(() => {
+    if (!key) return
+    let hidup = true
+    ambil().then(
+      (data) => hidup && setHasil({ key, data }),
+      (error) => hidup && setHasil({ key, error }),
+    )
+    return () => {
+      hidup = false
+    }
+  }, [key, ambil])
+  const milikKey = hasil.key === key
+  return { data: milikKey ? hasil.data : undefined, loading: Boolean(key) && !milikKey, error: milikKey ? (hasil.error ?? null) : null }
+}
+
+// Satu rencana kegiatan lengkap dengan indikatornya
+export function useDetailKegiatan(id) {
+  const ambil = useCallback(() => api(`/api/rencana-kegiatan/${id}`).then((res) => mapRencanaKegiatan(res.data)), [id])
+  const { data, ...state } = useMuat(id, ambil)
+  return { kegiatan: data ?? null, ...state }
+}
+
+// Semua rencana kegiatan satu periode, lengkap dengan indikatorIds & jumlahBerkas.
+// Daftar API dipaginasi 5 dan tanpa indikator/jumlah dokumen, jadi tiap kegiatan diambil detail + dokumennya.
+// ponytail: 1 + N/5 + 2N request; minta backend menambah indikator & dokumen_count di GET /rencana-kegiatan kalau mulai lambat
+export function useSemuaKegiatan(periodeId) {
+  const ambil = useCallback(async () => {
+    const ids = []
+    for (let page = 1, last = 1; page <= last; page += 1) {
+      const res = await api(`/api/rencana-kegiatan?periode_id=${periodeId}&page=${page}`)
+      ids.push(...(res.data ?? []).map((k) => k.id))
+      last = res.meta?.last_page ?? 1
+    }
+    return Promise.all(
+      ids.map(async (id) => {
+        const [detail, dokumen] = await Promise.all([api(`/api/rencana-kegiatan/${id}`), api(`/api/rencana-kegiatan/${id}/dokumen-bukti`)])
+        return { ...mapRencanaKegiatan(detail.data), jumlahBerkas: dokumen.data?.length ?? 0 }
+      }),
+    )
+  }, [periodeId])
+  const { data, ...state } = useMuat(periodeId, ambil)
+  return { kegiatan: data ?? EMPTY_LIST, ...state }
+}
+
+// Dokumen bukti satu rencana kegiatan dari API Laravel (berkas tersimpan di server, bukan di browser)
+const mapDokumen = (d) => ({ id: d.id, nama: d.nama_file, ukuran: d.size_bytes, tanggal: d.evidence_date, mime: d.mime_type })
+
+export function useDokumenBukti(kegiatanId) {
+  // kegiatanId ikut disimpan: loading = data yang ada belum milik kegiatan ini
+  const [state, setState] = useState({ kegiatanId: null, dokumen: [], error: null })
+  const base = `/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti`
+
+  const muat = useCallback(
+    () =>
+      api(base).then(
+        (res) => setState({ kegiatanId, dokumen: (res.data ?? []).map(mapDokumen), error: null }),
+        (error) => setState({ kegiatanId, dokumen: [], error }),
+      ),
+    [base, kegiatanId],
+  )
+  useEffect(() => {
+    if (kegiatanId) muat()
+  }, [kegiatanId, muat])
+
+  return {
+    dokumen: state.kegiatanId === kegiatanId ? state.dokumen : EMPTY_LIST,
+    loading: Boolean(kegiatanId) && state.kegiatanId !== kegiatanId,
+    error: state.kegiatanId === kegiatanId ? state.error : null,
+    // Satu request per berkas (endpoint menerima satu file); tanggal bukti = hari ini
+    async unggah(files) {
+      try {
+        for (const file of files) {
+          const body = new FormData()
+          body.append('file', file)
+          body.append('evidence_date', toISODate(new Date()))
+          await api(base, { method: 'POST', body })
+        }
+      } finally {
+        await muat()
+      }
+    },
+    // Object URL isi berkas untuk pratinjau (iframe); pemanggil wajib URL.revokeObjectURL setelah selesai
+    url: async (dokumen) => URL.createObjectURL(await unduh(`${base}/${dokumen.id}/download`)),
+    // Buka di tab baru; URL dicabut setelah tab sempat memuatnya
+    async buka(dokumen) {
+      const url = URL.createObjectURL(await unduh(`${base}/${dokumen.id}/download`))
+      window.open(url, '_blank', 'noopener')
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
     },
   }
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../lib/store'
+import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
 import { ROLES } from '../config/menu'
 import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusOf, toISODate } from '../lib/epss'
 import { ArrowLink, Badge, Collapse, CountUp, Dropdown, Memuat, PageHeader } from '../components/ui'
@@ -71,8 +71,8 @@ function Dashboard() {
   const { user } = useOutletContext()
   const verifikator = user.role === ROLES.VERIFIKATOR
   const { periode, aktif } = usePeriode()
-  const muat = [useSkor(), useBukti(), useBerkas(), useKegiatan()]
-  const [{ levels }, { bukti }, { berkas }, { kegiatan }] = muat
+  const muat = [useSkor(), useBukti(), useSemuaKegiatan(aktif?.id)]
+  const [{ levels }, { bukti }, { kegiatan }] = muat
   const [simulasi, setSimulasi] = useState([{ indikatorId: '', level: 1 }])
   const [infoSimulasi, setInfoSimulasi] = useState(false)
   const today = toISODate(new Date())
@@ -252,7 +252,7 @@ function Dashboard() {
                   <tr key={k.id} className="border-b border-grey-75 last:border-0">
                     <td className="px-5 py-4">{k.nama}</td>
                     <td className="px-5 py-4">{formatTanggal(k.mulai)}</td>
-                    <td className="px-5 py-4">{berkas[k.id]?.length ?? 0} berkas diunggah</td>
+                    <td className="px-5 py-4">{k.jumlahBerkas} berkas diunggah</td>
                     <td className="px-5 py-3">
                       <Badge {...STATUS_KEGIATAN[status]} className="w-full text-small">
                         {status}
