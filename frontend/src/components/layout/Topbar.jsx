@@ -142,11 +142,13 @@ function Topbar() {
             </li>
           ))}
         </ul>
-        {list.length > 4 && (
-          <Link to="/notifikasi" onClick={() => popoverRef.current.hidePopover()} className="block pb-5 text-center text-small font-semibold text-grey-500 underline">
-            Lihat semua notifikasi
-          </Link>
-        )}
+        <Link
+          to="/notifikasi"
+          onClick={() => popoverRef.current.hidePopover()}
+          className="sticky bottom-0 block border-t border-grey-75/50 bg-white py-4 text-center text-small font-semibold text-grey-500 hover:bg-grey2-100 focus-visible:outline-2 focus-visible:outline-grey-500"
+        >
+          Tampilkan semua{list.length > 4 && ` (${list.length})`}
+        </Link>
       </div>
     </div>
   )

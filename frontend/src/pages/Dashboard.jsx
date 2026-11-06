@@ -327,21 +327,29 @@ function Dashboard() {
               </button>
             </PageHeader>
             <Collapse open={infoSimulasi}>
-              <div id="info-simulasi" className="mt-4 flex flex-col gap-2 rounded-md border border-blue-500 bg-blue-50 px-5 py-4 text-small text-blue-500">
-                <p>
-                  <strong>Simulasi perubahan level</strong> menghitung ulang IPS Bayangan seolah-olah indikator yang Anda pilih sudah mencapai level tujuannya.
-                  Pilih indikator, lalu klik level tujuan (L1–L5). Level di bawah level saat ini tidak bisa dipilih karena simulasinya untuk peningkatan.
-                </p>
-                <ul className="flex list-disc flex-col gap-1 pl-5">
-                  <li>IPS = jumlah (bobot × level) semua indikator ÷ jumlah bobot. Indikator yang belum terverifikasi dihitung level 1.</li>
-                  <li>Angka hijau di tiap baris adalah kenaikan IPS dari indikator itu saja; &quot;Hasil simulasi&quot; adalah gabungan semua baris.</li>
-                  <li>Indikator berbobot besar menaikkan skor lebih banyak, jadi bandingkan dampaknya untuk menentukan prioritas.</li>
-                </ul>
-                <p>
-                  <strong>Gap analysis</strong> membandingkan hasil simulasi dengan target periode: &quot;Kurang x ke target&quot; berarti skor masih perlu naik
-                  sebanyak x, &quot;Target tercapai&quot; berarti peningkatan yang disimulasikan sudah cukup.
-                </p>
-                <p>Simulasi hanya perkiraan dan tidak menyimpan atau mengubah skor yang sebenarnya.</p>
+              <div id="info-simulasi" className="mt-4 flex flex-col gap-5 rounded-md border border-blue-500 bg-blue-50 px-6 py-5 text-body leading-relaxed text-blue-500">
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-h3">Simulasi perubahan level</h3>
+                  <p>Lihat berapa IPS Bayangan jika indikator tertentu naik ke level yang Anda pilih.</p>
+                  <ol className="flex list-decimal flex-col gap-1 pl-6">
+                    <li>Klik <strong>Tambah indikator</strong>, lalu pilih indikatornya.</li>
+                    <li>Klik level tujuan (L1–L5). Level di bawah level saat ini tidak bisa dipilih, karena simulasi hanya untuk peningkatan.</li>
+                    <li>Angka hijau di tiap baris = kenaikan IPS dari indikator itu saja. <strong>Hasil simulasi</strong> = gabungan semua baris.</li>
+                  </ol>
+                  <p>Indikator berbobot besar menaikkan skor lebih banyak, jadi dahulukan yang dampaknya paling besar.</p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-h3">Gap analysis</h3>
+                  <p>Membandingkan hasil simulasi dengan target periode:</p>
+                  <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li><strong>Kurang x ke target</strong>: skor masih perlu naik sebanyak x.</li>
+                    <li><strong>Target tercapai</strong>: peningkatan yang disimulasikan sudah cukup.</li>
+                  </ul>
+                </div>
+                <div className="flex flex-col gap-2 border-t border-blue-500/30 pt-4">
+                  <p><strong>Rumus IPS</strong> = jumlah (bobot × level) semua indikator ÷ jumlah bobot. Indikator yang belum terverifikasi dihitung level 1.</p>
+                  <p>Simulasi hanya perkiraan. Skor yang sebenarnya tidak disimpan atau diubah. Klik <strong>Reset</strong> untuk mengulang.</p>
+                </div>
               </div>
             </Collapse>
           </div>
