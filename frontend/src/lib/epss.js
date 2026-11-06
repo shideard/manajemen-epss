@@ -380,6 +380,7 @@ export function validasiPeriode(form, periodeLain = []) {
       nama_periode: form.nama.trim(),
       tahun_mulai: Number(form.tahun1),
       tahun_selesai: Number(form.tahun2),
+      versi_instrumen_id: form.versi_instrumen_id,
       tanggal_mulai: form.tanggal_mulai,
       tanggal_selesai: form.tanggal_selesai,
     },
