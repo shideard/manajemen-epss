@@ -253,9 +253,17 @@ export function usePeriode() {
     },
     
     ubah: async (id, perubahan) => {
+      const payload = {
+        nama_periode: perubahan.nama_periode,
+        tahun_mulai: perubahan.tahun_mulai,
+        tahun_selesai: perubahan.tahun_selesai,
+        tanggal_mulai: perubahan.tanggal_mulai,
+        tanggal_selesai: perubahan.tanggal_selesai,
+      }
+
       const response = await api(`/api/periode-evaluasi/${id}`, {
         method: 'PATCH',
-        body: perubahan,
+        body: payload,
       })
 
       const p = response.data
@@ -273,7 +281,9 @@ export function usePeriode() {
       }
 
       setPeriode((list) =>
-        list.map((item) => item.id === id ? periodeTerbaru : item)
+        list.map((item) =>
+          item.id === id ? { ...item, ...periodeTerbaru } : item
+        )
       )
 
       return periodeTerbaru
