@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
+import KanbanKegiatan from './KanbanKegiatan'
 import { matches } from './kegiatan'
-import { useBukti, useKegiatan, usePeriode } from '../../lib/store'
+import { useBerkas, useBukti, useKegiatan, usePeriode } from '../../lib/store'
 import { formatTanggal, paginate, statusOf } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { Badge, Dropdown, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
@@ -18,8 +19,71 @@ import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 import closeCircle from '../../assets/icons/close-circle-line.svg'
 import timeIcon from '../../assets/icons/time-line.svg'
 import checkCircle from '../../assets/icons/checkbox-circle-line.svg'
+import tableIcon from '../../assets/kanban/table-line.svg'
+import kanbanIcon from '../../assets/kanban/layout-column-line.svg'
+import filterIcon from '../../assets/kanban/filter-3-fill.svg'
 
 const PAGE_SIZE = 5
+
+// Ikon dipakai sebagai mask supaya warnanya ikut teks tab (aktif/tidak)
+const TAMPILAN = [
+  { value: 'tabel', label: 'Tabel', icon: tableIcon },
+  { value: 'kanban', label: 'Kanban', icon: kanbanIcon },
+]
+
+// Filter (Tahun, OPD, PIC, Status) disimpan di panel supaya toolbar tetap ringkas.
+// Tertutup saat klik di luar atau Esc (fokus kembali ke tombolnya), seperti Dropdown.
+function PanelFilter({ jumlahAktif, onReset, children }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const pemicuRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const tutupLuar = (e) => !ref.current.contains(e.target) && setOpen(false)
+    const tutupEsc = (e) => {
+      if (e.key !== 'Escape' || ref.current.querySelector('[aria-expanded="true"][aria-haspopup]')) return
+      setOpen(false)
+      pemicuRef.current.focus()
+    }
+    document.addEventListener('pointerdown', tutupLuar)
+    document.addEventListener('keydown', tutupEsc)
+    return () => {
+      document.removeEventListener('pointerdown', tutupLuar)
+      document.removeEventListener('keydown', tutupEsc)
+    }
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        ref={pemicuRef}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={jumlahAktif ? `Filter, ${jumlahAktif} aktif` : 'Filter'}
+        className={`relative grid h-[45px] w-[47px] place-items-center rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-grey-300 ${
+          open ? 'bg-white' : 'bg-grey2-75 hover:bg-white'
+        }`}
+      >
+        <img src={filterIcon} alt="" width={30} height={30} />
+        {jumlahAktif > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full bg-grey-300 text-caption font-bold text-lime-300">{jumlahAktif}</span>
+        )}
+      </button>
+      {open && (
+        <div role="dialog" aria-label="Filter rencana kegiatan" className="absolute top-full right-0 z-20 mt-2 flex w-[320px] max-w-[calc(100vw-2rem)] flex-col gap-4 rounded-lg bg-white p-5 shadow-lg">
+          <p className="font-semibold">Filter</p>
+          {children}
+          <button type="button" onClick={onReset} disabled={!jumlahAktif} className={buttonClass(jumlahAktif ? 'primary' : 'outline')}>
+            Reset Filter
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const STATUS_BADGE = {
   'Belum Mulai': { tone: 'red', icon: closeCircle },
@@ -31,8 +95,9 @@ function RencanaKegiatan() {
   const { user } = useOutletContext()
   const navigate = useNavigate()
   const { aktif } = usePeriode()
-  const muat = [useKegiatan(), useBukti()]
-  const [{ kegiatan, simpan, hapus: hapusKegiatan }, { bukti }] = muat
+  const muat = [useKegiatan(), useBukti(), useBerkas()]
+  const [{ kegiatan, simpan, hapus: hapusKegiatan }, { bukti }, { berkas }] = muat
+  const [tampilan, setTampilan] = useState('tabel')
   // Hanya verifikator yang mengelola rencana; operator melihat & membuka repositori buktinya
   const kelola = bolehUbah(user, 'kelolaRencana', aktif)
   const [query, setQuery] = useState('')
@@ -106,6 +171,22 @@ function RencanaKegiatan() {
 
       <section className="rounded-lg border-5 border-dashed border-lime-500 bg-lime-300 px-2.5 pt-6 pb-2.5">
         <div className="mb-6 flex flex-wrap items-center gap-3 px-5">
+          <div role="group" aria-label="Tampilan" className="flex shrink-0 gap-1 rounded-md bg-grey2-75 p-1">
+            {TAMPILAN.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setTampilan(t.value)}
+                aria-pressed={tampilan === t.value}
+                className={`flex items-center gap-2 rounded-sm px-3.5 py-2 font-medium transition-colors ${
+                  tampilan === t.value ? 'bg-grey-300 text-lime-300' : 'text-grey-200 hover:bg-white'
+                }`}
+              >
+                <span aria-hidden className="size-4.5 bg-current" style={{ mask: `url("${t.icon}") center / contain no-repeat` }} />
+                {t.label}
+              </button>
+            ))}
+          </div>
           <SearchBox
             variant="grey"
             value={query}
@@ -114,68 +195,74 @@ function RencanaKegiatan() {
               setPage(1)
             }}
             placeholder="Cari Rencana Kegiatan..."
+            className="ml-auto w-[330px]"
           />
-          <Dropdown
-            label="Tahun kegiatan"
-            value={tahun}
-            onChange={(value) => {
-              setTahun(value)
-              setPage(1)
-            }}
-            options={[{ value: '', label: 'Semua Tahun Kegiatan' }, ...years.map((y) => ({ value: y, label: y }))]}
-            className="w-[220px]"
-          />
-          <Dropdown
-            label="OPD"
-            value={opd}
-            onChange={(value) => {
-              setOpd(value)
-              setPage(1)
-            }}
-            options={[{ value: '', label: 'Semua OPD' }, ...opds.map((value) => ({ value, label: value }))]}
-            className="w-[220px]"
-          />
-          <Dropdown
-            label="PIC"
-            value={pic}
-            onChange={(value) => {
-              setPic(value)
-              setPage(1)
-            }}
-            options={[{ value: '', label: 'Semua PIC' }, ...pics.map((value) => ({ value, label: value }))]}
-            className="w-[220px]"
-          />
-          <Dropdown
-            label="Status"
-            value={statusFilter}
-            onChange={(value) => {
-              setStatusFilter(value)
-              setPage(1)
-            }}
-            options={[
-              { value: '', label: 'Semua Status' },
-              { value: 'Berjalan', label: 'Berjalan' },
-              { value: 'Belum Mulai', label: 'Belum Mulai' },
-              { value: 'Selesai', label: 'Selesai' },
-            ]}
-            className="w-[220px]"
-          />
-          <button
-            type="button"
-            onClick={() => {
-              setQuery('')
+          <PanelFilter
+            jumlahAktif={[tahun, opd, pic, statusFilter].filter(Boolean).length}
+            onReset={() => {
               setTahun('')
               setOpd('')
               setPic('')
               setStatusFilter('')
               setPage(1)
             }}
-            className={buttonClass('primary')}
           >
-            Reset Filter
-          </button>
+            <Dropdown
+              label="Tahun kegiatan"
+              value={tahun}
+              onChange={(value) => {
+                setTahun(value)
+                setPage(1)
+              }}
+              options={[{ value: '', label: 'Semua Tahun Kegiatan' }, ...years.map((y) => ({ value: y, label: y }))]}
+              className="w-full"
+            />
+            <Dropdown
+              label="OPD"
+              value={opd}
+              onChange={(value) => {
+                setOpd(value)
+                setPage(1)
+              }}
+              options={[{ value: '', label: 'Semua OPD' }, ...opds.map((value) => ({ value, label: value }))]}
+              className="w-full"
+            />
+            <Dropdown
+              label="PIC"
+              value={pic}
+              onChange={(value) => {
+                setPic(value)
+                setPage(1)
+              }}
+              options={[{ value: '', label: 'Semua PIC' }, ...pics.map((value) => ({ value, label: value }))]}
+              className="w-full"
+            />
+            <Dropdown
+              label="Status"
+              value={statusFilter}
+              onChange={(value) => {
+                setStatusFilter(value)
+                setPage(1)
+              }}
+              options={[
+                { value: '', label: 'Semua Status' },
+                { value: 'Berjalan', label: 'Berjalan' },
+                { value: 'Belum Mulai', label: 'Belum Mulai' },
+                { value: 'Selesai', label: 'Selesai' },
+              ]}
+              className="w-full"
+            />
+          </PanelFilter>
         </div>
 
+        {tampilan === 'kanban' ? (
+          <KanbanKegiatan
+            kegiatan={filtered}
+            bukti={bukti}
+            berkas={berkas}
+            hrefOf={(k) => (kelola ? `/rencana-kegiatan/${k.id}` : `/repositori-bukti-dukung/${k.id}`)}
+          />
+        ) : (
         <div className="overflow-x-auto rounded-lg bg-grey2-50 px-5 py-3">
           <table className="w-full min-w-[920px] text-left text-grey-500">
             <thead>
@@ -266,9 +353,10 @@ function RencanaKegiatan() {
             </tbody>
           </table>
         </div>
+        )}
       </section>
 
-      {filtered.length > 0 && <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />}
+      {tampilan === 'tabel' && filtered.length > 0 && <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />}
 
       <hr className="border-grey-75" />
 
