@@ -38,6 +38,12 @@ class StorePeriodeEvaluasiRequest extends FormRequest
                 'between:1000,9999',
                 'gte:tahun_mulai',
             ],
+            'target_ips' => [
+                'required',
+                'numeric',
+                'between:0,5',
+                'decimal:0,2',
+            ],
             'status' => ['missing'],
             'closed_by' => ['missing'],
             'closed_at' => ['missing'],

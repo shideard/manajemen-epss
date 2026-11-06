@@ -35,6 +35,13 @@ class UpdatePeriodeEvaluasiRequest extends FormRequest
                 'integer',
                 'between:1000,9999',
             ],
+            'target_ips' => [
+                'sometimes',
+                'required',
+                'numeric',
+                'between:0,5',
+                'decimal:0,2',
+            ],
             'versi_instrumen_id' => ['missing'],
             'status' => ['missing'],
             'closed_by' => ['missing'],

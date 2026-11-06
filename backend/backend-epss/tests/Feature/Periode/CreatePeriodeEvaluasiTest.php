@@ -31,6 +31,7 @@ class CreatePeriodeEvaluasiTest extends TestCase
             'nama_periode' => 'Evaluasi kegiatan 2025–2026',
             'tahun_mulai' => 2025,
             'tahun_selesai' => 2026,
+            'target_ips' => '2.85',
         ];
     }
 
@@ -55,7 +56,8 @@ class CreatePeriodeEvaluasiTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('data.nama_periode', $payload['nama_periode'])
             ->assertJsonPath('data.status', 'DRAFT')
-            ->assertJsonPath('data.closed_at', null);
+            ->assertJsonPath('data.closed_at', null)
+            ->assertJsonPath('data.target_ips', '2.85');
 
         $periode = PeriodeEvaluasi::findOrFail(
             $response->json('data.id')
@@ -132,7 +134,8 @@ class CreatePeriodeEvaluasiTest extends TestCase
             ->assertJsonPath(
                 'data.versi_instrumen_id',
                 $versi->id
-            );
+            )
+            ->assertJsonPath('data.target_ips', '2.85');
 
         $this->assertSame(
             StatusVersiInstrumen::ACTIVE,

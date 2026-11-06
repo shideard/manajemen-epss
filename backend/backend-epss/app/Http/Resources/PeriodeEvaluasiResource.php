@@ -17,6 +17,7 @@ class PeriodeEvaluasiResource extends JsonResource
             'tahun_mulai' => $this->tahun_mulai,
             'tahun_selesai' => $this->tahun_selesai,
             'status' => $this->status->value,
+            'target_ips' => $this->target_ips,
             'closed_at' => $this->closed_at?->toISOString(),
         ];
     }

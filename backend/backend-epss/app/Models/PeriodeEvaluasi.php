@@ -19,6 +19,7 @@ class PeriodeEvaluasi extends Model
         'nama_periode',
         'tahun_mulai',
         'tahun_selesai',
+        'target_ips',
     ];
 
     protected function casts(): array
@@ -26,6 +27,7 @@ class PeriodeEvaluasi extends Model
         return [
             'tahun_mulai' => 'integer',
             'tahun_selesai' => 'integer',
+            'target_ips' => 'decimal:2',
             'status' => StatusPeriode::class,
             'closed_at' => 'immutable_datetime',
         ];
