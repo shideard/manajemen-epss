@@ -65,24 +65,6 @@ export function PeriodeFields({ periode = {}, disabled, namaAside, versiInstrume
             placeholder="Isi Target (1.00-5.00)"
           />
         </Field>
-        <Field label="Tanggal Mulai">
-          <Input
-            type="date"
-            name="tanggal_mulai"
-            required
-            disabled={disabled}
-            defaultValue={periode.tanggal_mulai}
-          />
-        </Field>
-        <Field label="Tanggal Selesai">
-          <Input
-            type="date"
-            name="tanggal_selesai"
-            required
-            disabled={disabled}
-            defaultValue={periode.tanggal_selesai}
-          />
-        </Field>
       </div>
     </>
   )

@@ -1,15 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useUsers } from '../../lib/store'
-import { bobotDomain, DOMAINS, indikatorById, INDIKATOR } from '../../lib/epss'
-import { ROLES } from '../../config/menu'
+import { bobotDomain, DOMAINS, INDIKATOR } from '../../lib/epss'
 import { DialogHeader, Field, FormError, Input, ModalActions, Select } from '../../components/ui'
 import { buttonClass, fieldClass } from '../../components/classes'
 import bookIcon from '../../assets/icons/book-mark-fill.svg'
 import removeIcon from '../../assets/icons/close-circle-line.svg'
-import uploadIcon from '../../assets/icons/upload-cloud-2-fill.svg'
-
-// Jenis file output bukti dukung → atribut accept untuk pilihan file contoh
-const JENIS_FILE = { PDF: '.pdf', 'Gambar (JPG/PNG)': 'image/*', Word: '.doc,.docx', Excel: '.xls,.xlsx', Lainnya: '' }
 
 // Modal pakai <dialog> bawaan browser: Esc, fokus, dan backdrop sudah ditangani
 // indikator = record bukti kegiatan ini; yang sudah diajukan/diverifikasi tidak bisa dilepas
@@ -45,34 +39,17 @@ function DaftarIndikator({ onClose }) {
   )
 }
 
-function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
+function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikatorPilihan = [], onSave, onClose }) {
   const dialogRef = useRef(null)
   const [error, setError] = useState('')
-  const { users } = useUsers()
-  const [dipetakan, setDipetakan] = useState(() => indikator.map((b) => b.indikatorId))
-  const terkunci = indikator.filter((b) => b.status !== 'draft').map((b) => b.indikatorId)
-  // Output bukti dukung yang ditargetkan: [{ id, judul, jenis, contoh?: { nama, ukuran } }]
-  const [output, setOutput] = useState(kegiatan.output ?? [])
-  const [judulOutput, setJudulOutput] = useState('')
-  const [jenisOutput, setJenisOutput] = useState('')
-  const fileContoh = useRef(null)
+  const [dipetakan, setDipetakan] = useState(() => indikator.map((item) => item.id ?? item.indikatorId))
   const [daftarIndikator, setDaftarIndikator] = useState(false)
-
-  // Tambah satu target output; file contoh opsional (judul kosong → pakai nama file)
-  function tambahOutput(file) {
-    const judul = judulOutput.trim() || file?.name
-    if (!judul) return
-    // ponytail: hanya nama & ukuran file contoh yang disimpan; isinya diunggah ke backend saat API siap
-    const contoh = file && { nama: file.name, ukuran: file.size }
-    setOutput((list) => [...list, { id: crypto.randomUUID(), judul, jenis: jenisOutput, contoh }])
-    setJudulOutput('')
-  }
 
   useEffect(() => {
     dialogRef.current.showModal()
   }, [])
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const data = Object.fromEntries(new FormData(event.currentTarget))
     if (data.selesai < data.mulai) {
@@ -80,7 +57,11 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
       return
     }
     // Tahun pelaksanaan selalu mengikuti tanggal mulai, jadi tidak bisa berbeda
-    onSave({ ...data, tahun: data.mulai.slice(0, 4), output, indikator: dipetakan })
+    try {
+      await onSave({ ...data, indikator_ids: dipetakan })
+    } catch (err) {
+      setError(err.message || 'Gagal menyimpan rencana kegiatan.')
+    }
   }
 
   const close = () => dialogRef.current.close()
@@ -115,20 +96,17 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
             </Field>
           </div>
 
-          {/* ponytail: OPD masih teks bebas; jadi dropdown pencarian saat API master OPD tersedia */}
           <Field label="OPD Penanggung Jawab">
-            <Input name="opd" required defaultValue={kegiatan.opd} placeholder="Contoh: DINSOS" />
+            <Select name="opd_id" required defaultValue={kegiatan.opd_id ?? ''}>
+              <option value="">Pilih OPD</option>
+              {opds.map((opd) => <option key={opd.id} value={opd.id}>{opd.nama}</option>)}
+            </Select>
           </Field>
           <Field label="Penanggung Jawab Teknis (PIC)">
-            {/* PIC dicocokkan dengan akun operator: hanya PIC yang bisa mengunggah bukti kegiatan ini */}
-            <Input name="pic" required list="daftar-operator" defaultValue={kegiatan.pic} placeholder="Cari nama PIC..." />
-            <datalist id="daftar-operator">
-              {users
-                .filter((u) => u.role === ROLES.OPERATOR && u.status_aktif !== false)
-                .map((u) => (
-                  <option key={u.id} value={u.username} />
-                ))}
-            </datalist>
+            <Select name="pic_user_id" required defaultValue={kegiatan.pic_user_id ?? ''}>
+              <option value="">Pilih PIC</option>
+              {pics.map((pic) => <option key={pic.id} value={pic.id}>{pic.name} ({pic.username})</option>)}
+            </Select>
           </Field>
           <Field label="Deskripsi Kegiatan">
             <textarea name="deskripsi" defaultValue={kegiatan.deskripsi} placeholder="Isi deskripsi..." className={`${fieldClass} h-[177px] resize-none py-4`} />
@@ -151,94 +129,20 @@ function KegiatanForm({ kegiatan, indikator = [], onSave, onClose }) {
             </div>
             <Select id="pilih-indikator" value="" onChange={(e) => setDipetakan((ids) => [...ids, e.target.value])}>
               <option value="">Pilih indikator yang akan ditambahkan...</option>
-              {INDIKATOR.filter((i) => !dipetakan.includes(i.id)).map((i) => (
+              {indikatorPilihan.filter((i) => !dipetakan.includes(i.id)).map((i) => (
                 <option key={i.id} value={i.id}>
-                  Indikator {i.nomor}: {i.nama}
+                  Indikator {i.kode}: {i.nama}
                 </option>
               ))}
             </Select>
             {dipetakan.map((id) => (
               <p key={id} className="flex items-center justify-between gap-3 rounded-sm bg-lime-300 px-2.5 py-1.5 text-small">
-                Indikator {indikatorById[id].nomor}: {indikatorById[id].nama}
-                {terkunci.includes(id) ? (
-                  <span className="text-grey-200">Sudah diajukan</span>
-                ) : (
-                  <button type="button" onClick={() => setDipetakan((ids) => ids.filter((x) => x !== id))} aria-label={`Lepas indikator ${indikatorById[id].nomor}`}>
-                    <img src={removeIcon} alt="" width={15} height={15} className="grayscale" />
-                  </button>
-                )}
+                Indikator {indikatorPilihan.find((i) => i.id === id)?.kode ?? indikator.find((i) => i.id === id)?.kode}: {indikatorPilihan.find((i) => i.id === id)?.nama ?? indikator.find((i) => i.id === id)?.nama}
+                <button type="button" onClick={() => setDipetakan((ids) => ids.filter((x) => x !== id))} aria-label={`Lepas indikator ${indikatorPilihan.find((i) => i.id === id)?.kode ?? id}`}>
+                  <img src={removeIcon} alt="" width={15} height={15} className="grayscale" />
+                </button>
               </p>
             ))}
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <p className="font-semibold">Output Bukti Dukung yang Ditargetkan</p>
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-col gap-2.5 sm:flex-row">
-                <Input
-                  value={judulOutput}
-                  onChange={(e) => setJudulOutput(e.target.value)}
-                  // Enter menambah target, bukan mengirim form
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      tambahOutput()
-                    }
-                  }}
-                  aria-label="Judul bukti dukung yang ditargetkan"
-                  placeholder="Tulis Contoh Judul Bukti Dukung yang Ditargetkan"
-                  className="sm:flex-[3]"
-                />
-                <Select value={jenisOutput} onChange={(e) => setJenisOutput(e.target.value)} aria-label="Jenis file" className="sm:flex-1">
-                  <option value="">Pilih Jenis File</option>
-                  {Object.keys(JENIS_FILE).map((jenis) => (
-                    <option key={jenis}>{jenis}</option>
-                  ))}
-                </Select>
-              </div>
-
-              <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  if (e.dataTransfer.files[0]) tambahOutput(e.dataTransfer.files[0])
-                }}
-                className="flex h-[175px] flex-col items-center justify-center gap-2.5 rounded-md border-2 border-dashed border-grey-75 px-5 text-center text-grey-200"
-              >
-                <img src={uploadIcon} alt="" width={24} height={24} />
-                <p>
-                  <span className="block font-semibold">Unggah File</span>
-                  <span className="block text-small">Unggah atau seret dan lepas ke dalam kotak ini</span>
-                </p>
-                <input
-                  ref={fileContoh}
-                  type="file"
-                  accept={JENIS_FILE[jenisOutput]}
-                  onChange={(e) => {
-                    if (e.target.files[0]) tambahOutput(e.target.files[0])
-                    e.target.value = ''
-                  }}
-                  className="hidden"
-                />
-                <button type="button" onClick={() => fileContoh.current.click()} className={buttonClass()}>
-                  Pilih File
-                </button>
-              </div>
-              <p className="text-small text-grey-200">Tekan Enter untuk menambah target tanpa file contoh.</p>
-
-              {output.map((o) => (
-                <p key={o.id} className="flex min-h-[45px] items-center justify-between gap-3 rounded-md bg-lime-300 px-5 py-2">
-                  <span className="min-w-0">
-                    {o.judul}
-                    {o.jenis && <span className="text-small"> ({o.jenis})</span>}
-                    {o.contoh && <span className="block truncate text-small text-grey-200">Contoh: {o.contoh.nama}</span>}
-                  </span>
-                  <button type="button" onClick={() => setOutput((list) => list.filter((x) => x.id !== o.id))} aria-label={`Hapus output ${o.judul}`} className="shrink-0">
-                    <img src={removeIcon} alt="" width={24} height={24} className="grayscale" />
-                  </button>
-                </p>
-              ))}
-            </div>
           </div>
 
           <FormError>{error}</FormError>

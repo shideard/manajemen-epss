@@ -367,12 +367,8 @@ export function validasiPeriode(form, periodeLain = []) {
     return { error: 'Versi instrumen wajib dipilih.' }
   }
 
-  if (!form.tanggal_mulai || !form.tanggal_selesai) {
-    return { error: 'Tanggal mulai dan tanggal selesai wajib diisi.' }
-  }
-
-  if (form.tanggal_selesai < form.tanggal_mulai) {
-    return { error: 'Tanggal selesai tidak boleh sebelum tanggal mulai.' }
+  if (!form.target || Number(form.target) < 0 || Number(form.target) > 5) {
+    return { error: 'Target IPS wajib diisi dengan nilai 0 sampai 5.' }
   }
 
   return {
@@ -381,8 +377,7 @@ export function validasiPeriode(form, periodeLain = []) {
       tahun_mulai: Number(form.tahun1),
       tahun_selesai: Number(form.tahun2),
       versi_instrumen_id: form.versi_instrumen_id,
-      tanggal_mulai: form.tanggal_mulai,
-      tanggal_selesai: form.tanggal_selesai,
+      target_ips: Number(form.target),
     },
   }
 }
