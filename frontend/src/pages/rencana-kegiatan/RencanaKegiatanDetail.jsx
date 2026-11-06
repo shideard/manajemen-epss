@@ -1,33 +1,41 @@
-import { useState } from 'react'
-import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Building2, CalendarDays, UserRound } from 'lucide-react'
 import { Navigate, useOutletContext, useParams } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import { bolehUbah } from '../../config/menu'
 import { buttonClass } from '../../components/classes'
 import editIcon from '../../assets/rencana/edit-2-fill.svg'
-import { useBukti, useKegiatan, usePeriode } from '../../lib/store'
-import { formatTanggal, indikatorById, statusOf } from '../../lib/epss'
+import { usePeriode, useRencanaKegiatan } from '../../lib/store'
+import { formatTanggal, statusOf } from '../../lib/epss'
 import { Memuat, PageHeader } from '../../components/ui'
 
 function RencanaKegiatanDetail() {
   const { kegiatanId } = useParams()
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const muat = [useKegiatan(), useBukti()]
-  const [{ kegiatan, simpan }, { bukti }] = muat
+  const rencana = useRencanaKegiatan(aktif?.id)
+  const muat = [rencana]
+  const [k, setK] = useState(null)
+  const [detailLoading, setDetailLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const k = kegiatan.find((item) => item.id === kegiatanId)
-  if (!k && muat.some((data) => data.loading || data.error)) return <Memuat dari={muat} />
+  useEffect(() => {
+    if (!kegiatanId) return
+    let hidup = true
+    setK(null)
+    setDetailLoading(true)
+    rencana.detail(kegiatanId).then((item) => { if (hidup) setK(item) }).catch((error) => { if (hidup) setK({ error }) }).finally(() => { if (hidup) setDetailLoading(false) })
+    return () => { hidup = false }
+  }, [kegiatanId, rencana.detail])
+  if ((!k && detailLoading) || muat.some((data) => data.loading)) return <Memuat dari={muat} />
+  if (k?.error) return <p role="alert" className="text-red-500">{k.error.message}</p>
   if (!k) return <Navigate to="/rencana-kegiatan" replace />
 
-  const indikator = [...new Set(Object.values(bukti).filter((item) => item.kegiatanId === k.id).map((item) => item.indikatorId))]
-    .map((id) => indikatorById[id])
-    .filter(Boolean)
-  const kegiatanTertaut = Object.values(bukti).filter((item) => item.kegiatanId === k.id)
+  const indikator = k.indikator ?? []
   const bolehEdit = bolehUbah(user, 'kelolaRencana', aktif)
 
-  function save(data) {
-    simpan(k.id, data)
+  async function save(data) {
+    const updated = await rencana.simpan(k.id, data)
+    setK(updated)
     setEditing(false)
   }
 
@@ -87,7 +95,7 @@ function RencanaKegiatanDetail() {
             <ul className="flex flex-col gap-2">
               {indikator.map((item) => (
                 <li key={item.id} className="rounded-md bg-grey2-75 px-5 py-3 text-small">
-                  Indikator {item.nomor}: {item.nama}
+                  Indikator {item.kode}: {item.nama}
                 </li>
               ))}
             </ul>
@@ -98,7 +106,10 @@ function RencanaKegiatanDetail() {
       {editing && (
         <KegiatanForm
           kegiatan={k}
-          indikator={kegiatanTertaut}
+          indikator={indikator}
+          opds={rencana.opds}
+          pics={rencana.pics}
+          indikatorPilihan={rencana.indikator}
           onSave={save}
           onClose={() => setEditing(false)}
         />

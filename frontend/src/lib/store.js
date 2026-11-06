@@ -95,6 +95,116 @@ export function useKegiatan() {
   }
 }
 
+// Data rencana kegiatan pada periode terpilih dari API Laravel.
+const mapRencanaKegiatan = (item) => ({
+  ...item,
+  nama: item.nama_kegiatan,
+  opd: item.nama_opd,
+  pic: item.nama_pic,
+  mulai: item.tanggal_mulai_rencana,
+  selesai: item.tanggal_selesai_rencana,
+  tahun: String(item.tahun_kegiatan),
+  indikator: item.indikator ?? [],
+})
+
+async function apiAll(path) {
+  const first = await api(path)
+  const items = [...(first.data ?? [])]
+  const lastPage = first.meta?.last_page ?? 1
+  const base = path.split('?')[0]
+  for (let page = 2; page <= lastPage; page += 1) {
+    const result = await api(`${base}?page=${page}`)
+    items.push(...(result.data ?? []))
+  }
+  return items
+}
+
+export function useRencanaKegiatan(periodeId, filters = {}) {
+  const [kegiatan, setKegiatan] = useState([])
+  const [opds, setOpds] = useState([])
+  const [pics, setPics] = useState([])
+  const [indikator, setIndikator] = useState([])
+  const [meta, setMeta] = useState(null)
+  const [state, setState] = useState(SIAP)
+
+  const query = new URLSearchParams({ periode_id: periodeId ?? '', page: String(filters.page ?? 1) })
+  for (const key of ['q', 'tahun', 'opd_id', 'pic_user_id', 'status']) {
+    if (filters[key]) query.set(key, filters[key])
+  }
+  const queryString = query.toString()
+
+  const muatPilihan = useCallback(async () => {
+    const [pilihanOpd, pilihanPic] = await Promise.allSettled([
+      apiAll('/api/pilihan/opd'),
+      apiAll('/api/pilihan/pic'),
+    ])
+    if (pilihanOpd.status === 'fulfilled') setOpds(pilihanOpd.value)
+    if (pilihanPic.status === 'fulfilled') setPics(pilihanPic.value)
+    const error = [pilihanOpd, pilihanPic].find((result) => result.status === 'rejected')?.reason
+    if (error) setState({ loading: false, error })
+
+    if (!periodeId) return
+    try {
+      const pilihanIndikator = await api(`/api/periode-evaluasi/${periodeId}/indikator`)
+      setIndikator(pilihanIndikator.data ?? [])
+    } catch (errorIndikator) {
+      if (!error) setState({ loading: false, error: errorIndikator })
+    }
+  }, [periodeId])
+
+  const muat = useCallback(async () => {
+    if (!periodeId) { setKegiatan([]); setMeta(null); setState(SIAP); return [] }
+    setState({ loading: true, error: null })
+    try {
+      const daftar = await api(`/api/rencana-kegiatan?${queryString}`)
+      setKegiatan((daftar.data ?? []).map(mapRencanaKegiatan))
+      setMeta(daftar.meta ?? null)
+      setState(SIAP)
+      return daftar.data ?? []
+    } catch (error) {
+      setState({ loading: false, error })
+      return []
+    }
+  }, [periodeId, queryString])
+
+  const detail = useCallback(async (id) => {
+    const response = await api(`/api/rencana-kegiatan/${id}`)
+    return mapRencanaKegiatan(response.data)
+  }, [])
+
+  useEffect(() => { muatPilihan() }, [muatPilihan])
+  useEffect(() => { muat() }, [muat])
+
+  return {
+    kegiatan, opds, pics, indikator, meta, ...state, muat,
+    detail,
+    async hapus(id) {
+      await api(`/api/rencana-kegiatan/${id}`, { method: 'DELETE' })
+      await muat()
+    },
+    async simpan(id, data) {
+      const payload = {
+        nama_kegiatan: data.nama,
+        deskripsi: data.deskripsi || null,
+        opd_id: data.opd_id,
+        pic_user_id: data.pic_user_id,
+        tanggal_mulai_rencana: data.mulai,
+        tanggal_selesai_rencana: data.selesai,
+      }
+      const response = id
+        ? await api(`/api/rencana-kegiatan/${id}`, { method: 'PATCH', body: payload })
+        : await api('/api/rencana-kegiatan', { method: 'POST', body: { ...payload, periode_id: periodeId } })
+      const saved = response.data
+      await api(`/api/rencana-kegiatan/${saved.id}/indikator`, {
+        method: 'PUT',
+        body: { indikator_ids: data.indikator_ids ?? [] },
+      })
+      await muat()
+      return await detail(saved.id)
+    },
+  }
+}
+
 // bukti = { 'kegiatanId:indikatorId': { kegiatanId, indikatorId, checked, status, level, catatan, ... } }
 export function useBukti() {
   const [bukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
@@ -188,8 +298,7 @@ export function usePeriode() {
       nama: p.nama_periode,
       tahun1: p.tahun_mulai,
       tahun2: p.tahun_selesai,
-      tanggal_mulai: p.tanggal_mulai,
-      tanggal_selesai: p.tanggal_selesai,
+      target: p.target_ips == null ? null : Number(p.target_ips),
       versi_instrumen_id: p.versi_instrumen_id,
       status: p.status,
       terkunci: p.status === 'TERKUNCI',
@@ -207,8 +316,7 @@ export function usePeriode() {
         nama: p.nama_periode,
         tahun1: p.tahun_mulai,
         tahun2: p.tahun_selesai,
-        tanggal_mulai: p.tanggal_mulai,
-        tanggal_selesai: p.tanggal_selesai,
+        target: p.target_ips == null ? null : Number(p.target_ips),
         versi_instrumen_id: p.versi_instrumen_id,
         status: p.status,
         terkunci: p.status === 'TERKUNCI',
@@ -240,8 +348,7 @@ export function usePeriode() {
         nama: p.nama_periode,
         tahun1: p.tahun_mulai,
         tahun2: p.tahun_selesai,
-        tanggal_mulai: p.tanggal_mulai,
-        tanggal_selesai: p.tanggal_selesai,
+        target: p.target_ips == null ? null : Number(p.target_ips),
         versi_instrumen_id: p.versi_instrumen_id,
         status: p.status,
         terkunci: p.status === 'TERKUNCI',
@@ -257,8 +364,7 @@ export function usePeriode() {
         nama_periode: perubahan.nama_periode,
         tahun_mulai: perubahan.tahun_mulai,
         tahun_selesai: perubahan.tahun_selesai,
-        tanggal_mulai: perubahan.tanggal_mulai,
-        tanggal_selesai: perubahan.tanggal_selesai,
+        target_ips: perubahan.target_ips,
       }
 
       const response = await api(`/api/periode-evaluasi/${id}`, {
@@ -273,8 +379,7 @@ export function usePeriode() {
         nama: p.nama_periode,
         tahun1: p.tahun_mulai,
         tahun2: p.tahun_selesai,
-        tanggal_mulai: p.tanggal_mulai,
-        tanggal_selesai: p.tanggal_selesai,
+        target: p.target_ips == null ? null : Number(p.target_ips),
         versi_instrumen_id: p.versi_instrumen_id,
         status: p.status,
         terkunci: p.status === 'TERKUNCI',

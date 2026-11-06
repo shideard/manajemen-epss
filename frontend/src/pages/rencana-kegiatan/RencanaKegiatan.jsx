@@ -4,9 +4,8 @@ import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
 import KanbanKegiatan from './KanbanKegiatan'
-import { matches } from './kegiatan'
-import { useBerkas, useBukti, useKegiatan, usePeriode } from '../../lib/store'
-import { formatTanggal, paginate, statusOf } from '../../lib/epss'
+import { useBerkas, useBukti, usePeriode, useRencanaKegiatan } from '../../lib/store'
+import { formatTanggal, statusOf } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { Badge, Dropdown, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -95,8 +94,6 @@ function RencanaKegiatan() {
   const { user } = useOutletContext()
   const navigate = useNavigate()
   const { aktif } = usePeriode()
-  const muat = [useKegiatan(), useBukti(), useBerkas()]
-  const [{ kegiatan, simpan, hapus: hapusKegiatan }, { bukti }, { berkas }] = muat
   const [tampilan, setTampilan] = useState('tabel')
   // Hanya verifikator yang mengelola rencana; operator melihat & membuka repositori buktinya
   const kelola = bolehUbah(user, 'kelolaRencana', aktif)
@@ -106,31 +103,28 @@ function RencanaKegiatan() {
   const [pic, setPic] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
+  const statusApi = { 'Belum Mulai': 'BELUM_MULAI', Berjalan: 'BERJALAN', Selesai: 'SELESAI' }
+  const rencana = useRencanaKegiatan(aktif?.id, { page, q: query, tahun, opd_id: opd, pic_user_id: pic, status: statusApi[statusFilter] })
+  const kegiatan = rencana.kegiatan
+  const [{ bukti }, { berkas }] = [useBukti(), useBerkas()]
+  const muat = [rencana]
   const [editing, setEditing] = useState(null) // null = form tertutup, {} = tambah baru
   const [kegiatanBaruId, setKegiatanBaruId] = useState(null)
+  const [formLoadError, setFormLoadError] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
-  const years = [...new Set(kegiatan.map((k) => k.tahun))].sort()
-  const opds = [...new Set(kegiatan.map((k) => k.opd).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'))
-  const pics = [...new Set(kegiatan.map((k) => k.pic).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'))
+  const years = aktif ? [String(aktif.tahun1), String(aktif.tahun2)] : []
   const urutanStatus = { Berjalan: 0, 'Belum Mulai': 1, Selesai: 2 }
-  const filtered = kegiatan
-    .filter(
-      (k) =>
-        matches(k, query) &&
-        (!tahun || k.tahun === tahun) &&
-        (!opd || k.opd === opd) &&
-        (!pic || k.pic === pic) &&
-        (!statusFilter || statusOf(k) === statusFilter),
-    )
-    .sort((a, b) => urutanStatus[statusOf(a)] - urutanStatus[statusOf(b)])
-  const { rows, page: currentPage, pageCount } = paginate(filtered, page, PAGE_SIZE)
+  const filtered = kegiatan.slice().sort((a, b) => urutanStatus[statusOf(a)] - urutanStatus[statusOf(b)])
+  const rows = filtered
+  const currentPage = rencana.meta?.current_page ?? page
+  const pageCount = rencana.meta?.last_page ?? 1
 
-  function save(data) {
+  async function save(data) {
     const kegiatanBaru = !editing.id
-    const id = simpan(editing.id, data)
+    const saved = await rencana.simpan(editing.id, data)
     setEditing(null)
-    if (kegiatanBaru) setKegiatanBaruId(id)
+    if (kegiatanBaru) setKegiatanBaruId(saved.id)
   }
 
   useEffect(() => {
@@ -139,20 +133,28 @@ function RencanaKegiatan() {
     return () => window.clearTimeout(timer)
   }, [kegiatanBaruId, navigate])
 
-  // Sama dengan aturan lepas indikator: kegiatan yang buktinya sudah diajukan tidak bisa dihapus
-  const sudahDiajukan = (k) => Object.values(bukti).some((b) => b.kegiatanId === k.id && b.status !== 'draft')
+  async function buka(k) {
+    if (!kelola) return navigate(`/rencana-kegiatan/${k.id}`)
+    try {
+      setFormLoadError('')
+      setEditing(await rencana.detail(k.id))
+    } catch (error) {
+      setFormLoadError(error.message || 'Gagal memuat detail kegiatan.')
+    }
+  }
 
   function hapus(k) {
     konfirmasi({
-      title: 'Hapus Rencana Kegiatan',
-      message: `Hapus "${k.nama}"? Pemetaan indikator dan berkas bukti dukungnya ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
-      confirmLabel: 'Hapus',
+      title: 'Hapus Rencana Kegiatan?',
+      message: `Hapus "${k.nama}"? Kegiatan akan dihapus dari daftar. Dokumen bukti yang sudah tersimpan tetap ada.`,
+      confirmLabel: 'Hapus Kegiatan',
       danger: true,
-      onConfirm: () => hapusKegiatan(k.id),
+      onConfirm: async () => {
+        await rencana.hapus(k.id)
+        if (rows.length === 1 && page > 1) setPage(page - 1)
+      },
     })
   }
-
-  const buka = (k) => (kelola ? setEditing(k) : navigate(`/repositori-bukti-dukung/${k.id}`))
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -168,6 +170,7 @@ function RencanaKegiatan() {
           </button>
         )}
       </PageHeader>
+      {formLoadError && <p role="alert" className="text-small text-red-500">{formLoadError}</p>}
 
       <section className="rounded-lg border-5 border-dashed border-lime-500 bg-lime-300 px-2.5 pt-6 pb-2.5">
         <div className="mb-6 flex flex-wrap items-center gap-3 px-5">
@@ -224,7 +227,7 @@ function RencanaKegiatan() {
                 setOpd(value)
                 setPage(1)
               }}
-              options={[{ value: '', label: 'Semua OPD' }, ...opds.map((value) => ({ value, label: value }))]}
+              options={[{ value: '', label: 'Semua OPD' }, ...rencana.opds.map((value) => ({ value: value.id, label: value.nama }))]}
               className="w-full"
             />
             <Dropdown
@@ -234,7 +237,7 @@ function RencanaKegiatan() {
                 setPic(value)
                 setPage(1)
               }}
-              options={[{ value: '', label: 'Semua PIC' }, ...pics.map((value) => ({ value, label: value }))]}
+              options={[{ value: '', label: 'Semua PIC' }, ...rencana.pics.map((value) => ({ value: value.id, label: value.name }))]}
               className="w-full"
             />
             <Dropdown
@@ -260,7 +263,7 @@ function RencanaKegiatan() {
             kegiatan={filtered}
             bukti={bukti}
             berkas={berkas}
-            hrefOf={(k) => (kelola ? `/rencana-kegiatan/${k.id}` : `/repositori-bukti-dukung/${k.id}`)}
+            hrefOf={(k) => `/rencana-kegiatan/${k.id}`}
           />
         ) : (
         <div className="overflow-x-auto rounded-lg bg-grey2-50 px-5 py-3">
@@ -327,22 +330,15 @@ function RencanaKegiatan() {
                           >
                             <img src={eyeIcon} alt="" width={15} height={15} />
                           </Link>
-                          <button type="button" onClick={() => setEditing(k)} aria-label={`Edit ${k.nama}`} className="rounded-xs bg-lime-300">
+                          <button type="button" onClick={() => buka(k)} aria-label={`Edit ${k.nama}`} className="rounded-xs bg-lime-300">
                             <img src={editIcon} alt="" width={24} height={24} />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => hapus(k)}
-                            disabled={sudahDiajukan(k)}
-                            title={sudahDiajukan(k) ? 'Tidak bisa dihapus: bukti dukung kegiatan ini sudah diajukan' : undefined}
-                            aria-label={`Hapus ${k.nama}`}
-                            className="grid size-6 place-items-center rounded-xs bg-red-200 disabled:opacity-40"
-                          >
+                          <button type="button" onClick={() => hapus(k)} aria-label={`Hapus ${k.nama}`} className="grid size-6 place-items-center rounded-xs bg-red-200">
                             <img src={deleteIcon} alt="" width={18} height={18} />
                           </button>
                         </span>
                       ) : (
-                        <Link to={`/repositori-bukti-dukung/${k.id}`} aria-label={`Lihat bukti dukung ${k.nama}`} className="inline-grid size-6 place-items-center rounded-xs bg-lime-300 align-middle">
+                        <Link to={`/rencana-kegiatan/${k.id}`} aria-label={`Lihat detail ${k.nama}`} className="inline-grid size-6 place-items-center rounded-xs bg-lime-300 align-middle">
                           <img src={eyeIcon} alt="" width={15} height={15} />
                         </Link>
                       )}
@@ -366,7 +362,10 @@ function RencanaKegiatan() {
       {editing && (
         <KegiatanForm
           kegiatan={editing}
-          indikator={Object.values(bukti).filter((b) => b.kegiatanId === editing.id)}
+          indikator={editing.indikator ?? []}
+          opds={rencana.opds}
+          pics={rencana.pics}
+          indikatorPilihan={rencana.indikator}
           onSave={save}
           onClose={() => setEditing(null)}
         />
