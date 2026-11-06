@@ -16,6 +16,7 @@ function KonfigurasiPeriode() {
     periode,
     ubah: ubahPeriode,
     kunci: kunciPeriode,
+    aktifkan: aktifkanPeriode,
   }, { levels, snapshot }, versiInstrumen] = muat
   const [pesan, setPesan] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
@@ -62,6 +63,19 @@ function KonfigurasiPeriode() {
         } catch (error) {
           setPesan(error.message || 'Gagal mengunci periode.')
         }
+      },
+    })
+  }
+
+  function aktifkan() {
+    const terkunci = p.status === 'TERKUNCI'
+    konfirmasi({
+      title: terkunci ? 'Aktifkan Kembali Periode?' : 'Aktifkan Periode?',
+      message: `Apakah kamu yakin ingin ${terkunci ? 'mengaktifkan kembali' : 'mengaktifkan'} periode "${p.nama}"?`,
+      confirmLabel: terkunci ? 'Aktifkan Kembali' : 'Aktifkan',
+      onConfirm: async () => {
+        await aktifkanPeriode(p.id)
+        setPesan(terkunci ? 'Periode berhasil diaktifkan kembali.' : 'Periode berhasil diaktifkan.')
       },
     })
   }
@@ -122,6 +136,15 @@ function KonfigurasiPeriode() {
                 </button>
               )}
             </div>
+          )}
+          {['DRAFT', 'TERKUNCI'].includes(p.status) && (
+            <button
+              type="button"
+              onClick={aktifkan}
+              className={buttonClass()}
+            >
+              {p.status === 'TERKUNCI' ? 'Aktifkan Kembali Periode' : 'Aktifkan Periode'}
+            </button>
           )}
         </form>
 

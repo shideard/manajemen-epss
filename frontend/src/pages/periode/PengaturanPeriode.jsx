@@ -135,7 +135,6 @@ function PengaturanPeriode() {
     muat,
     tambah: tambahPeriode,
     hapus: hapusPeriode,
-    aktifkan: aktifkanPeriode,
   }] = dataHooks
 
   const [, versiInstrumen] = dataHooks
@@ -157,17 +156,6 @@ function PengaturanPeriode() {
       danger: true,
       onConfirm: async () => {
         hapusPeriode(p.id)
-      },
-    })
-  }
-
-  function aktifkan(p) {
-    konfirmasi({
-      title: 'Aktifkan Periode?',
-      message: `Apakah kamu yakin ingin mengaktifkan periode "${p.nama}"?`,
-      confirmLabel: 'Aktifkan',
-      onConfirm: async () => {
-        await aktifkanPeriode(p.id)
       },
     })
   }
@@ -242,15 +230,6 @@ function PengaturanPeriode() {
                   <td className="py-3.5">{p.actual?.toFixed(2) ?? '-'}</td>
                   <td className="py-3.5">
                     <span className="flex justify-center gap-2">
-                      {p.status === 'DRAFT' && (
-                        <button
-                          type="button"
-                          onClick={() => aktifkan(p)}
-                          className="rounded-xs bg-lime-300 px-3 py-1 text-xs font-semibold hover:bg-lime-400"
-                        >
-                          Aktivasi
-                        </button>
-                      )}                      
                       <Link to={`/pengaturan-periode/${p.id}`} aria-label={`Konfigurasi ${p.nama}`} className="rounded-xs bg-lime-300">
                         <img src={editIcon} alt="" width={24} height={24} />
                       </Link>
