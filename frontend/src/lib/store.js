@@ -105,6 +105,8 @@ const mapRencanaKegiatan = (item) => ({
   selesai: item.tanggal_selesai_rencana,
   tahun: String(item.tahun_kegiatan),
   indikator: item.indikator ?? [],
+  // Indikator API → id instrumen lokal (kode = nomor indikator); checklist & status bukti masih memakai id lokal
+  indikatorIds: (item.indikator ?? []).map((i) => INDIKATOR.find((l) => String(l.nomor) === String(i.kode))?.id).filter(Boolean),
 })
 
 async function apiAll(path) {
@@ -280,17 +282,23 @@ export function useDetailKegiatan(id) {
   return { kegiatan: data ?? null, ...state }
 }
 
-// Semua rencana kegiatan satu periode (semua halaman), mis. untuk mencari nama kegiatan dari id
-// ponytail: satu request per halaman API; minta endpoint tanpa pagination kalau kegiatannya ratusan
+// Semua rencana kegiatan satu periode, lengkap dengan indikatorIds & jumlahBerkas.
+// Daftar API dipaginasi 5 dan tanpa indikator/jumlah dokumen, jadi tiap kegiatan diambil detail + dokumennya.
+// ponytail: 1 + N/5 + 2N request; minta backend menambah indikator & dokumen_count di GET /rencana-kegiatan kalau mulai lambat
 export function useSemuaKegiatan(periodeId) {
   const ambil = useCallback(async () => {
-    const semua = []
+    const ids = []
     for (let page = 1, last = 1; page <= last; page += 1) {
       const res = await api(`/api/rencana-kegiatan?periode_id=${periodeId}&page=${page}`)
-      semua.push(...(res.data ?? []).map(mapRencanaKegiatan))
+      ids.push(...(res.data ?? []).map((k) => k.id))
       last = res.meta?.last_page ?? 1
     }
-    return semua
+    return Promise.all(
+      ids.map(async (id) => {
+        const [detail, dokumen] = await Promise.all([api(`/api/rencana-kegiatan/${id}`), api(`/api/rencana-kegiatan/${id}/dokumen-bukti`)])
+        return { ...mapRencanaKegiatan(detail.data), jumlahBerkas: dokumen.data?.length ?? 0 }
+      }),
+    )
   }, [periodeId])
   const { data, ...state } = useMuat(periodeId, ambil)
   return { kegiatan: data ?? EMPTY_LIST, ...state }

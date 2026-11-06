@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
-import { useBukti, usePeriode, useRencanaKegiatan } from '../../lib/store'
-import { buktiKey, INDIKATOR } from '../../lib/epss'
+import { useBukti, usePeriode, useSemuaKegiatan } from '../../lib/store'
+import { buktiKey, includesText, indikatorById, paginate } from '../../lib/epss'
 import { Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 
+const PAGE_SIZE = 5
 const FILTER = [
   { label: 'Semua', status: null },
   { label: 'Belum Unggah', status: 'draft' },
@@ -21,22 +22,20 @@ function RepositoriBukti() {
   const [query, setQuery] = useState('')
   const [queryIndikator, setQueryIndikator] = useState('')
   const [page, setPage] = useState(1)
-  // Cari, filter PIC & pagination di server (per kegiatan); filter status di klien atas halaman yang sedang tampil
-  // ponytail: filter status hanya menyaring halaman ini; pindah ke server saat status pengajuan ada di API
-  const rencana = useRencanaKegiatan(aktif?.id, { page, q: query, pic_user_id: semua ? '' : user.id })
-  const muat = [rencana, useBukti()]
-  const [{ kegiatan, meta }, { bukti }] = muat
+  const muat = [useSemuaKegiatan(aktif?.id), useBukti()]
+  const [{ kegiatan }, { bukti }] = muat
 
-  // Satu baris per pasangan kegiatan–indikator; kegiatan yang belum dipetakan tetap tampil.
-  // Indikator API → instrumen lokal lewat kode = nomor; statusnya masih dari browser
-  const baris = kegiatan.flatMap((k) => {
-    const daftar = k.indikator
-      .map((i) => INDIKATOR.find((lokal) => String(lokal.nomor) === String(i.kode)))
-      .filter(Boolean)
-      .map((i) => ({ kegiatan: k, indikator: i, bukti: bukti[buktiKey(k.id, i.id)] ?? { status: 'draft' } }))
-    return daftar.length ? daftar : [{ kegiatan: k, indikator: null, bukti: { status: 'draft' } }]
-  })
-  const rows = baris.filter(({ bukti: b }) => !filter || b.status === filter)
+  // Satu baris per pasangan kegiatan–indikator; kegiatan yang belum dipetakan tetap tampil. Statusnya masih dari browser
+  const baris = kegiatan
+    .filter((k) => semua || k.pic_user_id === user.id)
+    .flatMap((k) => {
+      const daftar = k.indikatorIds.map((id) => ({ kegiatan: k, indikator: indikatorById[id], bukti: bukti[buktiKey(k.id, id)] ?? { status: 'draft' } }))
+      return daftar.length ? daftar : [{ kegiatan: k, indikator: null, bukti: { status: 'draft' } }]
+    })
+  const filtered = baris.filter(
+    ({ kegiatan: k, indikator, bukti: b }) => (!filter || b.status === filter) && includesText([k.nama, k.pic, indikator?.nama], query),
+  )
+  const { rows, page: currentPage, pageCount } = paginate(filtered, page, PAGE_SIZE)
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -125,7 +124,7 @@ function RepositoriBukti() {
         })}
       </section>
 
-      {(meta?.last_page ?? 1) > 1 && <Pagination page={meta.current_page} pageCount={meta.last_page} onChange={setPage} />}
+      {filtered.length > 0 && <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />}
 
       <PageHeader as="h2" title="Status per Indikator">
         <SearchBox value={queryIndikator} onChange={setQueryIndikator} placeholder="Cari indikator..." />

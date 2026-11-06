@@ -146,12 +146,8 @@ function RepositoriDetail() {
 
   // Berkas hanya bisa diunggah PIC kegiatan, jadi pengunggahnya = PIC
   const files = dokumen.dokumen.map((f) => ({ ...f, oleh: k.pic }))
-  // Indikator dari API dipetakan ke instrumen lokal lewat kode = nomor indikator;
-  // checklist & status verifikasi masih di browser sampai endpoint pengajuan/verifikasi ada
-  const tertaut = k.indikator
-    .map((i) => INDIKATOR.find((lokal) => String(lokal.nomor) === String(i.kode)))
-    .filter(Boolean)
-    .map((i) => semuaBukti[buktiKey(k.id, i.id)] ?? { kegiatanId: k.id, indikatorId: i.id, status: 'draft' })
+  // Checklist & status verifikasi per indikator masih di browser sampai endpoint pengajuan/verifikasi ada
+  const tertaut = k.indikatorIds.map((id) => semuaBukti[buktiKey(k.id, id)] ?? { kegiatanId: k.id, indikatorId: id, status: 'draft' })
   // Operator lain boleh melihat sebagai referensi; hanya PIC yang bisa mengunggah, dan tidak saat periode dikunci
   const pic = k.pic_user_id === user.id
   const bolehEdit = pic && bolehUbah(user, 'unggahBukti', aktif)
