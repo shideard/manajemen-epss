@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react'
 import { Building2, CalendarDays, UserRound } from 'lucide-react'
 import { Navigate, useOutletContext, useParams } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
-import { bolehUbah } from '../../config/menu'
+import RepositoriDetail from '../bukti/RepositoriDetail'
+import { bolehUbah, ROLES } from '../../config/menu'
 import { buttonClass } from '../../components/classes'
 import editIcon from '../../assets/rencana/edit-2-fill.svg'
 import { usePeriode, useRencanaKegiatan } from '../../lib/store'
 import { formatTanggal, statusOf } from '../../lib/epss'
 import { Memuat, PageHeader } from '../../components/ui'
 
-function RencanaKegiatanDetail() {
+function RencanaKegiatanDetailVerifikator() {
   const { kegiatanId } = useParams()
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
@@ -116,6 +117,12 @@ function RencanaKegiatanDetail() {
       )}
     </div>
   )
+}
+
+function RencanaKegiatanDetail() {
+  const { user } = useOutletContext()
+  if (user.role === ROLES.OPERATOR) return <RepositoriDetail />
+  return <RencanaKegiatanDetailVerifikator />
 }
 
 export default RencanaKegiatanDetail
