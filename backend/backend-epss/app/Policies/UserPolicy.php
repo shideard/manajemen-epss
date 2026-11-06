@@ -27,6 +27,9 @@ class UserPolicy
     public function viewPicOptions(User $actor): bool
     {
         return $actor->status_aktif
-            && $actor->role === UserRole::VERIFIKATOR;
+            && in_array($actor->role, [
+                UserRole::VERIFIKATOR,
+                UserRole::OPERATOR,
+            ], true);
     }
 }
