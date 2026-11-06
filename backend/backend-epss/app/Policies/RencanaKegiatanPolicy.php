@@ -40,4 +40,19 @@ class RencanaKegiatanPolicy
                 ->where('status', StatusPeriode::AKTIF->value)
                 ->exists();
     }
+
+    public function delete(User $user, RencanaKegiatan $rencanaKegiatan): bool
+    {
+        return $user->role === UserRole::VERIFIKATOR;
+    }
+
+    public function uploadEvidence(User $user, RencanaKegiatan $rencanaKegiatan): bool 
+    {
+    return $user->status_aktif
+        && $user->role === UserRole::OPERATOR
+        && $rencanaKegiatan->pic_user_id === $user->id
+        && $rencanaKegiatan->periode()
+            ->where('status', StatusPeriode::AKTIF->value)
+            ->exists();
+    }
 }
