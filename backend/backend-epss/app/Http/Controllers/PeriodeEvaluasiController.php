@@ -16,7 +16,6 @@ use App\Http\Requests\Periode\UpdatePeriodeEvaluasiRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-
 class PeriodeEvaluasiController extends Controller
 {
     public function index(): AnonymousResourceCollection
@@ -83,6 +82,21 @@ class PeriodeEvaluasiController extends Controller
         $periode->load('versiInstrumen');
 
         return new PeriodeEvaluasiResource($periode);
+    }
+
+    public function destroy(PeriodeEvaluasi $periode)
+    {
+        Gate::authorize('delete', $periode);
+
+        if ($periode->rencanaKegiatan()->exists()) {
+            return response()->json([
+                'message' => 'Periode tidak dapat dihapus karena masih memiliki rencana kegiatan.',
+            ], 409);
+        }
+
+        $periode->delete();
+
+        return response()->noContent();
     }
 
     public function update(UpdatePeriodeEvaluasiRequest $request, PeriodeEvaluasi $periode): PeriodeEvaluasiResource 

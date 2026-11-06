@@ -63,4 +63,9 @@ class PeriodeEvaluasiPolicy
     return $user->status_aktif
         && $user->role === UserRole::VERIFIKATOR;
 }
+
+    public function delete(User $user, PeriodeEvaluasi $periode): bool
+    {
+        return $user->role === UserRole::VERIFIKATOR;
+    }
 }
