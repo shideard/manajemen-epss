@@ -18,6 +18,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class StoreRencanaKegiatanTest extends TestCase
 {
@@ -1013,4 +1015,292 @@ class StoreRencanaKegiatanTest extends TestCase
         ]);
     }
 
+
+    public function test_pic_can_upload_pdf_evidence_to_assigned_activity(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $createResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        // Route memakai auth:sanctum yang membaca guard web.
+        // Reset guard agar request berikutnya memakai PIC, bukan user sebelumnya.
+        $this->app['auth']->forgetGuards();
+
+        $response = $this
+            ->actingAs($scenario['pic'], 'web')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(
+                "/api/rencana-kegiatan/{$activityId}/dokumen-bukti",
+                [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        'bukti.pdf',
+                        1,
+                        'application/pdf'
+                    ),
+                ]
+            );
+
+        $response->assertCreated()
+            ->assertJsonPath('data.kegiatan_id', $activityId)
+            ->assertJsonPath('data.uploaded_by', $scenario['pic']->id)
+            ->assertJsonPath('data.version_number', 1)
+            ->assertJsonPath('data.is_current', true);
+
+        $document = DokumenBukti::query()
+            ->where('kegiatan_id', $activityId)
+            ->firstOrFail();
+
+        $this->assertSame('bukti.pdf', $document->nama_file);
+        $this->assertSame('application/pdf', $document->mime_type);
+        $this->assertSame(today()->toDateString(), $document->evidence_date->toDateString());
+
+        Storage::disk('local')->assertExists($document->storage_key);
+    }
+
+    public function test_non_pic_operator_and_verifikator_cannot_upload_evidence(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $createResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+        $operatorLain = $this->createUser(UserRole::OPERATOR);
+
+        foreach ([$operatorLain, $verifikator] as $actor) {
+            $this->app['auth']->forgetGuards();
+
+            $this->actingAs($actor, 'web')
+                ->withHeaders(['Accept' => 'application/json'])
+                ->post(
+                    "/api/rencana-kegiatan/{$activityId}/dokumen-bukti",
+                    [
+                        'evidence_date' => today()->toDateString(),
+                        'file' => UploadedFile::fake()->create(
+                            'bukti.pdf',
+                            1,
+                            'application/pdf'
+                        ),
+                    ]
+                )
+                ->assertForbidden();
+        }
+
+        $this->assertDatabaseCount('dokumen_bukti', 0);
+
+        $this->assertSame(
+            [],
+            Storage::disk('local')->allFiles("bukti/{$activityId}")
+        );
+    }
+
+    public function test_upload_rejects_unsupported_and_oversized_files(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $createResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $cases = [
+            UploadedFile::fake()->create(
+                'bukti.exe',
+                1,
+                'application/octet-stream'
+            ),
+            UploadedFile::fake()->create(
+                'bukti-terlalu-besar.pdf',
+                10241,
+                'application/pdf'
+            ),
+        ];
+
+        foreach ($cases as $file) {
+            $this->app['auth']->forgetGuards();
+
+            $this->actingAs($scenario['pic'], 'web')
+                ->withHeaders(['Accept' => 'application/json'])
+                ->post(
+                    "/api/rencana-kegiatan/{$activityId}/dokumen-bukti",
+                    [
+                        'evidence_date' => today()->toDateString(),
+                        'file' => $file,
+                    ]
+                )
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors(['file']);
+        }
+
+        $this->assertDatabaseCount('dokumen_bukti', 0);
+
+        $this->assertSame(
+            [],
+            Storage::disk('local')->allFiles("bukti/{$activityId}")
+        );
+    }
+
+    public function test_verifikator_can_list_evidence_documents_for_activity(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $createResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+        $fileContents = '%PDF-1.4 dokumen pengujian';
+        $storageKey = "bukti/{$activityId}/bukti-pengujian.pdf";
+
+        Storage::disk('local')->put($storageKey, $fileContents);
+
+        $document = (new DokumenBukti())->forceFill([
+            'kegiatan_id' => $activityId,
+            'uploaded_by' => $scenario['pic']->id,
+            'parent_document_id' => null,
+            'version_number' => 1,
+            'is_current' => true,
+            'evidence_date' => today()->toDateString(),
+            'nama_file' => 'bukti-pengujian.pdf',
+            'storage_key' => $storageKey,
+            'mime_type' => 'application/pdf',
+            'size_bytes' => strlen($fileContents),
+            'sha256_hash' => hash('sha256', $fileContents),
+        ]);
+
+        $document->save();
+
+        $this->getJson(
+            "/api/rencana-kegiatan/{$activityId}/dokumen-bukti"
+        )
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $document->id)
+            ->assertJsonPath('data.0.nama_file', 'bukti-pengujian.pdf')
+            ->assertJsonMissingPath('data.0.storage_key')
+            ->assertJsonMissingPath('data.0.sha256_hash');
+    }
+
+    public function test_verifikator_can_download_evidence_document_for_activity(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $createResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+        $fileContents = '%PDF-1.4 dokumen pengujian';
+        $storageKey = "bukti/{$activityId}/bukti-pengujian.pdf";
+
+        Storage::disk('local')->put($storageKey, $fileContents);
+
+        $document = (new DokumenBukti())->forceFill([
+            'kegiatan_id' => $activityId,
+            'uploaded_by' => $scenario['pic']->id,
+            'parent_document_id' => null,
+            'version_number' => 1,
+            'is_current' => true,
+            'evidence_date' => today()->toDateString(),
+            'nama_file' => 'bukti-pengujian.pdf',
+            'storage_key' => $storageKey,
+            'mime_type' => 'application/pdf',
+            'size_bytes' => strlen($fileContents),
+            'sha256_hash' => hash('sha256', $fileContents),
+        ]);
+
+        $document->save();
+
+        $this->get(
+            "/api/rencana-kegiatan/{$activityId}/dokumen-bukti/{$document->id}/download"
+        )
+            ->assertOk()
+            ->assertDownload('bukti-pengujian.pdf');
+    }
+
+    public function test_non_pic_operator_can_download_evidence_as_reference(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $createResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+        $fileContents = '%PDF-1.4 dokumen pengujian';
+        $storageKey = "bukti/{$activityId}/bukti-pengujian.pdf";
+
+        Storage::disk('local')->put($storageKey, $fileContents);
+
+        $document = (new DokumenBukti())->forceFill([
+            'kegiatan_id' => $activityId,
+            'uploaded_by' => $scenario['pic']->id,
+            'parent_document_id' => null,
+            'version_number' => 1,
+            'is_current' => true,
+            'evidence_date' => today()->toDateString(),
+            'nama_file' => 'bukti-pengujian.pdf',
+            'storage_key' => $storageKey,
+            'mime_type' => 'application/pdf',
+            'size_bytes' => strlen($fileContents),
+            'sha256_hash' => hash('sha256', $fileContents),
+        ]);
+
+        $document->save();
+
+        $operatorLain = $this->createUser(UserRole::OPERATOR);
+        $this->assertNotSame($scenario['pic']->id, $operatorLain->id);
+
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($operatorLain, 'web')
+            ->get(
+                "/api/rencana-kegiatan/{$activityId}/dokumen-bukti/{$document->id}/download"
+            )
+            ->assertOk()
+            ->assertDownload('bukti-pengujian.pdf');
+    }
 }

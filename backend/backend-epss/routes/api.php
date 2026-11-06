@@ -23,6 +23,9 @@ use App\Http\Controllers\RencanaKegiatanController;
 use Illuminate\Http\Response;
 use App\Http\Controllers\PeriodeIndikatorController;
 
+// dokumen bukti
+use App\Http\Controllers\DokumenBuktiController;
+
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
         return $request->user();
@@ -124,6 +127,24 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::delete('/rencana-kegiatan/{rencanaKegiatan}',
         [RencanaKegiatanController::class, 'destroy']
         );
+
+        Route::post('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti',
+        [DokumenBuktiController::class, 'store']
+        )->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.dokumen-bukti.store');
+
+        Route::get('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti',
+        [DokumenBuktiController::class, 'index']
+        )->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.dokumen-bukti.index');
+
+        Route::get('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti/{dokumenBukti}/download',
+        [DokumenBuktiController::class, 'download']
+        )
+        ->whereUuid('rencanaKegiatan')
+        ->whereUuid('dokumenBukti')
+        ->name('rencana-kegiatan.dokumen-bukti.download');
+
     });
 });
 
