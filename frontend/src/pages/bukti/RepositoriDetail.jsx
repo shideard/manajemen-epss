@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
 import { Link, Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { useBukti, useDokumenBukti, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
+import { useBukti, useDetailKegiatan, useDokumenBukti, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
 import { buktiKey, formatTanggal, INDIKATOR, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { ChecklistItem, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
@@ -130,7 +130,8 @@ function RepositoriDetail() {
   const { user } = useOutletContext()
   const navigate = useNavigate()
   const { aktif } = usePeriode()
-  const { kegiatan, detail } = useRencanaKegiatan(aktif?.id)
+  const { kegiatan } = useRencanaKegiatan(aktif?.id)
+  const detail = useDetailKegiatan(kegiatanId)
   const dokumen = useDokumenBukti(kegiatanId)
   const muat = [useBukti(), useSkor(), dokumen]
   const [{ bukti: semuaBukti, ubah: ubahBukti }, { levels }] = muat
@@ -139,22 +140,9 @@ function RepositoriDetail() {
   const [errorBerkas, setErrorBerkas] = useState('')
   const fileInput = useRef(null)
 
-  // Detail kegiatan dari API; hasil.id menandai milik kegiatan mana, jadi belum termuat = masih loading
-  const [hasil, setHasil] = useState({ id: null })
-  useEffect(() => {
-    let hidup = true
-    detail(kegiatanId).then(
-      (k) => hidup && setHasil({ id: kegiatanId, k }),
-      (error) => hidup && setHasil({ id: kegiatanId, error }),
-    )
-    return () => {
-      hidup = false
-    }
-  }, [kegiatanId, detail])
-  if (hasil.id !== kegiatanId) return <Memuat dari={[{ loading: true }]} />
-  if (hasil.error?.status === 404) return <Navigate to="/repositori-bukti-dukung" replace />
-  if (hasil.error) return <Memuat dari={[{ error: hasil.error }]} />
-  const k = hasil.k
+  if (detail.error?.status === 404) return <Navigate to="/repositori-bukti-dukung" replace />
+  if (!detail.kegiatan) return <Memuat dari={[detail]} />
+  const k = detail.kegiatan
 
   // Berkas hanya bisa diunggah PIC kegiatan, jadi pengunggahnya = PIC
   const files = dokumen.dokumen.map((f) => ({ ...f, oleh: k.pic }))

@@ -254,6 +254,48 @@ export function useBerkas() {
   }
 }
 
+// Hasil GET yang ditandai dengan key permintaannya: loading = hasil yang ada belum milik key ini.
+// Tanpa setState sinkron di effect, jadi pindah halaman langsung kembali ke loading.
+function useMuat(key, ambil) {
+  const [hasil, setHasil] = useState({ key: null })
+  useEffect(() => {
+    if (!key) return
+    let hidup = true
+    ambil().then(
+      (data) => hidup && setHasil({ key, data }),
+      (error) => hidup && setHasil({ key, error }),
+    )
+    return () => {
+      hidup = false
+    }
+  }, [key, ambil])
+  const milikKey = hasil.key === key
+  return { data: milikKey ? hasil.data : undefined, loading: Boolean(key) && !milikKey, error: milikKey ? (hasil.error ?? null) : null }
+}
+
+// Satu rencana kegiatan lengkap dengan indikatornya
+export function useDetailKegiatan(id) {
+  const ambil = useCallback(() => api(`/api/rencana-kegiatan/${id}`).then((res) => mapRencanaKegiatan(res.data)), [id])
+  const { data, ...state } = useMuat(id, ambil)
+  return { kegiatan: data ?? null, ...state }
+}
+
+// Semua rencana kegiatan satu periode (semua halaman), mis. untuk mencari nama kegiatan dari id
+// ponytail: satu request per halaman API; minta endpoint tanpa pagination kalau kegiatannya ratusan
+export function useSemuaKegiatan(periodeId) {
+  const ambil = useCallback(async () => {
+    const semua = []
+    for (let page = 1, last = 1; page <= last; page += 1) {
+      const res = await api(`/api/rencana-kegiatan?periode_id=${periodeId}&page=${page}`)
+      semua.push(...(res.data ?? []).map(mapRencanaKegiatan))
+      last = res.meta?.last_page ?? 1
+    }
+    return semua
+  }, [periodeId])
+  const { data, ...state } = useMuat(periodeId, ambil)
+  return { kegiatan: data ?? EMPTY_LIST, ...state }
+}
+
 // Dokumen bukti satu rencana kegiatan dari API Laravel (berkas tersimpan di server, bukan di browser)
 const mapDokumen = (d) => ({ id: d.id, nama: d.nama_file, ukuran: d.size_bytes, tanggal: d.evidence_date, mime: d.mime_type })
 
@@ -291,7 +333,9 @@ export function useDokumenBukti(kegiatanId) {
         await muat()
       }
     },
-    // Blob → object URL supaya bisa dibuka di tab baru; dicabut setelah tab sempat memuatnya
+    // Object URL isi berkas untuk pratinjau (iframe); pemanggil wajib URL.revokeObjectURL setelah selesai
+    url: async (dokumen) => URL.createObjectURL(await unduh(`${base}/${dokumen.id}/download`)),
+    // Buka di tab baru; URL dicabut setelah tab sempat memuatnya
     async buka(dokumen) {
       const url = URL.createObjectURL(await unduh(`${base}/${dokumen.id}/download`))
       window.open(url, '_blank', 'noopener')
