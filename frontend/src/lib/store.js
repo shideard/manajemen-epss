@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
-import { api } from './api'
+import { api, unduh } from './api'
 import {
   contohKegiatan,
   EMPTY_LIST,
@@ -250,6 +250,52 @@ export function useBerkas() {
         berkasUrl.delete(berkasId)
       }
       setBerkas((all) => ({ ...all, [kegiatanId]: (all[kegiatanId] ?? []).filter((f) => f.id !== berkasId) }))
+    },
+  }
+}
+
+// Dokumen bukti satu rencana kegiatan dari API Laravel (berkas tersimpan di server, bukan di browser)
+const mapDokumen = (d) => ({ id: d.id, nama: d.nama_file, ukuran: d.size_bytes, tanggal: d.evidence_date, mime: d.mime_type })
+
+export function useDokumenBukti(kegiatanId) {
+  // kegiatanId ikut disimpan: loading = data yang ada belum milik kegiatan ini
+  const [state, setState] = useState({ kegiatanId: null, dokumen: [], error: null })
+  const base = `/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti`
+
+  const muat = useCallback(
+    () =>
+      api(base).then(
+        (res) => setState({ kegiatanId, dokumen: (res.data ?? []).map(mapDokumen), error: null }),
+        (error) => setState({ kegiatanId, dokumen: [], error }),
+      ),
+    [base, kegiatanId],
+  )
+  useEffect(() => {
+    if (kegiatanId) muat()
+  }, [kegiatanId, muat])
+
+  return {
+    dokumen: state.kegiatanId === kegiatanId ? state.dokumen : EMPTY_LIST,
+    loading: Boolean(kegiatanId) && state.kegiatanId !== kegiatanId,
+    error: state.kegiatanId === kegiatanId ? state.error : null,
+    // Satu request per berkas (endpoint menerima satu file); tanggal bukti = hari ini
+    async unggah(files) {
+      try {
+        for (const file of files) {
+          const body = new FormData()
+          body.append('file', file)
+          body.append('evidence_date', toISODate(new Date()))
+          await api(base, { method: 'POST', body })
+        }
+      } finally {
+        await muat()
+      }
+    },
+    // Blob → object URL supaya bisa dibuka di tab baru; dicabut setelah tab sempat memuatnya
+    async buka(dokumen) {
+      const url = URL.createObjectURL(await unduh(`${base}/${dokumen.id}/download`))
+      window.open(url, '_blank', 'noopener')
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
     },
   }
 }

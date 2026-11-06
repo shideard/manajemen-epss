@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
-import { useBukti, useKegiatan } from '../../lib/store'
-import { includesText, indikatorById, isPic, paginate } from '../../lib/epss'
+import { useBukti, usePeriode, useRencanaKegiatan } from '../../lib/store'
+import { buktiKey, INDIKATOR } from '../../lib/epss'
 import { Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 
-const PAGE_SIZE = 5
 const FILTER = [
   { label: 'Semua', status: null },
   { label: 'Belum Unggah', status: 'draft' },
@@ -16,24 +15,28 @@ const FILTER = [
 
 function RepositoriBukti() {
   const { user } = useOutletContext()
-  const muat = [useKegiatan(), useBukti()]
-  const [{ kegiatan }, { bukti }] = muat
+  const { aktif } = usePeriode()
   const [semua, setSemua] = useState(false) // false = hanya kegiatan yang user ini PIC-nya
   const [filter, setFilter] = useState(null)
   const [query, setQuery] = useState('')
   const [queryIndikator, setQueryIndikator] = useState('')
   const [page, setPage] = useState(1)
+  // Cari, filter PIC & pagination di server (per kegiatan); filter status di klien atas halaman yang sedang tampil
+  // ponytail: filter status hanya menyaring halaman ini; pindah ke server saat status pengajuan ada di API
+  const rencana = useRencanaKegiatan(aktif?.id, { page, q: query, pic_user_id: semua ? '' : user.id })
+  const muat = [rencana, useBukti()]
+  const [{ kegiatan, meta }, { bukti }] = muat
 
-  // Satu baris per pasangan kegiatan–indikator; kegiatan yang belum dipetakan tetap tampil
-  const baris = kegiatan.filter((k) => semua || isPic(k, user)).flatMap((k) => {
-    const daftar = Object.values(bukti).filter((b) => b.kegiatanId === k.id)
-    return daftar.length ? daftar.map((b) => ({ kegiatan: k, bukti: b })) : [{ kegiatan: k, bukti: { status: 'draft' } }]
+  // Satu baris per pasangan kegiatan–indikator; kegiatan yang belum dipetakan tetap tampil.
+  // Indikator API → instrumen lokal lewat kode = nomor; statusnya masih dari browser
+  const baris = kegiatan.flatMap((k) => {
+    const daftar = k.indikator
+      .map((i) => INDIKATOR.find((lokal) => String(lokal.nomor) === String(i.kode)))
+      .filter(Boolean)
+      .map((i) => ({ kegiatan: k, indikator: i, bukti: bukti[buktiKey(k.id, i.id)] ?? { status: 'draft' } }))
+    return daftar.length ? daftar : [{ kegiatan: k, indikator: null, bukti: { status: 'draft' } }]
   })
-  const filtered = baris.filter(
-    ({ kegiatan: k, bukti: b }) =>
-      (!filter || b.status === filter) && includesText([k.nama, k.pic, indikatorById[b.indikatorId]?.nama], query),
-  )
-  const { rows, page: currentPage, pageCount } = paginate(filtered, page, PAGE_SIZE)
+  const rows = baris.filter(({ bukti: b }) => !filter || b.status === filter)
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -94,11 +97,10 @@ function RepositoriBukti() {
                 : 'Tidak ada kegiatan dengan Anda sebagai PIC yang cocok.'}
           </p>
         )}
-        {rows.map(({ kegiatan: k, bukti: b }) => {
-          const indikator = indikatorById[b.indikatorId]
+        {rows.map(({ kegiatan: k, indikator, bukti: b }) => {
           return (
             <Link
-              key={`${k.id}:${b.indikatorId}`}
+              key={`${k.id}:${indikator?.id}`}
               to={`/repositori-bukti-dukung/${k.id}`}
               className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-white px-7 py-4 transition duration-300 ease-out-quint hover:-translate-y-0.5 hover:shadow-md"
             >
@@ -123,7 +125,7 @@ function RepositoriBukti() {
         })}
       </section>
 
-      {filtered.length > 0 && <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />}
+      {(meta?.last_page ?? 1) > 1 && <Pagination page={meta.current_page} pageCount={meta.last_page} onChange={setPage} />}
 
       <PageHeader as="h2" title="Status per Indikator">
         <SearchBox value={queryIndikator} onChange={setQueryIndikator} placeholder="Cari indikator..." />

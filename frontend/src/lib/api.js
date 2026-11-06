@@ -4,12 +4,24 @@ function xsrfToken() {
   return match ? decodeURIComponent(match[1]) : ''
 }
 
+// FormData (unggah berkas) dikirim apa adanya; browser yang mengisi Content-Type multipart beserta boundary-nya
 async function send(path, method, body) {
+  const form = body instanceof FormData
   return fetch(path, {
     method,
-    headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
-    body: body && JSON.stringify(body),
+    headers: { Accept: 'application/json', ...(!form && { 'Content-Type': 'application/json' }), 'X-XSRF-TOKEN': xsrfToken() },
+    body: form ? body : body && JSON.stringify(body),
   })
+}
+
+// Unduh berkas dari endpoint terlindungi (cookie sesi ikut terkirim) → Blob
+export async function unduh(path) {
+  const res = await fetch(path)
+  if (!res.ok) {
+    const data = await res.json().catch(() => null)
+    throw Object.assign(new Error(data?.message ?? 'Gagal mengunduh berkas.'), { status: res.status })
+  }
+  return res.blob()
 }
 
 export async function api(path, { method = 'GET', body } = {}) {
