@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { bolehUbah } from '../../config/menu'
 import DomainBukti from './DomainBukti'
-import { useBukti, useKegiatan, usePeriode, useSkor } from '../../lib/store'
+import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../../lib/store'
 import { includesText, indikatorById, paginate } from '../../lib/epss'
 import { Dropdown, Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
@@ -12,7 +12,7 @@ const PAGE_SIZE = 5
 function  VerifikasiBukti() {
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const muat = [useKegiatan(), useBukti(), useSkor()]
+  const muat = [useSemuaKegiatan(aktif?.id), useBukti(), useSkor()]
   const [{ kegiatan }, { bukti }, { tetapkanLevel }] = muat
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
