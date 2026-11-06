@@ -51,12 +51,11 @@ function RencanaKegiatanDetail() {
             <div className="rounded-full bg-lime-300 px-3 py-1 text-small font-medium">{statusOf(k)}</div>
             {k.deskripsi && <p className="max-w-3xl text-center text-grey-200">{k.deskripsi}</p>}
             <hr className="w-full border-grey-50" />
-            <dl className="grid w-full grid-cols-2 gap-2.5 px-4 text-center md:grid-cols-4 md:px-15">
+            <dl className="grid w-full grid-cols-2 gap-2.5 px-4 text-center md:grid-cols-3 md:px-15">
               {[
                 [Building2, 'OPD', k.opd],
                 [UserRound, 'PIC', k.pic],
                 [CalendarDays, 'Jadwal', <>{formatTanggal(k.mulai)}<br />- {formatTanggal(k.selesai)}</>],
-                [Clock3, 'Deadline Bukti', formatTanggal(aktif.batas)],
               ].map(([Icon, label, value]) => (
                 <div key={label} className="flex flex-col items-center gap-2">
                   <Icon size={25} aria-hidden="true" className="rounded-xs bg-grey-500 px-1 py-1 text-white" />
