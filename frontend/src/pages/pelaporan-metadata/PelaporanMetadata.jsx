@@ -5,6 +5,7 @@ import {
   MOCK_METADATA_SUBMISSIONS,
   STORAGE_METADATA_KEY,
   INITIAL_METADATA_FORM,
+  normalisasiJadwal,
 } from './metadataData'
 
 function loadSavedSubmissions() {
@@ -63,6 +64,11 @@ function PelaporanMetadata() {
         tahun: halamanAwal?.tahun ?? submission.tahun ?? '',
         caraPengumpulan: halamanAwal?.caraPengumpulan ?? submission.caraPengumpulan ?? '',
         sektorKegiatan: halamanAwal?.sektorKegiatan ?? '',
+      },
+      blok3: {
+        ...INITIAL_METADATA_FORM.blok3,
+        ...sisa.blok3,
+        jadwal: normalisasiJadwal(sisa.blok3?.jadwal),
       },
       blok1: {
         ...INITIAL_METADATA_FORM.blok1,

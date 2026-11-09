@@ -45,14 +45,16 @@ export const INITIAL_METADATA_FORM = {
     tujuan: '',
     // Baris tahapan dipertahankan sebagai kerangka (nama tahapan baku),
     // tetapi tanggal mulai/selesai dikosongkan agar diisi manual.
+    // `grup` + `kode` dipakai untuk mengelompokkan tampilan (A-D) dan
+    // menentukan urutan validasi antartahapan.
     jadwal: [
-      { tahapan: '1. Perencanaan Kegiatan', mulai: '', selesai: '' },
-      { tahapan: '2. Desain Instrumen', mulai: '', selesai: '' },
-      { tahapan: '3. Pengumpulan Data', mulai: '', selesai: '' },
-      { tahapan: '4. Pengolahan Data', mulai: '', selesai: '' },
-      { tahapan: '5. Analisis Hasil', mulai: '', selesai: '' },
-      { tahapan: '6. Diseminasi Hasil', mulai: '', selesai: '' },
-      { tahapan: '7. Evaluasi', mulai: '', selesai: '' },
+      { id: 1, grup: 'A', kode: '1', tahapan: 'Perencanaan Kegiatan', mulai: '', selesai: '' },
+      { id: 2, grup: 'A', kode: '2', tahapan: 'Desain Instrumen', mulai: '', selesai: '' },
+      { id: 3, grup: 'B', kode: '3', tahapan: 'Pengumpulan Data', mulai: '', selesai: '' },
+      { id: 4, grup: 'C', kode: '4', tahapan: 'Pengolahan Data', mulai: '', selesai: '' },
+      { id: 5, grup: 'D', kode: '5', tahapan: 'Analisis Hasil', mulai: '', selesai: '' },
+      { id: 6, grup: 'D', kode: '6', tahapan: 'Diseminasi Hasil', mulai: '', selesai: '' },
+      { id: 7, grup: 'D', kode: '7', tahapan: 'Evaluasi', mulai: '', selesai: '' },
     ],
     // Satu baris kosong supaya tabel variabel sudah bisa diisi langsung.
     variabel: [
@@ -123,6 +125,28 @@ export const INITIAL_METADATA_FORM = {
   // Hanya berisi kunci field yang direkomendasikan dan memang diterapkan
   // lewat aksi eksplisit. Sistem TIDAK PERNAH mengisi form secara otomatis.
   rekomendasiDiterapkan: [],
+}
+
+// Kelompok baku tahapan 3.3 Rencana Jadwal Kegiatan (standar INDAH).
+export const JADWAL_GRUP = [
+  { kode: 'A', nama: 'Perencanaan' },
+  { kode: 'B', nama: 'Pengumpulan' },
+  { kode: 'C', nama: 'Pemeriksaan' },
+  { kode: 'D', nama: 'Penyebarluasan' },
+]
+
+// Draft lama menyimpan jadwal sebagai array datar tanpa id/grup.
+// Normalisasi menambahkan id, grup, dan kode; urutan baris dipertahankan.
+export function normalisasiJadwal(jadwal) {
+  if (!Array.isArray(jadwal)) return INITIAL_METADATA_FORM.blok3.jadwal
+  return jadwal.map((j, idx) => ({
+    id: j.id ?? idx + 1,
+    grup: j.grup ?? JADWAL_GRUP[Math.min(Math.floor(idx / 2), JADWAL_GRUP.length - 1)].kode,
+    kode: j.kode ?? String(idx + 1),
+    tahapan: j.tahapan ?? '',
+    mulai: j.mulai ?? '',
+    selesai: j.selesai ?? '',
+  }))
 }
 
 // Minimal panjang judul kegiatan sebelum rekomendasi boleh ditampilkan.

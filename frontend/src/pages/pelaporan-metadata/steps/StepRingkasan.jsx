@@ -1,4 +1,5 @@
 import { CheckCircle2, Sparkles, Building, User, Calendar, Sliders, Database, Layers, Send } from 'lucide-react'
+import { JADWAL_GRUP } from '../metadataData'
 
 function SummaryItem({ label, value }) {
   const displayValue = Array.isArray(value)
@@ -92,13 +93,28 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
           <SummaryItem label="Tujuan" value={blok3.tujuan} />
           <div>
             <span className="text-grey-100 font-medium text-[13px] block mb-2">Jadwal Tahapan:</span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {blok3.jadwal.map((j, idx) => (
-                <div key={idx} className="rounded-lg bg-grey2-75 p-2.5 text-[12px]">
-                  <p className="font-semibold text-grey-300">{j.tahapan}</p>
-                  <p className="text-grey-100">{j.mulai} s.d. {j.selesai}</p>
-                </div>
-              ))}
+            <div className="flex flex-col gap-3">
+              {JADWAL_GRUP.map((grup) => {
+                const baris = blok3.jadwal.filter((j) => j.grup === grup.kode)
+                if (baris.length === 0) return null
+                return (
+                  <div key={grup.kode}>
+                    <p className="text-[12px] font-bold text-grey-300 mb-1">
+                      {grup.kode}. {grup.nama}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {baris.map((j) => (
+                        <div key={j.id} className="rounded-lg bg-grey2-75 p-2.5 text-[12px]">
+                          <p className="font-semibold text-grey-300">{j.tahapan || '-'}</p>
+                          <p className="text-grey-100">
+                            {j.mulai || '-'} s.d. {j.selesai || '-'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
           <div className="mt-2">
