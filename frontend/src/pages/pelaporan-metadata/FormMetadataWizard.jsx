@@ -45,6 +45,18 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
   const [formData, setFormData] = useState(initialData || INITIAL_METADATA_FORM)
   const [toastMessage, setToastMessage] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [idForm, setIdForm] = useState(initialData?.id)
+
+  // Wizard dipakai ulang untuk draft berbeda tanpa di-unmount. Kalau id data
+  // awal berganti, semua state lokal direset supaya tidak ada isian atau
+  // posisi step yang terbawa dari draft sebelumnya.
+  if (initialData && initialData.id !== idForm) {
+    setIdForm(initialData.id)
+    setFormData(initialData)
+    setCurrentStepId('awal')
+    setToastMessage(null)
+    setIsSubmitting(false)
+  }
 
   // Posisi step disimpan sebagai id agar tidak bergeser saat step kondisional
   // (mis. Blok V) muncul atau hilang. Jika id aktif jadi tidak terlihat,
@@ -131,57 +143,28 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
     }))
   }
 
-  // AI Prediction Trigger
-  const applyPrediction = (preset, setSampleTitle = false) => {
-    const { predictions, confidence } = preset
-    setFormData((prev) => ({
-      ...prev,
-      halamanAwal: {
-        ...prev.halamanAwal,
-        judulKegiatan: setSampleTitle
-          ? (preset.sampleTitle || prev.halamanAwal.judulKegiatan)
-          : (prev.halamanAwal.judulKegiatan || preset.sampleTitle),
-        caraPengumpulan: predictions.caraPengumpulan || prev.halamanAwal.caraPengumpulan,
-        sektorKegiatan: predictions.sektorKegiatan || prev.halamanAwal.sektorKegiatan,
-      },
-      blok4: {
-        ...prev.blok4,
-        frekuensiKegiatan: predictions.frekuensiKegiatan || prev.blok4.frekuensiKegiatan,
-        tipePengumpulan: predictions.tipePengumpulan || prev.blok4.tipePengumpulan,
-        cakupanWilayah: predictions.cakupanWilayah || prev.blok4.cakupanWilayah,
-        metodePengumpulan: predictions.metodePengumpulan || prev.blok4.metodePengumpulan,
-        saranaPengumpulan: predictions.saranaPengumpulan || prev.blok4.saranaPengumpulan,
-        unitPengumpulan: predictions.unitPengumpulan || prev.blok4.unitPengumpulan,
-      },
-      blok6: {
-        ...prev.blok6,
-        pilotSurvey: predictions.pilotSurvey || prev.blok6.pilotSurvey,
-        metodePemeriksaanKualitas:
-          predictions.metodePemeriksaanKualitas || prev.blok6.metodePemeriksaanKualitas,
-        penyesuaianNonrespon:
-          predictions.penyesuaianNonrespon || prev.blok6.penyesuaianNonrespon,
-      },
-      blok7: {
-        ...prev.blok7,
-        tahapanPengolahan: predictions.tahapanPengolahan || prev.blok7.tahapanPengolahan,
-        metodeAnalisis: predictions.metodeAnalisis || prev.blok7.metodeAnalisis,
-        unitAnalisis: predictions.unitAnalisis || prev.blok7.unitAnalisis,
-        tingkatPenyajian: predictions.tingkatPenyajian || prev.blok7.tingkatPenyajian,
-      },
-      blok8: {
-        ...prev.blok8,
-        produkUmum: predictions.produkUmum || prev.blok8.produkUmum,
-      },
-      aiPredictionsApplied: true,
-      aiConfidence: confidence,
-      predictedFields: preset.predictedFieldsList || [],
-    }))
+  // Rekomendasi tidak pernah mengisi form secara massal. Fungsi ini hanya
+  // menulis SATU field ketika pengguna menekan "Terapkan" pada panel
+  // rekomendasi, lalu mencatat field tersebut agar bisa ditandai di UI.
+  const terapkanRekomendasi = (blok, fieldKey, nilai, label) => {
+    setFormData((prev) => {
+      const keyRekomendasi = `${blok}.${fieldKey}`
+      const sudahTercatat = (prev.rekomendasiDiterapkan || []).includes(keyRekomendasi)
 
-    showToast(
-      `✨ Model AI Berhasil: 14 atribut pilihan pada Blok IV, VI, VII, dan VIII telah terisi otomatis (Akurasi ${confidence})!`,
-      'success'
-    )
+      return {
+        ...prev,
+        [blok]: { ...prev[blok], [fieldKey]: nilai },
+        rekomendasiDiterapkan: sudahTercatat
+          ? prev.rekomendasiDiterapkan
+          : [...(prev.rekomendasiDiterapkan || []), keyRekomendasi],
+      }
+    })
+
+    showToast(`Rekomendasi "${label}" diterapkan. Silakan periksa kembali kesesuaiannya.`, 'success')
   }
+
+  const updateHalamanAwalDariRekomendasi = (fieldKey, nilai, label) =>
+    terapkanRekomendasi('halamanAwal', fieldKey, nilai, label)
 
   const handleSaveDraft = () => {
     const saved = {
@@ -331,7 +314,7 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
           <StepHalamanAwal
             formData={formData}
             updateHalamanAwal={updateHalamanAwal}
-            applyPrediction={applyPrediction}
+            terapkanRekomendasi={updateHalamanAwalDariRekomendasi}
           />
         )}
         {currentStep?.id === 'blok1' && (
@@ -344,19 +327,47 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
           <StepBlok3Perencanaan formData={formData} updateBlok3={updateBlok3} />
         )}
         {currentStep?.id === 'blok4' && (
-          <StepBlok4Desain formData={formData} updateBlok4={updateBlok4} caraPengumpulan={formData.halamanAwal?.caraPengumpulan} />
+          <StepBlok4Desain
+            formData={formData}
+            updateBlok4={updateBlok4}
+            caraPengumpulan={formData.halamanAwal?.caraPengumpulan}
+            onTerapkanRekomendasi={(fieldKey, nilai, label) =>
+              terapkanRekomendasi('blok4', fieldKey, nilai, label)
+            }
+          />
         )}
         {currentStep?.id === 'blok5' && (
           <StepBlok5DesainSampel formData={formData} updateBlok5={updateBlok5} />
         )}
         {currentStep?.id === 'blok6' && (
-          <StepBlok6Pengumpulan formData={formData} updateBlok6={updateBlok6} caraPengumpulan={formData.halamanAwal?.caraPengumpulan} />
+          <StepBlok6Pengumpulan
+            formData={formData}
+            updateBlok6={updateBlok6}
+            caraPengumpulan={formData.halamanAwal?.caraPengumpulan}
+            onTerapkanRekomendasi={(fieldKey, nilai, label) =>
+              terapkanRekomendasi('blok6', fieldKey, nilai, label)
+            }
+          />
         )}
         {currentStep?.id === 'blok7' && (
-          <StepBlok7Pengolahan formData={formData} updateBlok7={updateBlok7} caraPengumpulan={formData.halamanAwal?.caraPengumpulan} />
+          <StepBlok7Pengolahan
+            formData={formData}
+            updateBlok7={updateBlok7}
+            caraPengumpulan={formData.halamanAwal?.caraPengumpulan}
+            onTerapkanRekomendasi={(fieldKey, nilai, label) =>
+              terapkanRekomendasi('blok7', fieldKey, nilai, label)
+            }
+          />
         )}
         {currentStep?.id === 'blok8' && (
-          <StepBlok8Diseminasi formData={formData} updateBlok8={updateBlok8} caraPengumpulan={formData.halamanAwal?.caraPengumpulan} />
+          <StepBlok8Diseminasi
+            formData={formData}
+            updateBlok8={updateBlok8}
+            caraPengumpulan={formData.halamanAwal?.caraPengumpulan}
+            onTerapkanRekomendasi={(fieldKey, nilai, label) =>
+              terapkanRekomendasi('blok8', fieldKey, nilai, label)
+            }
+          />
         )}
         {currentStep?.id === 'ringkasan' && (
           <StepRingkasan

@@ -10,130 +10,129 @@ export const INITIAL_METADATA_FORM = {
 
   // Halaman Awal
   halamanAwal: {
-    rekomendasiBps: 'Tidak', // 'Ya' | 'Tidak'
+    rekomendasiBps: '', // 'Ya' | 'Tidak'
     judulKegiatan: '',
-    tahun: new Date().getFullYear().toString(),
+    tahun: '',
     caraPengumpulan: '', // 'Survei' | 'Sensus' | 'Kompilasi Produk Administrasi' | 'Cara Lain Sesuai Perkembangan TI'
     sektorKegiatan: '', // 'Sosial Budaya' | 'Ekonomi' | 'Politik Hukum dan Keamanan' | 'Pertanian' | 'Komunikasi dan Informatika'
   },
 
   // Blok I: Penyelenggara
+  // Nama instansi memang sudah diketahui; sisanya diisi manual oleh pengguna.
   blok1: {
     instansiPenyelenggara: 'Dinas Komunikasi dan Informatika Kota Bogor',
-    alamat: 'Jl. Ir. H. Juanda No. 10, Kota Bogor, Jawa Barat 16121',
-    telepon: '(0251) 8321075',
-    faksimile: '(0251) 8321075',
-    email: 'diskominfo@kotabogor.go.id',
+    alamat: '',
+    telepon: '',
+    faksimile: '',
+    email: '',
   },
 
   // Blok II: Penanggung Jawab
   blok2: {
-    eselon1: 'Pemerintah Daerah Kota Bogor',
-    eselon2: 'Kepala Dinas Komunikasi dan Informatika Kota Bogor',
-    teknisNama: 'Ahmad Fauzi, S.Kom., M.Si.',
-    teknisJabatan: 'Kepala Bidang Statistik Sektoral dan Pengelolaan Informasi',
-    teknisAlamat: 'Gedung Diskominfo Lt. 3, Jl. Ir. H. Juanda No. 10, Bogor',
-    teknisTelepon: '0812-3456-7890',
-    teknisFaksimile: '(0251) 8321075',
-    teknisEmail: 'bidang.statistik@kotabogor.go.id',
+    eselon1: '',
+    eselon2: '',
+    teknisNama: '',
+    teknisJabatan: '',
+    teknisAlamat: '',
+    teknisTelepon: '',
+    teknisFaksimile: '',
+    teknisEmail: '',
   },
 
   // Blok III: Perencanaan dan Persiapan
   blok3: {
-    latarBelakang: 'Penyelenggaraan statistik sektoral ini dilaksanakan dalam rangka menyediakan data dukung perencanaan dan evaluasi pembangunan serta memperkuat Satu Data Indonesia tingkat Kota Bogor.',
-    tujuan: 'Menyediakan indikator statistik sektoral yang valid, reliabel, dan mutakhir untuk kebutuhan pengambilan kebijakan daerah.',
+    latarBelakang: '',
+    tujuan: '',
+    // Baris tahapan dipertahankan sebagai kerangka (nama tahapan baku),
+    // tetapi tanggal mulai/selesai dikosongkan agar diisi manual.
     jadwal: [
-      { tahapan: '1. Perencanaan Kegiatan', mulai: '2026-02-01', selesai: '2026-02-28' },
-      { tahapan: '2. Desain Instrumen', mulai: '2026-03-01', selesai: '2026-03-20' },
-      { tahapan: '3. Pengumpulan Data', mulai: '2026-04-01', selesai: '2026-05-15' },
-      { tahapan: '4. Pengolahan Data', mulai: '2026-05-16', selesai: '2026-06-15' },
-      { tahapan: '5. Analisis Hasil', mulai: '2026-06-16', selesai: '2026-07-10' },
-      { tahapan: '6. Diseminasi Hasil', mulai: '2026-07-15', selesai: '2026-07-31' },
-      { tahapan: '7. Evaluasi', mulai: '2026-08-01', selesai: '2026-08-15' },
+      { tahapan: '1. Perencanaan Kegiatan', mulai: '', selesai: '' },
+      { tahapan: '2. Desain Instrumen', mulai: '', selesai: '' },
+      { tahapan: '3. Pengumpulan Data', mulai: '', selesai: '' },
+      { tahapan: '4. Pengolahan Data', mulai: '', selesai: '' },
+      { tahapan: '5. Analisis Hasil', mulai: '', selesai: '' },
+      { tahapan: '6. Diseminasi Hasil', mulai: '', selesai: '' },
+      { tahapan: '7. Evaluasi', mulai: '', selesai: '' },
     ],
+    // Satu baris kosong supaya tabel variabel sudah bisa diisi langsung.
     variabel: [
-      {
-        id: 1,
-        nama: 'Tingkat Kepuasan Pengguna Layanan',
-        konsep: 'Indeks persepsi masyarakat terhadap kemudahan dan kecepatan layanan',
-        definisi: 'Skor agregat skala Likert 1-5 berdasarkan 9 unsur pelayanan publik',
-        referensiWaktu: 'Tahun 2026',
-      },
+      { id: 1, nama: '', konsep: '', definisi: '', referensiWaktu: '' },
     ],
   },
 
   // Blok IV: Desain Kegiatan
   blok4: {
-    frekuensiKegiatan: 'Berulang', // 'Hanya Sekali' | 'Berulang'
+    frekuensiKegiatan: '', // 'Hanya Sekali' | 'Berulang'
     // Hanya relevan jika frekuensiKegiatan === 'Berulang'
-    frekuensiPenyelenggaraan: 'Tahunan', // 'Harian' | 'Minggu' | 'Bulanan' | 'Triwulanan' | 'Empat Bulanan' | 'Semesteran' | 'Tahunan' | 'Lebih Dari Dua Tahunan'
-    tipePengumpulan: 'Cross Sectional', // 'Longitudinal Panel' | 'Longitudinal Cross Sectional' | 'Cross Sectional'
-    cakupanWilayah: 'Sebagian Wilayah Indonesia', // 'Seluruh Wilayah Indonesia' | 'Sebagian Wilayah Indonesia'
-    metodePengumpulan: ['Wawancara', 'Mengisi Kuesioner Sendiri'], // Array of checkboxes
-    saranaPengumpulan: ['Computer Aided Web Interviewing (CAWI)', 'Computer-assisted Personal Interviewing (CAPI)'],
-    unitPengumpulan: ['Individu', 'Rumah Tangga'],
+    frekuensiPenyelenggaraan: '', // 'Harian' | 'Minggu' | 'Bulanan' | 'Triwulanan' | 'Empat Bulanan' | 'Semesteran' | 'Tahunan' | 'Lebih Dari Dua Tahunan'
+    tipePengumpulan: '', // 'Longitudinal Panel' | 'Longitudinal Cross Sectional' | 'Cross Sectional'
+    cakupanWilayah: '', // 'Seluruh Wilayah Indonesia' | 'Sebagian Wilayah Indonesia'
+    metodePengumpulan: [], // Array of checkboxes
+    saranaPengumpulan: [],
+    unitPengumpulan: [],
   },
 
   // Blok V: Desain Sampel (hanya untuk kegiatan Survei)
   blok5: {
-    rancanganSampel: 'Multi Stage Atau Phase', // 'Single Stage Atau Phase' | 'Multi Stage Atau Phase'
-    metodePemilihanSampel: 'Sampel Probabilitas', // 'Sampel Probabilitas' | 'Sampel Nonprobabilitas'
-    metodeSampel: 'Stratified Random Sampling', // Probabilitas: 'Simple Random Sampling' | 'Systematic Random Sampling' | 'Stratified Random Sampling' | 'Cluster Sampling' | 'Probability Proportional to Size Sampling'
+    rancanganSampel: '', // 'Single Stage Atau Phase' | 'Multi Stage Atau Phase'
+    metodePemilihanSampel: '', // 'Sampel Probabilitas' | 'Sampel Nonprobabilitas'
+    metodeSampel: '', // Probabilitas: 'Simple Random Sampling' | 'Systematic Random Sampling' | 'Stratified Random Sampling' | 'Cluster Sampling' | 'Probability Proportional to Size Sampling'
     // Nonprobabilitas: 'Quota Sampling' | 'Accidental Sampling' | 'Purposive Sampling' | 'Snowball Sampling' | 'Saturation Sampling'
-    kerangkaSampel: 'List Frame', // 'List Frame' | 'Area Frame'
-    fraksiSampel: '0,05 (5 persen dari populasi terpilih)', // teks bebas
-    samplingError: 'RSE ≤ 5% pada tingkat kepercayaan 95%', // teks bebas
-    unitSampel: 'Individu penerima layanan publik yang terpilih',
-    unitObservasi: 'Individu penerima layanan publik',
+    kerangkaSampel: '', // 'List Frame' | 'Area Frame'
+    fraksiSampel: '', // teks bebas
+    samplingError: '', // teks bebas
+    unitSampel: '',
+    unitObservasi: '',
   },
 
   // Blok VI: Pengumpulan Data
   blok6: {
-    pilotSurvey: 'Ya', // 'Ya' | 'Tidak'
-    metodePemeriksaanKualitas: ['Supervisi', 'Kunjungan Kembali'],
-    penyesuaianNonrespon: 'Ya', // 'Ya' | 'Tidak'
-    petugasPengumpulan:
-      'Staf Instansi Penyelenggara Dan Mitra Atau Tenaga Kontrak', // 'Staf Instansi Penyelenggara' | 'Mitra Atau Tenaga Kontrak' | 'Staf Instansi Penyelenggara Dan Mitra Atau Tenaga Kontrak'
-    persyaratanPendidikan: 'Diploma IV Atau S1 Atau S2 Atau S3', // 'Kurang Dari Atau Sama Dengan SMP' | 'SMA Atau SMK' | 'Diploma I Atau II Atau III' | 'Diploma IV Atau S1 Atau S2 Atau S3'
-    jumlahSupervisor: '4', // jumlah dalam satuan Orang
-    jumlahEnumerator: '16', // jumlah dalam satuan Orang
-    pelatihanPetugas: 'Ya', // 'Ya' | 'Tidak'
+    pilotSurvey: '', // 'Ya' | 'Tidak'
+    metodePemeriksaanKualitas: [],
+    penyesuaianNonrespon: '', // 'Ya' | 'Tidak'
+    petugasPengumpulan: '', // 'Staf Instansi Penyelenggara' | 'Mitra Atau Tenaga Kontrak' | 'Staf Instansi Penyelenggara Dan Mitra Atau Tenaga Kontrak'
+    persyaratanPendidikan: '', // 'Kurang Dari Atau Sama Dengan SMP' | 'SMA Atau SMK' | 'Diploma I Atau II Atau III' | 'Diploma IV Atau S1 Atau S2 Atau S3'
+    jumlahSupervisor: '', // jumlah dalam satuan Orang
+    jumlahEnumerator: '', // jumlah dalam satuan Orang
+    pelatihanPetugas: '', // 'Ya' | 'Tidak'
   },
 
   // Blok VII: Pengolahan dan Analisis
   blok7: {
     tahapanPengolahan: {
-      editing: 'Ya',
-      coding: 'Ya',
-      dataEntry: 'Ya',
-      validasi: 'Ya',
+      editing: '',
+      coding: '',
+      dataEntry: '',
+      validasi: '',
     },
-    metodeAnalisis: 'Deskriptif Dan Inferensia', // 'Deskriptif' | 'Inferensia' | 'Deskriptif Dan Inferensia'
-    unitAnalisis: ['Individu'],
-    tingkatPenyajian: ['Kabupaten/Kota'],
+    metodeAnalisis: '', // 'Deskriptif' | 'Inferensia' | 'Deskriptif Dan Inferensia'
+    unitAnalisis: [],
+    tingkatPenyajian: [],
   },
 
   // Blok VIII: Diseminasi Hasil
   blok8: {
     produkUmum: {
-      tercetak: 'Ya',
-      digital: 'Ya',
-      dataMikro: 'Tidak',
+      tercetak: '',
+      digital: '',
+      dataMikro: '',
     },
   },
 
-  // Metadata catatan auto-fill AI
-  aiPredictionsApplied: false,
-  aiConfidence: null,
-  predictedFields: [],
+  // Catatan rekomendasi historis yang dipilih sendiri oleh pengguna.
+  // Hanya berisi kunci field yang direkomendasikan dan memang diterapkan
+  // lewat aksi eksplisit. Sistem TIDAK PERNAH mengisi form secara otomatis.
+  rekomendasiDiterapkan: [],
 }
 
-// Preset prediksi cerdas berdasarkan kata kunci pada judul kegiatan
+// Minimal panjang judul kegiatan sebelum rekomendasi boleh ditampilkan.
+export const MIN_JUDUL_REKOMENDASI = 3
+
+// Preset rekomendasi berdasarkan kata kunci pada judul kegiatan.
+// Bersifat SARAN saja: nilai tidak pernah ditulis ke form tanpa aksi pengguna.
 export const AI_PREDICTION_PRESETS = [
   {
     keywordMatch: ['kepuasan', 'masyarakat', 'layanan', 'survei'],
-    sampleTitle: 'Survei Kepuasan Masyarakat Terhadap Pelayanan Publik Kota Bogor 2026',
-    confidence: '95%',
     predictions: {
       caraPengumpulan: 'Survei',
       sektorKegiatan: 'Sosial Budaya',
@@ -152,19 +151,9 @@ export const AI_PREDICTION_PRESETS = [
       tingkatPenyajian: ['Kabupaten/Kota'],
       produkUmum: { tercetak: 'Ya', digital: 'Ya', dataMikro: 'Tidak' },
     },
-    predictedFieldsList: [
-      'Cara Pengumpulan Data',
-      'Sektor Kegiatan',
-      'Desain Kegiatan (Blok IV: Frekuensi, Tipe, Metode, Sarana, Unit)',
-      'Pengumpulan Data (Blok VI: Pilot, Supervisi, Non-respon)',
-      'Pengolahan & Analisis (Blok VII: Tahapan, Metode Analisis, Unit, Tingkat)',
-      'Diseminasi Hasil (Blok VIII: Produk Tersedia)',
-    ],
   },
   {
     keywordMatch: ['kompilasi', 'produk', 'administrasi', 'data statistik'],
-    sampleTitle: 'Kompilasi Data Statistik Sektoral Komunikasi dan Informatika Kota Bogor',
-    confidence: '92%',
     predictions: {
       caraPengumpulan: 'Kompilasi Produk Administrasi',
       sektorKegiatan: 'Komunikasi dan Informatika',
@@ -183,18 +172,9 @@ export const AI_PREDICTION_PRESETS = [
       tingkatPenyajian: ['Kabupaten/Kota'],
       produkUmum: { tercetak: 'Tidak', digital: 'Ya', dataMikro: 'Tidak' },
     },
-    predictedFieldsList: [
-      'Cara Pengumpulan Data (Kompilasi Administrasi)',
-      'Sektor Kegiatan (Kominfo)',
-      'Metode Pengumpulan (Data Sekunder)',
-      'Pengolahan & Analisis (Deskriptif)',
-      'Diseminasi (Digital/Softcopy)',
-    ],
   },
   {
     keywordMatch: ['umkm', 'usaha', 'ekonomi', 'pedagang', 'industri'],
-    sampleTitle: 'Pendataan Potensi Pelaku Usaha Mikro dan Kecil Kota Bogor 2026',
-    confidence: '88%',
     predictions: {
       caraPengumpulan: 'Survei',
       sektorKegiatan: 'Ekonomi',
@@ -213,13 +193,6 @@ export const AI_PREDICTION_PRESETS = [
       tingkatPenyajian: ['Kabupaten/Kota'],
       produkUmum: { tercetak: 'Ya', digital: 'Ya', dataMikro: 'Ya' },
     },
-    predictedFieldsList: [
-      'Cara Pengumpulan & Sektor (Ekonomi)',
-      'Metode & Sarana Pengumpulan (CAPI/PAPI)',
-      'Unit Pengumpulan (Usaha/Perusahaan)',
-      'Metode Analisis (Deskriptif)',
-      'Diseminasi Hasil (Tercetak, Digital, Data Mikro)',
-    ],
   },
 ]
 

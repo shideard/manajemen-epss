@@ -32,10 +32,10 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
           </p>
         </div>
 
-        {formData.aiPredictionsApplied && (
+        {(formData.rekomendasiDiterapkan || []).length > 0 && (
           <div className="flex items-center gap-1.5 rounded-full bg-lime-100 border border-lime-300 px-3.5 py-1.5 text-[12px] font-bold text-grey-300 shadow-xs">
             <Sparkles size={15} className="text-lime-500" />
-            <span>Prediksi AI Diterapkan ({formData.aiConfidence})</span>
+            <span>{formData.rekomendasiDiterapkan.length} rekomendasi diterapkan</span>
           </div>
         )}
       </div>

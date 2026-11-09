@@ -1,10 +1,44 @@
-import { Sparkles } from 'lucide-react'
+import { useMemo } from 'react'
 import SaranPill from '../components/SaranPill'
+import PanelRekomendasi from '../components/PanelRekomendasi'
 import { getSaranUntukOpsi } from '../lib/saranHelper'
+import { cariRekomendasi, rekomendasiUntukBlok } from '../lib/rekomendasiHelper'
 
-function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan }) {
+// Hanya field pengumpulan yang masuk cakupan rekomendasi (bukan jumlah
+// petugas, pendidikan, atau pelatihan petugas).
+const LABEL_REKOMENDASI = {
+  pilotSurvey: '6.1. Uji Coba (Pilot Survey)',
+  metodePemeriksaanKualitas: '6.2. Metode Pemeriksaan Kualitas',
+  penyesuaianNonrespon: '6.3. Penyesuaian Nonrespon',
+}
+
+function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapkanRekomendasi }) {
   const data = formData.blok6
   const saranUntuk = (field, opsi) => getSaranUntukOpsi(`blok6.${field}`, caraPengumpulan, opsi)
+
+  const rekomendasi = useMemo(
+    () => cariRekomendasi(formData.halamanAwal?.judulKegiatan),
+    [formData.halamanAwal?.judulKegiatan]
+  )
+
+  const items = useMemo(
+    () =>
+      rekomendasiUntukBlok(
+        rekomendasi,
+        (predictions) =>
+          Object.fromEntries(
+            Object.keys(LABEL_REKOMENDASI)
+              .filter((key) => predictions[key] !== undefined)
+              .map((key) => [key, predictions[key]])
+          ),
+        (key) => data[key]
+      ).map((item) => ({
+        ...item,
+        label: LABEL_REKOMENDASI[item.fieldKey],
+        diterapkan: (formData.rekomendasiDiterapkan || []).includes(`blok6.${item.fieldKey}`),
+      })),
+    [rekomendasi, data, formData.rekomendasiDiterapkan]
+  )
 
   const handleQualityToggle = (item) => {
     const list = data.metodePemeriksaanKualitas || []
@@ -22,13 +56,16 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan }) {
           <h2 className="text-[18px] font-bold text-grey-300">VI. PENGUMPULAN DATA</h2>
           <p className="text-[13px] text-grey-100">Prosedur operasional lapangan, penjaminan kualitas data, dan profil petugas survei.</p>
         </div>
-        {formData.aiPredictionsApplied && (
-          <div className="flex items-center gap-1.5 rounded-full bg-lime-100 border border-lime-300 px-3 py-1 text-[11px] font-bold text-grey-300">
-            <Sparkles size={14} className="text-lime-500" />
-            <span>Prediksi AI Aktif</span>
-          </div>
-        )}
       </div>
+
+      <PanelRekomendasi
+        judulKegiatan={(formData.halamanAwal?.judulKegiatan || '').trim()}
+        rekomendasi={rekomendasi}
+        items={items}
+        onTerapkan={(fieldKey, nilai) =>
+          onTerapkanRekomendasi(fieldKey, nilai, LABEL_REKOMENDASI[fieldKey])
+        }
+      />
 
       <div className="rounded-2xl border border-grey-50 bg-white p-7 shadow-xs flex flex-col gap-6">
         {/* 6.1. Uji Coba (Pilot Survey) */}

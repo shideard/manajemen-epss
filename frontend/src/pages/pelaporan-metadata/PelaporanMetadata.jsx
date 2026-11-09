@@ -31,6 +31,8 @@ function PelaporanMetadata() {
   }, [submissions])
 
   const handleOpenCreate = () => {
+    // Form baru selalu dimulai dari keadaan kosong: tidak ada isian yang
+    // dibawa dari draft sebelumnya maupun dari data contoh.
     setCurrentEditData({
       ...INITIAL_METADATA_FORM,
       id: `MSB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
@@ -39,19 +41,37 @@ function PelaporanMetadata() {
   }
 
   const handleOpenEdit = (submission) => {
-    // If it's a full form object, use it; otherwise adapt mock to full form
+    // Draft lama disimpan sebagai form lengkap; entri contoh (mock) hanya punya
+    // beberapa field ringkas. Keduanya digabung di ATAS kerangka kosong
+    // supaya field yang tidak tersimpan tetap kosong, bukan terisi default.
+    const { halamanAwal, blok1, ...sisa } = submission
+
     setCurrentEditData({
       ...INITIAL_METADATA_FORM,
-      id: submission.id,
-      status: submission.status,
+      ...sisa,
+      // Entri daftar menyimpan status sebagai status pengajuan ("Draft",
+      // "Sedang diperiksa", ...), bukan status form. Jangan ditimpa.
+      status: INITIAL_METADATA_FORM.status,
+      // Penanda "dengan rekomendasi" di daftar bukan riwayat penerapan
+      // per field, jadi tidak dibawa ke form.
+      aiAssisted: undefined,
       halamanAwal: {
         ...INITIAL_METADATA_FORM.halamanAwal,
-        judulKegiatan: submission.judulKegiatan || '',
-        tahun: submission.tahun || new Date().getFullYear().toString(),
-        caraPengumpulan: submission.caraPengumpulan || 'Survei',
+        ...halamanAwal,
+        rekomendasiBps: halamanAwal?.rekomendasiBps ?? '',
+        judulKegiatan: halamanAwal?.judulKegiatan ?? submission.judulKegiatan ?? '',
+        tahun: halamanAwal?.tahun ?? submission.tahun ?? '',
+        caraPengumpulan: halamanAwal?.caraPengumpulan ?? submission.caraPengumpulan ?? '',
+        sektorKegiatan: halamanAwal?.sektorKegiatan ?? '',
       },
-      aiPredictionsApplied: Boolean(submission.aiAssisted),
-      aiConfidence: submission.aiAssisted ? '95%' : null,
+      blok1: {
+        ...INITIAL_METADATA_FORM.blok1,
+        ...blok1,
+        instansiPenyelenggara:
+          blok1?.instansiPenyelenggara ??
+          submission.instansi ??
+          INITIAL_METADATA_FORM.blok1.instansiPenyelenggara,
+      },
     })
     setViewMode('wizard')
   }
@@ -72,7 +92,7 @@ function PelaporanMetadata() {
           year: 'numeric',
         }),
         skorKelengkapan: '100%',
-        aiAssisted: savedForm.aiPredictionsApplied,
+        aiAssisted: (savedForm.rekomendasiDiterapkan || []).length > 0,
       }
 
       if (idx >= 0) {

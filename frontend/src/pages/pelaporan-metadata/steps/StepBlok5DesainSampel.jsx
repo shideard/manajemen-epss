@@ -1,5 +1,3 @@
-import { Sparkles } from 'lucide-react'
-
 const OPSI_RANCANGAN = ['Single Stage Atau Phase', 'Multi Stage Atau Phase']
 
 const OPSI_METODE_PEMILIHAN = ['Sampel Probabilitas', 'Sampel Nonprobabilitas']
@@ -48,12 +46,6 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
             Rancangan sampel, metode pemilihan, kerangka sampel, dan unit observasi kegiatan survei.
           </p>
         </div>
-        {formData.aiPredictionsApplied && (
-          <div className="flex items-center gap-1.5 rounded-full bg-lime-100 border border-lime-300 px-3 py-1 text-[11px] font-bold text-grey-300">
-            <Sparkles size={14} className="text-lime-500" />
-            <span>Prediksi AI Aktif</span>
-          </div>
-        )}
       </div>
 
       <div className="rounded-2xl border border-grey-50 bg-white p-7 shadow-xs flex flex-col gap-6">

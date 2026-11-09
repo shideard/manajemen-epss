@@ -1,10 +1,51 @@
-import { Sparkles } from 'lucide-react'
+import { useMemo } from 'react'
 import SaranPill from '../components/SaranPill'
+import PanelRekomendasi from '../components/PanelRekomendasi'
 import { getSaranUntukOpsi } from '../lib/saranHelper'
+import { cariRekomendasi, rekomendasiUntukBlok } from '../lib/rekomendasiHelper'
 
-function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan }) {
+const LABEL_REKOMENDASI = {
+  tahapanPengolahan: '7.1. Tahapan Pengolahan Data',
+  metodeAnalisis: '7.2. Metode Analisis',
+  unitAnalisis: '7.3. Unit Analisis',
+  tingkatPenyajian: '7.4. Tingkat Penyajian Hasil Analisis',
+}
+
+// Label ramah untuk nilai objek tahapanPengolahan di panel rekomendasi.
+const LABEL_TAHAPAN = {
+  editing: 'Penyuntingan',
+  coding: 'Penyandian',
+  dataEntry: 'Data Entry',
+  validasi: 'Penyahihan',
+}
+
+function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan, onTerapkanRekomendasi }) {
   const data = formData.blok7
   const saranUntuk = (field, opsi) => getSaranUntukOpsi(`blok7.${field}`, caraPengumpulan, opsi)
+
+  const rekomendasi = useMemo(
+    () => cariRekomendasi(formData.halamanAwal?.judulKegiatan),
+    [formData.halamanAwal?.judulKegiatan]
+  )
+
+  const items = useMemo(
+    () =>
+      rekomendasiUntukBlok(
+        rekomendasi,
+        (predictions) =>
+          Object.fromEntries(
+            Object.keys(LABEL_REKOMENDASI)
+              .filter((key) => predictions[key] !== undefined)
+              .map((key) => [key, predictions[key]])
+          ),
+        (key) => data[key]
+      ).map((item) => ({
+        ...item,
+        label: LABEL_REKOMENDASI[item.fieldKey],
+        diterapkan: (formData.rekomendasiDiterapkan || []).includes(`blok7.${item.fieldKey}`),
+      })),
+    [rekomendasi, data, formData.rekomendasiDiterapkan]
+  )
 
   const handleTahapanToggle = (key, value) => {
     updateBlok7('tahapanPengolahan', {
@@ -29,13 +70,17 @@ function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan }) {
           <h2 className="text-[18px] font-bold text-grey-300">VII. PENGOLAHAN DAN ANALISIS</h2>
           <p className="text-[13px] text-grey-100">Tahapan pembersihan data, metode analisis statistik, dan level penyajian hasil.</p>
         </div>
-        {formData.aiPredictionsApplied && (
-          <div className="flex items-center gap-1.5 rounded-full bg-lime-100 border border-lime-300 px-3 py-1 text-[11px] font-bold text-grey-300">
-            <Sparkles size={14} className="text-lime-500" />
-            <span>Prediksi AI Aktif</span>
-          </div>
-        )}
       </div>
+
+      <PanelRekomendasi
+        judulKegiatan={(formData.halamanAwal?.judulKegiatan || '').trim()}
+        rekomendasi={rekomendasi}
+        items={items}
+        labelNilai={LABEL_TAHAPAN}
+        onTerapkan={(fieldKey, nilai) =>
+          onTerapkanRekomendasi(fieldKey, nilai, LABEL_REKOMENDASI[fieldKey])
+        }
+      />
 
       <div className="rounded-2xl border border-grey-50 bg-white p-7 shadow-xs flex flex-col gap-6">
         {/* 7.1. Tahapan Pengolahan Data */}
