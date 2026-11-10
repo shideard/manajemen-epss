@@ -3,10 +3,8 @@ import { Link } from 'react-router-dom'
 import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../../lib/store'
 import { buktiKey, DOMAINS, includesText, INDIKATOR, levelLabel } from '../../lib/epss'
 import { Badge, Collapse, DomainPanel, Memuat, StatusBukti } from '../../components/ui'
-import { buttonClass } from '../../components/classes'
 import arrowLime from '../../assets/icons/arrow-down-s-line-lime.svg'
 import arrowDark from '../../assets/icons/arrow-down-s-line-dark.svg'
-import arrowLong from '../../assets/icons/arrow-long-lime.svg'
 
 // Panah ke bawah = tertutup, ke atas = terbuka (seperti di desain)
 function Toggle({ open, onClick, label, icon, className = '' }) {
@@ -25,29 +23,28 @@ const toggleSet = (set, id) => {
 }
 
 // Domain → indikator → kegiatan yang dipetakan beserta status buktinya.
-// onVerifikasi ada = tampilan verifikator (tombol Verifikasi Indikator + link ke detail verifikasi)
-function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bolehVerifikasi = false }) {
+// verifikator = link ke detail verifikasi. Level indikator naik sendiri saat ajuan level berikutnya diverifikasi (lihat levelIndikator)
+function DomainBukti({ query = '', filterIndikator = 'semua', verifikator = false }) {
   const { aktif } = usePeriode()
   const muat = [useSemuaKegiatan(aktif?.id), useBukti(), useSkor()]
   const [{ kegiatan }, { bukti }, { levels }] = muat
   const [domainTerbuka, setDomainTerbuka] = useState(() => new Set([DOMAINS[0].id]))
   const [indikatorTerbuka, setIndikatorTerbuka] = useState(() => new Set())
-  const verifikator = Boolean(onVerifikasi)
   const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
   // Pemetaan dari API; status per pasangan masih dari browser (belum ada record = draft)
   const buktiIndikator = (indikatorId) =>
     kegiatan
       .filter((k) => k.indikatorIds.includes(indikatorId))
       .map((k) => bukti[buktiKey(k.id, indikatorId)] ?? { kegiatanId: k.id, indikatorId, status: 'draft' })
+  const levelTarget = (kegiatanId, indikatorId) => kegiatan.find((k) => k.id === kegiatanId)?.levelTarget[indikatorId] ?? 1
   const jumlahBerkas = (indikatorId) => kegiatan.filter((k) => k.indikatorIds.includes(indikatorId)).reduce((n, k) => n + k.jumlahBerkas, 0)
 
   function cocokFilter(i) {
     if (filterIndikator === 'semua') return true
-    const daftar = buktiIndikator(i.id)
-    const semuaValid = daftar.length > 0 && daftar.every((b) => b.status === 'terverifikasi')
-    if (filterIndikator === 'terverifikasi') return semuaValid && Boolean(levels[i.id])
-    if (filterIndikator === 'siap') return semuaValid && !levels[i.id]
-    return !semuaValid
+    if (filterIndikator === 'terverifikasi') return Boolean(levels[i.id])
+    const menunggu = buktiIndikator(i.id).some((b) => b.status === 'menunggu')
+    if (filterIndikator === 'menunggu') return menunggu
+    return !levels[i.id] && !menunggu
   }
   const adaHasil = INDIKATOR.some(cocokFilter)
 
@@ -86,7 +83,6 @@ function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bole
                     const daftar = buktiIndikator(i.id)
                     const valid = daftar.filter((b) => b.status === 'terverifikasi')
                     const semuaValid = daftar.length > 0 && valid.length === daftar.length
-                    const levelBaru = semuaValid ? Math.min(...valid.map((b) => b.level)) : null
                     const terbuka = indikatorTerbuka.has(i.id)
                     return (
                       <li key={i.id} className="border-b border-grey-75/50 py-4 last:border-0">
@@ -122,23 +118,14 @@ function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bole
                                     to={verifikator ? `/verifikasi-bukti-dukung/${b.kegiatanId}/${i.id}` : `/repositori-bukti-dukung/${b.kegiatanId}`}
                                     className={`flex items-center justify-between gap-4 px-7 py-2 text-small font-medium text-grey-200 hover:underline transform transition duration-300 ease-out-quint ${b.status === 'terverifikasi' ? 'bg-green-50 text-green-500' : 'bg-grey2-75 text-grey-500 hover:bg-grey2-100'}`}
                                   >
-                                    {namaKegiatan[b.kegiatanId]}
+                                    <span>
+                                      {namaKegiatan[b.kegiatanId]} <span className="font-light">(Level {levelTarget(b.kegiatanId, i.id)})</span>
+                                    </span>
                                     <StatusBukti status={b.status} label={verifikator && b.status === 'draft' ? 'Belum diajukan' : undefined} className="text-small" />
                                   </Link>
                                 </li>
                               ))}
                             </ul>
-                            {verifikator && (
-                              <button
-                                type="button"
-                                disabled={!bolehVerifikasi || !semuaValid || levels[i.id] === levelBaru}
-                                onClick={() => onVerifikasi(i, levelBaru)}
-                                className={`mx-4 w-[239px] justify-between! ${buttonClass()}`}
-                              >
-                                {levels[i.id] && levels[i.id] === levelBaru ? 'Indikator Terverifikasi' : 'Verifikasi Indikator'}
-                                <img src={arrowLong} alt="" width={29} height={15} />
-                              </button>
-                            )}
                           </div>
                         </Collapse>
                       </li>

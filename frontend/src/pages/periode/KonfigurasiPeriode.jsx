@@ -203,7 +203,7 @@ function KonfigurasiPeriode() {
               {riwayat.length === 0 && (
                 <tr>
                   <td colSpan={4} className="py-10 text-grey-200">
-                    Belum ada snapshot. Snapshot terekam saat verifikator memverifikasi indikator.
+                    Belum ada snapshot. Snapshot terekam setiap ajuan bukti dukung diverifikasi terpenuhi.
                   </td>
                 </tr>
               )}

@@ -7,8 +7,8 @@ import { bolehUbah, ROLES } from '../../config/menu'
 import { buttonClass } from '../../components/classes'
 import editIcon from '../../assets/rencana/edit-2-fill.svg'
 import { usePeriode, useRencanaKegiatan } from '../../lib/store'
-import { formatTanggal, statusOf } from '../../lib/epss'
-import { Memuat, PageHeader } from '../../components/ui'
+import { formatTanggal, LEVELS, statusOf } from '../../lib/epss'
+import { Badge, Memuat, PageHeader } from '../../components/ui'
 
 function RencanaKegiatanDetailVerifikator() {
   const { kegiatanId } = useParams()
@@ -100,8 +100,9 @@ function RencanaKegiatanDetailVerifikator() {
           {indikator.length ? (
             <ul className="flex flex-col gap-2">
               {indikator.map((item) => (
-                <li key={item.id} className="rounded-md bg-grey2-75 px-5 py-3 text-small">
+                <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-grey2-75 px-5 py-3 text-small">
                   Indikator {item.kode}: {item.nama}
+                  <Badge tone="blue">Target Level {item.level ?? 1} ({LEVELS[(item.level ?? 1) - 1]})</Badge>
                 </li>
               ))}
             </ul>

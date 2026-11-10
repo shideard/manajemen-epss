@@ -1,40 +1,27 @@
 import { useState } from 'react'
-import { Link, useOutletContext } from 'react-router-dom'
-import { bolehUbah } from '../../config/menu'
+import { Link } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
-import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../../lib/store'
+import { useBukti, usePeriode, useSemuaKegiatan } from '../../lib/store'
 import { includesText, indikatorById, paginate } from '../../lib/epss'
 import { Dropdown, Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
-import { useConfirm } from '../../components/useConfirm'
 
 const PAGE_SIZE = 5
 
 function  VerifikasiBukti() {
-  const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const muat = [useSemuaKegiatan(aktif?.id), useBukti(), useSkor()]
-  const [{ kegiatan }, { bukti }, { tetapkanLevel }] = muat
+  const muat = [useSemuaKegiatan(aktif?.id), useBukti()]
+  const [{ kegiatan }, { bukti }] = muat
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [filterIndikator, setFilterIndikator] = useState('semua')
-  const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
+  const levelTarget = Object.fromEntries(kegiatan.map((k) => [k.id, k.levelTarget]))
   const ajuan = Object.values(bukti)
     .filter((b) => b.status === 'menunggu' && namaKegiatan[b.kegiatanId])
     .filter((b) => includesText([indikatorById[b.indikatorId].nama, namaKegiatan[b.kegiatanId], b.pengaju], query))
     .sort((a, b) => b.diajukan.localeCompare(a.diajukan))
   const { rows, page: currentPage, pageCount } = paginate(ajuan, page, PAGE_SIZE)
-
-  // Indikator valid jika semua kegiatan tertautnya valid; level indikator = level terendah dari kegiatan tsb
-  function verifikasiIndikator(indikator, level) {
-    konfirmasi({
-      title: 'Verifikasi Indikator',
-      message: `Tetapkan Indikator ${indikator.nomor} (${indikator.nama}) pada Level ${level}? Skor IPS dihitung ulang dan tercatat di riwayat snapshot.`,
-      confirmLabel: 'Verifikasi',
-      onConfirm: () => tetapkanLevel(aktif.id, indikator, level),
-    })
-  }
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -62,7 +49,7 @@ function  VerifikasiBukti() {
               >
                 <span className="flex flex-col gap-2">
                   <span className="font-semibold">
-                    Indikator {indikator.nomor}: {indikator.nama}
+                    Indikator {indikator.nomor}: {indikator.nama} · Level {levelTarget[b.kegiatanId]?.[b.indikatorId] ?? 1}
                   </span>
                   <span className="flex flex-wrap items-baseline gap-x-4 font-light text-grey-200">
                     <span>
@@ -92,21 +79,16 @@ function  VerifikasiBukti() {
           onChange={setFilterIndikator}
           options={[
             { value: 'semua', label: 'Semua indikator' },
-            { value: 'terverifikasi', label: 'Sudah diverifikasi' },
-            { value: 'siap', label: 'Siap diverifikasi' },
-            { value: 'belum-lengkap', label: 'Belum lengkap' },
+            { value: 'terverifikasi', label: 'Sudah punya level terverifikasi' },
+            { value: 'menunggu', label: 'Ada ajuan menunggu' },
+            { value: 'belum', label: 'Belum ada level terverifikasi' },
           ]}
           className="w-[260px]"
         />
       </PageHeader>
       <div className="flex flex-col gap-6">
-        <DomainBukti
-          filterIndikator={filterIndikator}
-          onVerifikasi={verifikasiIndikator}
-          bolehVerifikasi={bolehUbah(user, 'verifikasiBukti', aktif)}
-        />
+        <DomainBukti filterIndikator={filterIndikator} verifikator />
       </div>
-      {dialogKonfirmasi}
     </div>
   )
 }

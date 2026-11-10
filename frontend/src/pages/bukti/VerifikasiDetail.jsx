@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useBukti, useDetailKegiatan, useDokumenBukti, usePeriode } from '../../lib/store'
 import { bolehUbah } from '../../config/menu'
-import { buktiKey, indikatorById, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
+import { buktiKey, indikatorById, LEVELS, metaBerkas } from '../../lib/epss'
 import { ChecklistItem, Field, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
 import { buttonClass, fieldClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
@@ -23,7 +23,6 @@ function VerifikasiDetail() {
   const [{ kegiatan: k }, { bukti: semuaBukti, verifikasi }] = muat
   const [dipilih, setDipilih] = useState(0)
   const [pratinjau, setPratinjau] = useState({ id: null })
-  const [level, setLevel] = useState(null)
   const [catatan, setCatatan] = useState('')
   const [pedoman, setPedoman] = useState(false)
   const [error, setError] = useState('')
@@ -62,21 +61,22 @@ function VerifikasiDetail() {
 
   // Hanya ajuan berstatus "menunggu" yang bisa diputuskan, dan tidak saat periode dikunci
   const bolehPutuskan = bolehUbah(user, 'verifikasiBukti', aktif) && bukti.status === 'menunggu'
-  const semuaChecked = draft ?? bukti.checked ?? {}
-  const terpenuhi = levelTerpenuhi(indikator.levels, semuaChecked)
-  // Berjenjang: hanya boleh membuka level sampai satu di atas level terpenuhi
-  const levelAktif = level ?? Math.min(terpenuhi + 1, LEVELS.length)
-  const checked = semuaChecked[levelAktif] ?? []
+  // Hanya level yang ditargetkan verifikator untuk kegiatan ini yang diperiksa
+  const levelAktif = k.levelTarget[indikatorId] ?? 1
+  const syarat = indikator.levels[levelAktif - 1].syarat
+  const checked = syarat.map((_, i) => Boolean((draft ?? bukti.checked?.[levelAktif])?.[i]))
+  const lengkap = checked.every(Boolean)
 
   const simpan = async (perubahan) => {
-    await verifikasi(bukti, { ...perubahan, checked: semuaChecked })
-    navigate('/verifikasi-bukti-dukung')
+    try {
+      await verifikasi(bukti, { ...perubahan, checked: { [levelAktif]: checked } })
+      navigate('/verifikasi-bukti-dukung')
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
-  function centang(index, value) {
-    const baris = indikator.levels[levelAktif - 1].syarat.map((_, i) => (i === index ? value : Boolean(checked[i])))
-    setDraft({ ...semuaChecked, [levelAktif]: baris })
-  }
+  const centang = (index, value) => setDraft(checked.map((v, i) => (i === index ? value : v)))
 
   function kirimRevisi() {
     if (!catatan.trim()) return setError('Isi catatan perbaikan untuk operator terlebih dahulu.')
@@ -89,12 +89,12 @@ function VerifikasiDetail() {
   }
 
   function setujui() {
-    if (terpenuhi === 0) return setError('Belum ada level yang terpenuhi. Centang persyaratan level 1 terlebih dahulu.')
+    if (!lengkap) return setError(`Seluruh persyaratan Level ${levelAktif} harus terpenuhi untuk menyetujui. Jika belum, kirim revisi ke operator.`)
     konfirmasi({
-      title: 'Setujui & Tetapkan Level',
-      message: `Tetapkan "${k.nama}" untuk Indikator ${indikator.nomor} pada Level ${terpenuhi} (${LEVELS[terpenuhi - 1]})? Ajuan akan berstatus Terverifikasi.`,
+      title: 'Setujui Level',
+      message: `Nyatakan "${k.nama}" memenuhi Indikator ${indikator.nomor} Level ${levelAktif} (${LEVELS[levelAktif - 1]})? Ajuan akan berstatus Terverifikasi.`,
       confirmLabel: 'Setujui',
-      onConfirm: () => simpan({ keputusan: 'terverifikasi', level: terpenuhi }),
+      onConfirm: () => simpan({ keputusan: 'terverifikasi' }),
     })
   }
 
@@ -147,8 +147,7 @@ function VerifikasiDetail() {
           <section className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
               <h3 className="font-semibold">Checklist per Level</h3>
-              {/* Tombol level hanya membuka checklist; level yang ditetapkan selalu Level Terpenuhi */}
-              <p className="text-small text-grey-200">Pilih level untuk melihat syaratnya. Level yang ditetapkan saat disetujui adalah Level Terpenuhi.</p>
+              <p className="text-small text-grey-200">Kegiatan ini diajukan untuk Level {levelAktif}. Level lain tidak dapat dipilih.</p>
             </div>
             <div className="grid grid-cols-5 gap-2">
               {LEVELS.map((nama, i) => {
@@ -158,8 +157,7 @@ function VerifikasiDetail() {
                   <button
                     key={n}
                     type="button"
-                    onClick={() => setLevel(n)}
-                    disabled={n > terpenuhi + 1}
+                    disabled={!aktif}
                     aria-pressed={aktif}
                     className={`flex h-[65px] flex-col items-center justify-center gap-1 rounded-md disabled:opacity-40 ${
                       aktif ? 'border-2 border-grey-500 bg-lime-300 text-grey-500' : 'bg-grey-500 text-lime-300'
@@ -167,7 +165,7 @@ function VerifikasiDetail() {
                   >
                     <span className="font-semibold">{n}</span>
                     <span className="text-caption">{nama}</span>
-                    {n <= terpenuhi && <span className="text-caption font-semibold">Terpenuhi</span>}
+                    {aktif && <span className="text-caption font-semibold">Diajukan</span>}
                   </button>
                 )
               })}
@@ -177,17 +175,19 @@ function VerifikasiDetail() {
           <section className="flex flex-col gap-2.5">
             <div className="flex flex-col gap-1">
               <h3 className="font-semibold">Checklist Persyaratan Bukti Dukung:</h3>
-              <p className="text-small text-grey-200">Anda bisa lanjut ke level selanjutnya jika seluruh persyaratan pada level {levelAktif} sudah terpenuhi.</p>
+              <p className="text-small text-grey-200">Setujui jika seluruh persyaratan Level {levelAktif} terpenuhi; jika belum, kirim revisi ke operator.</p>
             </div>
-            {indikator.levels[levelAktif - 1].syarat.map((syarat, i) => (
-              <ChecklistItem key={syarat} checked={Boolean(checked[i])} onChange={(value) => centang(i, value)} disabled={!bolehPutuskan}>
-                {syarat}
+            {syarat.map((item, i) => (
+              <ChecklistItem key={item} checked={checked[i]} onChange={(value) => centang(i, value)} disabled={!bolehPutuskan}>
+                {item}
               </ChecklistItem>
             ))}
           </section>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="font-semibold">Level Terpenuhi : {terpenuhi}</p>
+            <p className="font-semibold">
+              Persyaratan Level {levelAktif} : {checked.filter(Boolean).length} dari {checked.length} terpenuhi
+            </p>
             <button type="button" onClick={() => setPedoman(true)} className={buttonClass('secondary', 'sm')}>
               <img src={bookIcon} alt="" width={19} height={19} />
               Lihat Pedoman Indikator
@@ -221,7 +221,7 @@ function VerifikasiDetail() {
                 Kirim Revisi ke Operator
               </button>
               <button type="button" onClick={setujui} className={buttonClass()}>
-                Setujui &amp; Tetapkan Level {terpenuhi || ''}
+                Setujui Level {levelAktif}
               </button>
             </div>
           )}

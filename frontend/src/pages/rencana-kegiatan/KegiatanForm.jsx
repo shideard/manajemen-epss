@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { bobotDomain, DOMAINS, INDIKATOR } from '../../lib/epss'
+import { bobotDomain, DOMAINS, INDIKATOR, LEVELS } from '../../lib/epss'
 import { DialogHeader, Field, FormError, Input, ModalActions, Select } from '../../components/ui'
 import { buttonClass, fieldClass } from '../../components/classes'
 import bookIcon from '../../assets/icons/book-mark-fill.svg'
@@ -42,7 +42,12 @@ function DaftarIndikator({ onClose }) {
 function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikatorPilihan = [], onSave, onClose }) {
   const dialogRef = useRef(null)
   const [error, setError] = useState('')
-  const [dipetakan, setDipetakan] = useState(() => indikator.map((item) => item.id ?? item.indikatorId))
+  // [{ id, level }]: indikator tertaut beserta level yang ditargetkan dipenuhi kegiatan ini
+  const [dipetakan, setDipetakan] = useState(() => indikator.map((item) => ({ id: item.id, level: item.level ?? 1 })))
+  const namaIndikator = (id) => {
+    const i = indikatorPilihan.find((x) => x.id === id) ?? indikator.find((x) => x.id === id)
+    return i ? `Indikator ${i.kode}: ${i.nama}` : id
+  }
   const [daftarIndikator, setDaftarIndikator] = useState(false)
 
   useEffect(() => {
@@ -58,7 +63,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
     }
     // Tahun pelaksanaan selalu mengikuti tanggal mulai, jadi tidak bisa berbeda
     try {
-      await onSave({ ...data, indikator_ids: dipetakan })
+      await onSave({ ...data, indikator_ids: dipetakan.map((d) => d.id), levels: Object.fromEntries(dipetakan.map((d) => [d.id, d.level])) })
     } catch (err) {
       setError(err.message || 'Gagal menyimpan rencana kegiatan.')
     }
@@ -127,21 +132,36 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                 Lihat Pedoman Indikator
               </button>
             </div>
-            <Select id="pilih-indikator" value="" onChange={(e) => setDipetakan((ids) => [...ids, e.target.value])}>
+            <Select id="pilih-indikator" value="" onChange={(e) => setDipetakan((list) => [...list, { id: e.target.value, level: 1 }])}>
               <option value="">Pilih indikator yang akan ditambahkan...</option>
-              {indikatorPilihan.filter((i) => !dipetakan.includes(i.id)).map((i) => (
+              {indikatorPilihan.filter((i) => !dipetakan.some((d) => d.id === i.id)).map((i) => (
                 <option key={i.id} value={i.id}>
                   Indikator {i.kode}: {i.nama}
                 </option>
               ))}
             </Select>
-            {dipetakan.map((id) => (
-              <p key={id} className="flex items-center justify-between gap-3 rounded-sm bg-lime-300 px-2.5 py-1.5 text-small">
-                Indikator {indikatorPilihan.find((i) => i.id === id)?.kode ?? indikator.find((i) => i.id === id)?.kode}: {indikatorPilihan.find((i) => i.id === id)?.nama ?? indikator.find((i) => i.id === id)?.nama}
-                <button type="button" onClick={() => setDipetakan((ids) => ids.filter((x) => x !== id))} aria-label={`Lepas indikator ${indikatorPilihan.find((i) => i.id === id)?.kode ?? id}`}>
+            {dipetakan.length > 0 && <p className="text-small text-grey-200">Tentukan level indikator yang dipenuhi oleh kegiatan ini. Operator hanya dapat mengisi checklist level tersebut.</p>}
+            {dipetakan.map(({ id, level }) => (
+              <div key={id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-lime-300 px-2.5 py-1.5 text-small">
+                <span className="min-w-0 flex-1">{namaIndikator(id)}</span>
+                <label className="flex items-center gap-2">
+                  <span className="sr-only">Level untuk {namaIndikator(id)}</span>
+                  <select
+                    value={level}
+                    onChange={(e) => setDipetakan((list) => list.map((d) => (d.id === id ? { ...d, level: Number(e.target.value) } : d)))}
+                    className="rounded-sm border border-grey-500 bg-white px-2 py-1"
+                  >
+                    {LEVELS.map((nama, i) => (
+                      <option key={nama} value={i + 1}>
+                        Level {i + 1} ({nama})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button type="button" onClick={() => setDipetakan((list) => list.filter((d) => d.id !== id))} aria-label={`Lepas ${namaIndikator(id)}`}>
                   <img src={removeIcon} alt="" width={15} height={15} className="grayscale" />
                 </button>
-              </p>
+              </div>
             ))}
           </div>
 

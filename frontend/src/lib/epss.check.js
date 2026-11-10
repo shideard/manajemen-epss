@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, levelIndikator, riwayatIps, INDIKATOR, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -10,19 +10,21 @@ assert.equal(hitungIps(dua, {}), 1) // belum diverifikasi = level 1
 assert.equal(hitungIps(dua, { a: 5, b: 3 }), 3.5)
 assert.equal(hitungIps([], {}), 0)
 
+// Level indikator = level berurutan dari 1 yang terverifikasi; celah di level 3 menahan di level 2
+const ajuan = (indikatorId, level, status = 'terverifikasi', diverifikasi = `2026-01-0${level}`) => ({ id: `${indikatorId}${level}`, indikatorId, level, status, diverifikasi })
+assert.deepEqual(levelIndikator([ajuan('a', 1), ajuan('a', 2), ajuan('a', 4)]), { a: 2 })
+assert.deepEqual(levelIndikator([ajuan('a', 1), ajuan('a', 2), ajuan('a', 4), ajuan('a', 3)]), { a: 4 })
+assert.deepEqual(levelIndikator([ajuan('a', 2), ajuan('b', 1), ajuan('b', 2, 'menunggu')]), { b: 1 })
+assert.deepEqual(levelIndikator([]), {})
+const riwayat = riwayatIps([ajuan('i1', 2), ajuan('i1', 1), ajuan('i1', 3, 'menunggu')])
+assert.deepEqual(riwayat.map((r) => r.perubahan), ['Indikator 1 Level 2 terverifikasi', 'Indikator 1 Level 1 terverifikasi'])
+assert.ok(riwayat[0].nilai > riwayat[1].nilai) // level 2 baru terhitung setelah level 1
+
 assert.equal(predikat(1.79), 'Kurang')
 assert.equal(predikat(2.42), 'Cukup')
 assert.equal(predikat(2.74), 'Baik')
 assert.equal(predikat(3.5), 'Sangat Baik')
 assert.equal(predikat(4.2), 'Memuaskan')
-
-// Berjenjang: level 3 lengkap tapi level 2 belum → tetap level 1
-const { levels } = INDIKATOR[0]
-const centang = (level) => levels[level - 1].syarat.map(() => true)
-assert.equal(levelTerpenuhi(levels, {}), 0)
-assert.equal(levelTerpenuhi(levels, { 1: centang(1), 3: centang(3) }), 1)
-assert.equal(levelTerpenuhi(levels, { 1: centang(1), 2: centang(2) }), 2)
-assert.equal(levelTerpenuhi(levels, { 1: centang(1), 2: [true, false] }), 1)
 
 const k = { id: 'k1', mulai: '2026-09-10', selesai: '2026-09-20' }
 assert.equal(statusKegiatan(k, [], 0, '2026-09-01'), 'Belum dilaksanakan')

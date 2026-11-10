@@ -5,11 +5,12 @@ import {
   contohKegiatan,
   EMPTY_LIST,
   EMPTY_OBJECT,
-  hitungIps,
   INDIKATOR,
   indikatorById,
   KEYS,
+  levelIndikator,
   notifikasi,
+  riwayatIps,
   SEED_PENGINGAT,
   SEED_PERIODE,
   sinkronPemetaan,
@@ -97,6 +98,9 @@ export function useKegiatan() {
   }
 }
 
+// Indikator API → id instrumen lokal lewat kode = nomor indikator
+const indikatorLokalByKode = Object.fromEntries(INDIKATOR.map((i) => [String(i.nomor), i.id]))
+
 // Data rencana kegiatan pada periode terpilih dari API Laravel.
 const mapRencanaKegiatan = (item) => ({
   ...item,
@@ -110,7 +114,9 @@ const mapRencanaKegiatan = (item) => ({
   warna: [...String(item.id)].reduce((n, c) => n + c.charCodeAt(0), 0) % WARNA.length,
   indikator: item.indikator ?? [],
   // Indikator API → id instrumen lokal (kode = nomor indikator); checklist & status bukti masih memakai id lokal
-  indikatorIds: (item.indikator ?? []).map((i) => INDIKATOR.find((l) => String(l.nomor) === String(i.kode))?.id).filter(Boolean),
+  indikatorIds: (item.indikator ?? []).map((i) => indikatorLokalByKode[String(i.kode)]).filter(Boolean),
+  // Level yang ditargetkan verifikator per indikator (id lokal → level)
+  levelTarget: Object.fromEntries((item.indikator ?? []).filter((i) => indikatorLokalByKode[String(i.kode)]).map((i) => [indikatorLokalByKode[String(i.kode)], i.level ?? 1])),
 })
 
 async function apiAll(path) {
@@ -239,7 +245,7 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
       const saved = response.data
       await api(`/api/rencana-kegiatan/${saved.id}/indikator`, {
         method: 'PUT',
-        body: { indikator_ids: data.indikator_ids ?? [] },
+        body: { indikator_ids: data.indikator_ids ?? [], levels: data.levels ?? {} },
       })
       await muat()
       return await detail(saved.id)
@@ -249,7 +255,6 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
 
 // Ajuan bukti dari API → bentuk yang dipakai halaman. Indikator API dicocokkan ke id lokal lewat kode = nomor
 const STATUS_AJUAN = { DRAFT: 'draft', MENUNGGU: 'menunggu', PERBAIKAN: 'perbaikan', TERVERIFIKASI: 'terverifikasi' }
-const indikatorLokalByKode = Object.fromEntries(INDIKATOR.map((i) => [String(i.nomor), i.id]))
 const mapAjuan = (a) => ({
   id: a.id,
   kegiatanId: a.kegiatan_id,
@@ -307,14 +312,14 @@ export function useBukti() {
         throw error
       }
     },
-    // Verifikator: keputusan 'terverifikasi' (dengan level) atau 'perbaikan' (dengan catatan)
-    async verifikasi(ajuan, { keputusan, checked, level, catatan }) {
+    // Verifikator: keputusan 'terverifikasi' (level = level target kegiatan, ditetapkan backend) atau 'perbaikan' (dengan catatan)
+    async verifikasi(ajuan, { keputusan, checked, catatan }) {
       const { data: a } = await api(`/api/ajuan-bukti/${ajuan.id}/verifikasi`, {
         method: 'PATCH',
         body: {
           keputusan: keputusan === 'terverifikasi' ? 'TERVERIFIKASI' : 'PERBAIKAN',
           checklist: checked,
-          ...(keputusan === 'terverifikasi' ? { level } : { catatan }),
+          ...(keputusan === 'perbaikan' && { catatan }),
         },
       })
       return terima(a)
@@ -457,37 +462,18 @@ export function useDokumenBukti(kegiatanId) {
   }
 }
 
-// Level terverifikasi per indikator + riwayat snapshot skor IPS tiap kali level ditetapkan
-// ponytail: level belum dipisah per periode; tambahkan periodeId saat pindah ke API
+// Level terverifikasi per indikator (berjenjang dari ajuan terverifikasi) + riwayat skor IPS, untuk periode aktif
 export function useSkor() {
-  const [levels, setLevels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
-  const [snapshot, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
-  return {
-    levels,
-    snapshot,
-    ...SIAP,
-    tetapkanLevel(periodeId, indikator, level) {
-      const baru = { ...levels, [indikator.id]: level }
-      setLevels(baru)
-      setSnapshot((list) => [
-        {
-          id: crypto.randomUUID(),
-          periodeId,
-          waktu: new Date().toISOString(),
-          nilai: hitungIps(INDIKATOR, baru),
-          perubahan: `Verifikasi Indikator ${indikator.nomor} (Level ${level})`,
-        },
-        ...list,
-      ])
-    },
-  }
+  const { aktif } = usePeriode()
+  const { bukti, loading, error } = useBukti()
+  const ajuan = Object.values(bukti)
+  return { levels: levelIndikator(ajuan), snapshot: riwayatIps(ajuan).map((s) => ({ ...s, periodeId: aktif?.id })), loading, error }
 }
 
 // Daftar periode + periode yang sedang dipilih user (default: periode pertama yang belum dikunci)
 export function usePeriode() {
   const [periode, setPeriode] = useStore(KEYS.periode, SEED_PERIODE)
   const [aktifId, setAktifId] = useStore(KEYS.periodeAktif, null)
-  const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
   const aktif = periode.find((p) => p.id === aktifId && p.status === 'AKTIF')
     ?? periode.find((p) => p.status === 'AKTIF')
     ?? null
@@ -603,7 +589,6 @@ export function usePeriode() {
       })
 
       setPeriode((list) => list.filter((p) => p.id !== id))
-      setSnapshot((list) => list.filter((s) => s.periodeId !== id))
     },
 
     aktifkan: async (id) => {

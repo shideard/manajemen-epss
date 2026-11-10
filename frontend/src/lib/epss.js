@@ -28,8 +28,6 @@ export const KEYS = {
   periodeAktif: 'epss.periode-aktif',
   bukti: 'epss.bukti', // { 'kegiatanId:indikatorId': { checked, status, level, catatan } }
   berkas: 'epss.berkas', // { kegiatanId: [{ id, nama, ukuran, tanggal, oleh }] }
-  levelIndikator: 'epss.level-indikator', // { indikatorId: level terverifikasi }
-  snapshot: 'epss.snapshot',
   notifDibaca: 'epss.notif-dibaca',
   pengingat: 'epss.pengingat',
   users: 'epss.akun', // akun dari POST /api/users; key baru supaya akun lama yang hanya ada di browser tidak ikut tampil
@@ -265,6 +263,36 @@ export function hitungIps(indikator, levels) {
   return bobot ? total / bobot : 0
 }
 
+// Level indikator dari ajuan terverifikasi: tiap ajuan memenuhi satu level (level target kegiatannya).
+// Berjenjang dari level 1 tanpa celah: level 1, 2, dan 4 terpenuhi → level 2; setelah level 3 terpenuhi → level 4.
+// Indikator tanpa level 1 tidak masuk hasil (hitungIps tetap menghitungnya level 1)
+export function levelIndikator(ajuan) {
+  const terpenuhi = {}
+  for (const b of ajuan) {
+    if (b.status === 'terverifikasi' && b.level) (terpenuhi[b.indikatorId] ??= new Set()).add(b.level)
+  }
+  const hasil = {}
+  for (const [id, set] of Object.entries(terpenuhi)) {
+    let level = 0
+    while (set.has(level + 1)) level++
+    if (level > 0) hasil[id] = level
+  }
+  return hasil
+}
+
+// Riwayat skor IPS: satu titik tiap ajuan diverifikasi terpenuhi, terbaru dulu
+export function riwayatIps(ajuan) {
+  const terverifikasi = ajuan.filter((b) => b.status === 'terverifikasi' && b.diverifikasi).sort((a, b) => a.diverifikasi.localeCompare(b.diverifikasi))
+  return terverifikasi
+    .map((b, n) => ({
+      id: b.id,
+      waktu: b.diverifikasi,
+      nilai: hitungIps(INDIKATOR, levelIndikator(terverifikasi.slice(0, n + 1))),
+      perubahan: `Indikator ${indikatorById[b.indikatorId]?.nomor} Level ${b.level} terverifikasi`,
+    }))
+    .reverse()
+}
+
 // Predikat IPS sesuai Peraturan BPS No 3/2022
 // Batas bawah tiap predikat, dari yang tertinggi (juga dipakai skala IPS di dashboard)
 export const PREDIKAT_BATAS = [
@@ -276,13 +304,6 @@ export const PREDIKAT_BATAS = [
 ]
 
 export const predikat = (ips) => PREDIKAT_BATAS.find(([batas]) => ips >= batas)?.[1] ?? 'Kurang'
-
-// Verifikasi berjenjang: level terpenuhi = jumlah level berurutan dari level 1 yang semua syaratnya dicentang
-export function levelTerpenuhi(levels, checked = {}) {
-  let level = 0
-  while (level < levels.length && levels[level].syarat.every((_, i) => checked[level + 1]?.[i])) level++
-  return level
-}
 
 export const buktiKey = (kegiatanId, indikatorId) => `${kegiatanId}:${indikatorId}`
 

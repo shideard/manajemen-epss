@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useBukti, useDetailKegiatan, useDokumenBukti, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
-import { buktiKey, formatTanggal, INDIKATOR, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
+import { buktiKey, formatTanggal, INDIKATOR, LEVELS, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { ChecklistItem, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -16,34 +16,32 @@ import checkBadge from '../../assets/icons/check-badge.svg'
 import eyeIcon from '../../assets/icons/eye-line.svg'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import mindMap from '../../assets/icons/mind-map.svg'
-import levelArrow from '../../assets/icons/arrow-drop-left-level.svg'
 
-// Checklist satu indikator; tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
-function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, readOnly, onSave }) {
+// Checklist satu indikator, hanya untuk level yang ditargetkan verifikator pada kegiatan ini.
+// Tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
+function IndikatorBukti({ bukti, indikator, level, levelTerverifikasi, jumlahBerkas, readOnly, onSave }) {
   const checked = bukti.checked ?? {}
-  const terpenuhi = levelTerpenuhi(indikator.levels, checked)
-  const maksLevel = Math.min(terpenuhi + 1, LEVELS.length)
-  const [level, setLevel] = useState(maksLevel)
   const [pedoman, setPedoman] = useState(false)
   const [error, setError] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
   const terkunci = readOnly || bukti.status === 'menunggu' || bukti.status === 'terverifikasi'
-  const target = Math.min((levelTerverifikasi ?? 0) + 1, LEVELS.length)
   const syarat = indikator.levels[level - 1].syarat
+  const baris = syarat.map((_, i) => Boolean(checked[level]?.[i]))
+  const lengkap = baris.every(Boolean)
 
   function centang(index, value) {
     setError('')
-    onSave({ checked: { ...checked, [level]: syarat.map((_, i) => (i === index ? value : Boolean(checked[level]?.[i]))) } }).catch((err) => setError(err.message))
+    onSave({ checked: { [level]: baris.map((v, i) => (i === index ? value : v)) } }).catch((err) => setError(err.message))
   }
 
   function ajukan() {
     if (jumlahBerkas === 0) return setError('Unggah minimal satu berkas bukti dukung sebelum mengajukan verifikasi.')
-    if (terpenuhi === 0) return setError('Lengkapi persyaratan level 1 sebelum mengajukan verifikasi.')
+    if (!lengkap) return setError(`Centang seluruh persyaratan Level ${level} sebelum mengajukan verifikasi.`)
     konfirmasi({
       title: 'Ajukan Verifikasi',
-      message: `Ajukan bukti dukung Indikator ${indikator.nomor} (Level Terpenuhi: ${terpenuhi}) ke verifikator? Checklist tidak bisa diubah selama menunggu verifikasi.`,
+      message: `Ajukan bukti dukung Indikator ${indikator.nomor} untuk Level ${level} (${LEVELS[level - 1]}) ke verifikator? Checklist tidak bisa diubah selama menunggu verifikasi.`,
       confirmLabel: 'Ajukan',
-      onConfirm: () => onSave({ checked, ajukan: true }),
+      onConfirm: () => onSave({ checked: { [level]: baris }, ajukan: true }).catch((err) => setError(err.message)),
     })
   }
 
@@ -59,10 +57,11 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
           </p>
         </div>
         <div className="flex flex-col gap-2 text-right">
-          <p className="font-semibold">Target Kematangan :</p>
+          <p className="font-semibold">Level yang Dipenuhi Kegiatan :</p>
           <p className="font-light">
-            Level {target} ({LEVELS[target - 1]})
+            Level {level} ({LEVELS[level - 1]})
           </p>
+          <p className="text-small font-light">Level indikator saat ini: {levelTerverifikasi ? `Level ${levelTerverifikasi}` : 'belum terverifikasi'}</p>
         </div>
       </header>
 
@@ -75,23 +74,15 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
           <Notice tone="red" className="text-small">Catatan verifikator: {bukti.catatan}</Notice>
         )}
         {syarat.map((item, i) => (
-          <ChecklistItem key={item} checked={Boolean(checked[level]?.[i])} onChange={(value) => centang(i, value)} disabled={terkunci}>
+          <ChecklistItem key={item} checked={baris[i]} onChange={(value) => centang(i, value)} disabled={terkunci}>
             {item}
           </ChecklistItem>
         ))}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="w-[160px] font-semibold">Level Terpenuhi : {terpenuhi}</p>
-          {/* Berjenjang: tidak bisa lompat melewati level yang belum terpenuhi */}
-          <div className="flex h-[41px] w-[209px] items-center justify-between overflow-hidden rounded-lg bg-grey-300">
-            <button type="button" onClick={() => setLevel(level - 1)} disabled={level === 1} aria-label="Level sebelumnya" className="disabled:opacity-40">
-              <img src={levelArrow} alt="" width={46} height={45} />
-            </button>
-            <span className="font-semibold text-lime-300">Level {level}</span>
-            <button type="button" onClick={() => setLevel(level + 1)} disabled={level >= maksLevel} aria-label="Level berikutnya" className="disabled:opacity-40">
-              <img src={levelArrow} alt="" width={46} height={45} className="-scale-x-100" />
-            </button>
-          </div>
+          <p className="font-semibold">
+            Persyaratan Level {level} : {baris.filter(Boolean).length} dari {baris.length} terpenuhi
+          </p>
           <button
                     type="button"
                     onClick={() => setPedoman(true)}
@@ -330,6 +321,7 @@ function RepositoriDetail() {
           key={`${b.indikatorId}:${b.status}`}
           bukti={b}
           indikator={INDIKATOR.find((i) => i.id === b.indikatorId)}
+          level={k.levelTarget[b.indikatorId] ?? 1}
           levelTerverifikasi={levels[b.indikatorId]}
           jumlahBerkas={files.length}
           readOnly={!bolehEdit}
