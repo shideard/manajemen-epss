@@ -571,22 +571,25 @@ export function useVersiInstrumen() {
   return { daftar, ...state }
 }
 
-// Akun dibuat & diaktifkan/dinonaktifkan lewat API; error validasi (error.errors) dilempar ke pemanggil.
-// ponytail: backend belum punya GET /api/users, jadi daftar = akun yang dibuat dari browser ini (disimpan lokal); ambil dari API saat endpoint-nya ada
+// Akun dari API: daftar, buat, aktifkan/nonaktifkan; error validasi (error.errors) dilempar ke pemanggil
+const ambilUsers = () => api('/api/users').then((res) => res.data ?? [])
 export function useUsers() {
-  const [users, setUsers] = useStore(KEYS.users, EMPTY_LIST)
+  const { data, ...state } = useMuat('users', ambilUsers)
+  // Perubahan dari halaman ini ditimpakan di atas hasil GET, tanpa memuat ulang
+  const [ubahan, setUbahan] = useState({ baru: [], status: {} })
+  const users = [...(data ?? EMPTY_LIST), ...ubahan.baru].map((u) => (u.id in ubahan.status ? { ...u, status_aktif: ubahan.status[u.id] } : u))
   return {
     users,
-    ...SIAP,
+    ...state,
     // data = { name, username, email, password, password_confirmation, role }
     async tambah(data) {
       const { data: akun } = await api('/api/users', { method: 'POST', body: data })
-      setUsers((list) => [...list, akun])
+      setUbahan((u) => ({ ...u, baru: [...u.baru, akun] }))
     },
     // Akun nonaktif tidak bisa login
     async setStatus(id, status_aktif) {
       await api(`/api/users/${id}/status`, { method: 'PATCH', body: { status_aktif } })
-      setUsers((list) => list.map((u) => (u.id === id ? { ...u, status_aktif } : u)))
+      setUbahan((u) => ({ ...u, status: { ...u.status, [id]: status_aktif } }))
     },
   }
 }

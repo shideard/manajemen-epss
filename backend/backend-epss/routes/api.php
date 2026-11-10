@@ -44,6 +44,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
             'update',
         ])->name('users.status.update');
 
+        Route::get('/users', [UserController::class, 'index'])
+        ->name('users.index');
+
         Route::post('/users', [UserController::class, 'store'])
         ->name('users.save');
 

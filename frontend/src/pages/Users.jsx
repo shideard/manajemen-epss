@@ -125,7 +125,7 @@ function Users() {
       <section className="flex flex-col gap-3 rounded-lg bg-grey-500 px-2 pt-6 pb-2">
         <div className="flex flex-col gap-1 px-3">
           <h2 className="text-h3 text-lime-300">Daftar akun</h2>
-          <p className="text-small text-white">Menampilkan akun yang dibuat dari browser ini.</p>
+          <p className="text-small text-white">Semua akun terdaftar. Status hanya dapat diubah untuk operator dan verifikator.</p>
         </div>
         <div className="overflow-x-auto rounded-md bg-white px-2 py-5">
           <table className="w-full min-w-[720px] text-center text-body text-grey-500">
@@ -153,7 +153,7 @@ function Users() {
                   <td className="py-2.5">{u.username}</td>
                   <td className="py-2.5">{u.email ?? '-'}</td>
                   <td className="py-2.5">
-                    <Badge tone={TONE[u.role]} className="w-full font-normal">
+                    <Badge tone={TONE[u.role] ?? 'blue'} className="w-full font-normal">
                       {ROLE_LABELS[u.role]}
                     </Badge>
                   </td>
@@ -163,9 +163,11 @@ function Users() {
                     </Badge>
                   </td>
                   <td className="py-2.5">
-                    <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
-                      {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
-                    </button>
+                    {PERAN.includes(u.role) && (
+                      <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
+                        {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
