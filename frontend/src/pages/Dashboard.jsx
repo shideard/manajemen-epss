@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
 import { ROLES } from '../config/menu'
-import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusOf, toISODate } from '../lib/epss'
+import { agendaTerdekat, formatTanggal, hitungIps, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusOf, toISODate } from '../lib/epss'
 import { ArrowLink, Badge, Collapse, CountUp, Dropdown, Memuat, PageHeader } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
@@ -71,8 +71,9 @@ function Dashboard() {
   const { user } = useOutletContext()
   const verifikator = user.role === ROLES.VERIFIKATOR
   const { periode, aktif } = usePeriode()
-  const muat = [useSkor(), useBukti(), useSemuaKegiatan(aktif?.id)]
-  const [{ levels }, { bukti }, { kegiatan }] = muat
+  const muat = [useSkor(), useBukti(), useSemuaKegiatan(aktif?.id), useInstrumen(aktif?.id)]
+  const [{ levels }, { bukti }, { kegiatan }, { instrumen }] = muat
+  const { domains: DOMAINS, indikator: INDIKATOR } = instrumen
   const [simulasi, setSimulasi] = useState([{ indikatorId: '', level: 1 }])
   const [infoSimulasi, setInfoSimulasi] = useState(false)
   const today = toISODate(new Date())

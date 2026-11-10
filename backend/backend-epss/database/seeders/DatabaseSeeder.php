@@ -17,11 +17,18 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        $this->call(OpdSeeder::class);
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            OpdSeeder::class,
+            // Butuh indikator di database; tidak berbuat apa-apa jika instrumen belum diisi
+            KriteriaLevelBawaanSeeder::class,
         ]);
+
+        // Factory butuh paket dev (Faker), jadi akun uji hanya untuk environment local
+        if (app()->environment('local')) {
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+        }
     }
 }

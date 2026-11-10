@@ -4,8 +4,8 @@ import {
   buktiKey,
   EMPTY_LIST,
   EMPTY_OBJECT,
-  INDIKATOR,
-  indikatorById,
+  bangunInstrumen,
+  INSTRUMEN_KOSONG,
   KEYS,
   levelIndikator,
   notifikasi,
@@ -67,8 +67,22 @@ function useStore(key, seed) {
 // ponytail: localStorage sinkron, jadi loading selalu false dan error selalu null; aksi akan mengembalikan Promise saat pindah ke API
 const SIAP = { loading: false, error: null }
 
-// Indikator API → id instrumen lokal lewat kode = nomor indikator
-const indikatorLokalByKode = Object.fromEntries(INDIKATOR.map((i) => [String(i.nomor), i.id]))
+// Instrumen (domain → aspek → indikator + kriteria level) versi periode; satu permintaan per periode untuk semua halaman
+const cacheInstrumen = new Map()
+const ambilInstrumen = (periodeId) => {
+  if (!cacheInstrumen.has(periodeId)) {
+    const janji = api(`/api/periode-evaluasi/${periodeId}/indikator`).then((res) => bangunInstrumen(res.data ?? []))
+    janji.catch(() => cacheInstrumen.delete(periodeId)) // gagal → boleh dicoba lagi
+    cacheInstrumen.set(periodeId, janji)
+  }
+  return cacheInstrumen.get(periodeId)
+}
+
+export function useInstrumen(periodeId) {
+  const ambil = useCallback(() => ambilInstrumen(periodeId), [periodeId])
+  const { data, ...state } = useMuat(periodeId, ambil)
+  return { instrumen: data ?? INSTRUMEN_KOSONG, ...state }
+}
 
 // Data rencana kegiatan pada periode terpilih dari API Laravel.
 const mapRencanaKegiatan = (item) => ({
@@ -82,10 +96,9 @@ const mapRencanaKegiatan = (item) => ({
   // API tidak menyimpan warna: diturunkan dari id supaya tetap sama di kalender, agenda, dan peta
   warna: [...String(item.id)].reduce((n, c) => n + c.charCodeAt(0), 0) % WARNA.length,
   indikator: item.indikator ?? [],
-  // Indikator API → id instrumen lokal (kode = nomor indikator); checklist & status bukti masih memakai id lokal
-  indikatorIds: (item.indikator ?? []).map((i) => indikatorLokalByKode[String(i.kode)]).filter(Boolean),
-  // Level yang ditargetkan verifikator per indikator (id lokal → level)
-  levelTarget: Object.fromEntries((item.indikator ?? []).filter((i) => indikatorLokalByKode[String(i.kode)]).map((i) => [indikatorLokalByKode[String(i.kode)], i.level ?? 1])),
+  indikatorIds: (item.indikator ?? []).map((i) => i.id),
+  // Level yang ditargetkan verifikator per indikator (id indikator → level)
+  levelTarget: Object.fromEntries((item.indikator ?? []).map((i) => [i.id, i.level ?? 1])),
 })
 
 async function apiAll(path) {
@@ -222,12 +235,12 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
   }
 }
 
-// Ajuan bukti dari API → bentuk yang dipakai halaman. Indikator API dicocokkan ke id lokal lewat kode = nomor
+// Ajuan bukti dari API → bentuk yang dipakai halaman
 const STATUS_AJUAN = { DRAFT: 'draft', MENUNGGU: 'menunggu', PERBAIKAN: 'perbaikan', TERVERIFIKASI: 'terverifikasi' }
 const mapAjuan = (a) => ({
   id: a.id,
   kegiatanId: a.kegiatan_id,
-  indikatorId: indikatorLokalByKode[String(a.indikator.kode)],
+  indikatorId: a.indikator.id,
   status: STATUS_AJUAN[a.status],
   checked: a.checklist ?? {},
   level: a.level,
@@ -264,14 +277,12 @@ export function useBukti() {
     // kegiatan = hasil API (punya daftar indikator beserta id API-nya)
     async simpan(kegiatan, indikatorId, { checked, ajukan = false }) {
       const key = buktiKey(kegiatan.id, indikatorId)
-      const nomor = String(indikatorById[indikatorId].nomor)
-      const indikatorApi = kegiatan.indikator.find((i) => String(i.kode) === nomor)
-      if (!indikatorApi) throw new Error('Indikator ini belum dipetakan ke kegiatan.')
+      if (!kegiatan.indikatorIds.includes(indikatorId)) throw new Error('Indikator ini belum dipetakan ke kegiatan.')
       const sebelum = bukti[key]
       // Centang langsung tampil; dikembalikan jika server menolak
       setUbahan((u) => ({ ...u, [key]: { kegiatanId: kegiatan.id, indikatorId, status: 'draft', ...sebelum, checked } }))
       try {
-        const { data: a } = await api(`/api/rencana-kegiatan/${kegiatan.id}/ajuan-bukti/${indikatorApi.id}`, {
+        const { data: a } = await api(`/api/rencana-kegiatan/${kegiatan.id}/ajuan-bukti/${indikatorId}`, {
           method: 'PUT',
           body: { checklist: checked, ajukan },
         })
@@ -403,9 +414,15 @@ export function useDokumenBukti(kegiatanId) {
 // Level terverifikasi per indikator (berjenjang dari ajuan terverifikasi) + riwayat skor IPS, untuk periode aktif
 export function useSkor() {
   const { aktif } = usePeriode()
-  const { bukti, loading, error } = useBukti()
-  const ajuan = Object.values(bukti)
-  return { levels: levelIndikator(ajuan), snapshot: riwayatIps(ajuan).map((s) => ({ ...s, periodeId: aktif?.id })), loading, error }
+  const daftar = useBukti()
+  const { instrumen, ...muatInstrumen } = useInstrumen(aktif?.id)
+  const ajuan = Object.values(daftar.bukti)
+  return {
+    levels: levelIndikator(ajuan),
+    snapshot: riwayatIps(instrumen, ajuan).map((s) => ({ ...s, periodeId: aktif?.id })),
+    loading: daftar.loading || muatInstrumen.loading,
+    error: daftar.error ?? muatInstrumen.error,
+  }
 }
 
 // Daftar periode + periode yang sedang dipilih user (default: periode pertama yang belum dikunci)

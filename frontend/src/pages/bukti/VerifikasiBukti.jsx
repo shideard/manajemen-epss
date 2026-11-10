@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
-import { useBukti, usePeriode, useSemuaKegiatan } from '../../lib/store'
-import { includesText, indikatorById, paginate } from '../../lib/epss'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan } from '../../lib/store'
+import { includesText, paginate } from '../../lib/epss'
 import { Dropdown, Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 
 const PAGE_SIZE = 5
 
 function  VerifikasiBukti() {
   const { aktif } = usePeriode()
-  const muat = [useSemuaKegiatan(aktif?.id), useBukti()]
-  const [{ kegiatan }, { bukti }] = muat
+  const muat = [useSemuaKegiatan(aktif?.id), useBukti(), useInstrumen(aktif?.id)]
+  const [{ kegiatan }, { bukti }, { instrumen }] = muat
+  const indikatorById = instrumen.byId
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [filterIndikator, setFilterIndikator] = useState('semua')
@@ -18,7 +19,7 @@ function  VerifikasiBukti() {
   const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
   const levelTarget = Object.fromEntries(kegiatan.map((k) => [k.id, k.levelTarget]))
   const ajuan = Object.values(bukti)
-    .filter((b) => b.status === 'menunggu' && namaKegiatan[b.kegiatanId])
+    .filter((b) => b.status === 'menunggu' && namaKegiatan[b.kegiatanId] && indikatorById[b.indikatorId])
     .filter((b) => includesText([indikatorById[b.indikatorId].nama, namaKegiatan[b.kegiatanId], b.pengaju], query))
     .sort((a, b) => b.diajukan.localeCompare(a.diajukan))
   const { rows, page: currentPage, pageCount } = paginate(ajuan, page, PAGE_SIZE)

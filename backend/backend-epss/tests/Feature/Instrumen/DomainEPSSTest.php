@@ -130,8 +130,9 @@ class DomainEPSSTest extends TestCase
             'bobot' => 20.00,
         ]);
 
+        // restrictOnDelete di PostgreSQL = restrict_violation (23001), bukan foreign_key_violation (23503)
         $this->expectException(QueryException::class);
-        $this->expectExceptionMessage('SQLSTATE[23503]'); // foreign key violation
+        $this->expectExceptionMessage('SQLSTATE[23001]');
 
         $versi->delete();
     }

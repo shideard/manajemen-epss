@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
-import { useBukti, usePeriode, useSemuaKegiatan } from '../../lib/store'
-import { buktiKey, includesText, indikatorById, paginate } from '../../lib/epss'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan } from '../../lib/store'
+import { buktiKey, includesText, paginate } from '../../lib/epss'
 import { Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 
 const PAGE_SIZE = 5
@@ -22,14 +22,14 @@ function RepositoriBukti() {
   const [query, setQuery] = useState('')
   const [queryIndikator, setQueryIndikator] = useState('')
   const [page, setPage] = useState(1)
-  const muat = [useSemuaKegiatan(aktif?.id), useBukti()]
-  const [{ kegiatan }, { bukti }] = muat
+  const muat = [useSemuaKegiatan(aktif?.id), useBukti(), useInstrumen(aktif?.id)]
+  const [{ kegiatan }, { bukti }, { instrumen }] = muat
 
-  // Satu baris per pasangan kegiatan–indikator; kegiatan yang belum dipetakan tetap tampil. Statusnya masih dari browser
+  // Satu baris per pasangan kegiatan–indikator; kegiatan yang belum dipetakan tetap tampil
   const baris = kegiatan
     .filter((k) => semua || k.pic_user_id === user.id)
     .flatMap((k) => {
-      const daftar = k.indikatorIds.map((id) => ({ kegiatan: k, indikator: indikatorById[id], bukti: bukti[buktiKey(k.id, id)] ?? { status: 'draft' } }))
+      const daftar = k.indikatorIds.map((id) => ({ kegiatan: k, indikator: instrumen.byId[id], bukti: bukti[buktiKey(k.id, id)] ?? { status: 'draft' } }))
       return daftar.length ? daftar : [{ kegiatan: k, indikator: null, bukti: { status: 'draft' } }]
     })
   const filtered = baris.filter(

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { useBukti, useDetailKegiatan, useDokumenBukti, usePeriode } from '../../lib/store'
+import { useBukti, useDetailKegiatan, useDokumenBukti, useInstrumen, usePeriode } from '../../lib/store'
 import { bolehUbah } from '../../config/menu'
-import { buktiKey, indikatorById, LEVELS, metaBerkas } from '../../lib/epss'
+import { buktiKey, LEVELS, metaBerkas } from '../../lib/epss'
 import { ChecklistItem, Field, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
 import { buttonClass, fieldClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
@@ -19,8 +19,8 @@ function VerifikasiDetail() {
   const { aktif } = usePeriode()
   const detail = useDetailKegiatan(kegiatanId)
   const dokumen = useDokumenBukti(kegiatanId)
-  const muat = [detail, useBukti(), dokumen]
-  const [{ kegiatan: k }, { bukti: semuaBukti, verifikasi }] = muat
+  const muat = [detail, useBukti(), dokumen, useInstrumen(aktif?.id)]
+  const [{ kegiatan: k }, { bukti: semuaBukti, verifikasi }, , { instrumen }] = muat
   const [dipilih, setDipilih] = useState(0)
   const [pratinjau, setPratinjau] = useState({ id: null })
   const [catatan, setCatatan] = useState('')
@@ -32,7 +32,7 @@ function VerifikasiDetail() {
 
   const key = buktiKey(kegiatanId, indikatorId)
   const bukti = semuaBukti[key]
-  const indikator = indikatorById[indikatorId]
+  const indikator = instrumen.byId[indikatorId]
   // Pengunggah berkas = PIC kegiatan (hanya PIC yang bisa mengunggah)
   const files = dokumen.dokumen.map((f) => ({ ...f, oleh: k?.pic }))
   const file = files[dipilih]
@@ -56,7 +56,7 @@ function VerifikasiDetail() {
     }
   }, [file?.id]) // eslint-disable-line react-hooks/exhaustive-deps -- dokumen.url baru tiap render; cukup unduh ulang saat berkasnya ganti
 
-  if ((!bukti || !k) && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} bentuk="detail" />
+  if ((!bukti || !k || !indikator) && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} bentuk="detail" />
   if (!bukti || !k || !indikator) return <Navigate to="/verifikasi-bukti-dukung" replace />
 
   // Hanya ajuan berstatus "menunggu" yang bisa diputuskan, dan tidak saat periode dikunci

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
 import { unduh } from '../lib/api'
 import { berkasKegiatan, lkeCsv, pemetaanBukti } from '../lib/epss'
 import { Memuat, PageHeader } from '../components/ui'
@@ -28,15 +28,15 @@ function ExportCard({ title, description, button, onClick }) {
 
 function ExportLke() {
   const { aktif } = usePeriode()
-  const muat = [useSemuaKegiatan(aktif?.id), useSkor(), useBukti()]
-  const [{ kegiatan }, { levels }, { bukti }] = muat
+  const muat = [useSemuaKegiatan(aktif?.id), useSkor(), useBukti(), useInstrumen(aktif?.id)]
+  const [{ kegiatan }, { levels }, { bukti }, { instrumen }] = muat
   const [pesan, setPesan] = useState('')
   const [menyiapkan, setMenyiapkan] = useState(false)
 
   function unduhLke() {
     const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
     // BOM agar Excel membaca UTF-8 dengan benar
-    simpan(`LKE-EPSS-${aktif.tahun1}-${aktif.tahun2}.csv`, new Blob(['﻿', lkeCsv(levels, pemetaanBukti(kegiatan, bukti), berkasKegiatan(kegiatan, aktif.id), namaKegiatan)], { type: 'text/csv;charset=utf-8' }))
+    simpan(`LKE-EPSS-${aktif.tahun1}-${aktif.tahun2}.csv`, new Blob(['﻿', lkeCsv(instrumen, levels, pemetaanBukti(kegiatan, bukti), berkasKegiatan(kegiatan, aktif.id), namaKegiatan)], { type: 'text/csv;charset=utf-8' }))
   }
 
   // Server menyusun ZIP Domain/Indikator/Kegiatan/berkas dari berkas bukti terbaru periode aktif

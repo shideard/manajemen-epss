@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
-import { berkasKegiatan, bobotDomain, DOMAINS, hitungIps, includesText, INDIKATOR, jumlahBukti, levelLabel, pemetaanBukti } from '../lib/epss'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
+import { berkasKegiatan, bobotDomain, hitungIps, includesText, jumlahBukti, levelLabel, pemetaanBukti } from '../lib/epss'
 import { DomainPanel, Memuat, PageHeader, SearchBox } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import PedomanModal from '../components/PedomanModal'
@@ -8,8 +8,9 @@ import bookIcon from '../assets/icons/book-mark-fill-sm.svg'
 
 function PedomanIndikator() {
   const { aktif } = usePeriode()
-  const muat = [useSkor(), useBukti(), useSemuaKegiatan(aktif?.id)]
-  const [{ levels }, { bukti: ajuan }, { kegiatan }] = muat
+  const muat = [useSkor(), useBukti(), useSemuaKegiatan(aktif?.id), useInstrumen(aktif?.id)]
+  const [{ levels }, { bukti: ajuan }, { kegiatan }, { instrumen }] = muat
+  const { domains: DOMAINS, indikator: INDIKATOR } = instrumen
   const bukti = pemetaanBukti(kegiatan, ajuan)
   const berkas = berkasKegiatan(kegiatan, aktif?.id)
   const [query, setQuery] = useState('')

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { bobotDomain, DOMAINS, INDIKATOR, LEVELS } from '../../lib/epss'
+import { bangunInstrumen, bobotDomain, LEVELS } from '../../lib/epss'
 import { DialogHeader, Field, FormError, Input, ModalActions, Select } from '../../components/ui'
 import { buttonClass, fieldClass } from '../../components/classes'
 import bookIcon from '../../assets/icons/book-mark-fill.svg'
@@ -8,19 +8,20 @@ import removeIcon from '../../assets/icons/close-circle-line.svg'
 // Modal pakai <dialog> bawaan browser: Esc, fokus, dan backdrop sudah ditangani
 // indikator = record bukti kegiatan ini; yang sudah diajukan/diverifikasi tidak bisa dilepas
 // Panel samping "Daftar Indikator": semua indikator per domain beserta bobotnya
-function DaftarIndikator({ onClose }) {
+function DaftarIndikator({ daftar, onClose }) {
+  const { domains } = bangunInstrumen(daftar)
   return (
     <aside className="flex w-[min(476px,calc(100vw-2rem))] shrink-0 flex-col overflow-hidden rounded-lg bg-white shadow-lg xl:max-h-[calc(100vh-2rem)]">
       <DialogHeader title="Daftar Indikator" onClose={onClose} closeLabel="Tutup daftar indikator" />
       <div className="flex flex-col gap-6 overflow-y-auto px-5 py-6">
-        {DOMAINS.map((domain, d) => (
+        {domains.map((domain) => (
           <section key={domain.id} className="flex flex-col gap-3">
             <p className="flex flex-wrap items-center gap-3 text-small font-semibold">
-              Domain {d + 1} - {domain.nama}
+              Domain {domain.nomor} - {domain.nama}
               <span className="flex h-6 items-center rounded-full border border-grey-500 bg-lime-75 px-3 text-caption font-normal">Bobot domain: {bobotDomain(domain)}%</span>
             </p>
             <ul className="rounded-md bg-lime-50 py-2.5">
-              {INDIKATOR.filter((i) => i.domain === domain).map((i) => (
+              {domain.indikator.map((i) => (
                 <li key={i.id} className="flex flex-col gap-1 border-b border-grey-75/50 px-5 py-2 last:border-0">
                   <p className="flex items-center justify-between gap-5.5 text-small font-medium">
                     <span className="min-w-0">
@@ -169,7 +170,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
           <ModalActions onCancel={close} />
         </div>
       </form>
-      {daftarIndikator && <DaftarIndikator onClose={() => setDaftarIndikator(false)} />}
+      {daftarIndikator && <DaftarIndikator daftar={indikatorPilihan} onClose={() => setDaftarIndikator(false)} />}
       </div>
     </dialog>
   )

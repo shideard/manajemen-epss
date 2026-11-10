@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { useBukti, useDetailKegiatan, useDokumenBukti, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
-import { buktiKey, formatTanggal, INDIKATOR, LEVELS, metaBerkas } from '../../lib/epss'
+import { useBukti, useDetailKegiatan, useDokumenBukti, useInstrumen, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
+import { buktiKey, formatTanggal, LEVELS, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { ChecklistItem, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -129,8 +129,8 @@ function RepositoriDetail() {
   const { kegiatan } = useRencanaKegiatan(aktif?.id)
   const detail = useDetailKegiatan(kegiatanId)
   const dokumen = useDokumenBukti(kegiatanId)
-  const muat = [useBukti(), useSkor(), dokumen]
-  const [{ bukti: semuaBukti, simpan: simpanAjuan }, { levels }] = muat
+  const muat = [useBukti(), useSkor(), dokumen, useInstrumen(aktif?.id)]
+  const [{ bukti: semuaBukti, simpan: simpanAjuan }, { levels }, , { instrumen }] = muat
   const [cari, setCari] = useState('')
   const [mengunggah, setMengunggah] = useState(false)
   const [errorBerkas, setErrorBerkas] = useState('')
@@ -142,7 +142,8 @@ function RepositoriDetail() {
 
   // Berkas hanya bisa diunggah PIC kegiatan, jadi pengunggahnya = PIC
   const files = dokumen.dokumen.map((f) => ({ ...f, oleh: k.pic }))
-  const tertaut = k.indikatorIds.map((id) => semuaBukti[buktiKey(k.id, id)] ?? { kegiatanId: k.id, indikatorId: id, status: 'draft' })
+  // Indikator yang belum termuat dari instrumen dilewati sampai instrumennya siap
+  const tertaut = k.indikatorIds.filter((id) => instrumen.byId[id]).map((id) => semuaBukti[buktiKey(k.id, id)] ?? { kegiatanId: k.id, indikatorId: id, status: 'draft' })
   // Operator lain boleh melihat sebagai referensi; hanya PIC yang bisa mengunggah, dan tidak saat periode dikunci
   const pic = k.pic_user_id === user.id
   const bolehEdit = pic && bolehUbah(user, 'unggahBukti', aktif)
@@ -320,7 +321,7 @@ function RepositoriDetail() {
         <IndikatorBukti
           key={`${b.indikatorId}:${b.status}`}
           bukti={b}
-          indikator={INDIKATOR.find((i) => i.id === b.indikatorId)}
+          indikator={instrumen.byId[b.indikatorId]}
           level={k.levelTarget[b.indikatorId] ?? 1}
           levelTerverifikasi={levels[b.indikatorId]}
           jumlahBerkas={files.length}

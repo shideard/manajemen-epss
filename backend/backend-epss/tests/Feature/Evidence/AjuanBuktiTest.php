@@ -421,6 +421,22 @@ class AjuanBuktiTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_indicator_list_includes_seeded_level_requirements(): void
+    {
+        $s = $this->createScenario();
+        $this->seed(\Database\Seeders\KriteriaLevelBawaanSeeder::class);
+        $this->seed(\Database\Seeders\KriteriaLevelBawaanSeeder::class); // berulang tidak menggandakan
+
+        $this->assertDatabaseCount('kriteria_level', 5);
+        $this->sebagai($s['verifikator'], 'web')
+            ->getJson('/api/periode-evaluasi/' . $s['periode']->id . '/indikator')
+            ->assertOk()
+            ->assertJsonCount(5, 'data.0.levels')
+            ->assertJsonPath('data.0.levels.2.level', 3)
+            ->assertJsonPath('data.0.levels.2.nama', 'Terstandarisasi')
+            ->assertJsonCount(4, 'data.0.levels.2.syarat');
+    }
+
     public function test_period_listing_returns_its_submissions(): void
     {
         $s = $this->createScenario();

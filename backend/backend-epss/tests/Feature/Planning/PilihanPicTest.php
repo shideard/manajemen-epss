@@ -55,18 +55,17 @@ class PilihanPicTest extends TestCase
             ->assertJsonMissingPath('data.0.remember_token');
     }
 
-    public function test_operator_and_super_admin_cannot_access_pic_options(): void
+    // Operator memakai pilihan ini di halaman bukti dukung (lihat OpdPolicy/UserPolicy); super admin tidak
+    public function test_operator_can_and_super_admin_cannot_access_pic_options(): void
     {
-        foreach ([
-            UserRole::OPERATOR,
-            UserRole::SUPER_ADMIN_BIDANG,
-        ] as $role) {
-            $actor = $this->createActor($role);
+        $this->actingAs($this->createActor(UserRole::OPERATOR), 'web')
+            ->getJson('/api/pilihan/pic')
+            ->assertOk();
 
-            $this->actingAs($actor, 'web')
-                ->getJson('/api/pilihan/pic')
-                ->assertForbidden();
-        }
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($this->createActor(UserRole::SUPER_ADMIN_BIDANG), 'web')
+            ->getJson('/api/pilihan/pic')
+            ->assertForbidden();
     }
 
     public function test_guest_cannot_access_pic_options(): void

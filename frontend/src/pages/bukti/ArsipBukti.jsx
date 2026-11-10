@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { bukaDokumen, usePeriode, useSemuaKegiatan } from '../../lib/store'
+import { bukaDokumen, useInstrumen, usePeriode, useSemuaKegiatan } from '../../lib/store'
 import { arsipBerkas, berkasKegiatan, formatTanggal, formatUkuran, includesText, paginate, pemetaanBukti } from '../../lib/epss'
 import { Badge, DialogHeader, FormError, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -104,13 +104,14 @@ function ArsipBukti() {
   const folder = periode.find((p) => p.id === periodeId) ?? aktif
   // Isi folder = dokumen semua kegiatan pada periode folder itu
   const daftar = useSemuaKegiatan(folder?.id)
-  const muat = [daftar]
+  const muatInstrumen = useInstrumen(folder?.id)
+  const muat = [daftar, muatInstrumen]
   const { kegiatan } = daftar
   const [dipilihId, setDipilihId] = useState(null)
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
 
-  const isiFolder = arsipBerkas(berkasKegiatan(kegiatan, folder?.id), kegiatan, pemetaanBukti(kegiatan, {}), periode)
+  const isiFolder = arsipBerkas(muatInstrumen.instrumen, berkasKegiatan(kegiatan, folder?.id), kegiatan, pemetaanBukti(kegiatan, {}), periode)
   const cocok = isiFolder.filter((f) =>
     includesText([f.nama, f.oleh, ...f.kegiatan.map((k) => k.nama), ...f.indikator.flatMap((i) => [i.nama, `indikator ${i.nomor}`, `ind. ${i.nomor}`])], query),
   )

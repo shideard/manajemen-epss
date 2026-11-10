@@ -25,6 +25,9 @@ class PeriodeIndikatorController extends Controller
             ->with([
                 'aspek:id,domain_id,kode,nama',
                 'aspek.domain:id,kode,nama',
+                'kriteriaLevels' => fn ($query) => $query->orderBy('level'),
+                'kriteriaLevels.kriteriaPemenuhan' => fn ($query) => $query->orderBy('urutan'),
+                'kriteriaLevels.persyaratanBukti' => fn ($query) => $query->orderBy('urutan'),
             ])
             ->orderBy('kode')
             ->orderBy('id')

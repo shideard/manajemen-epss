@@ -1,6 +1,27 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, levelIndikator, pemetaanBukti, berkasKegiatan, riwayatIps, INDIKATOR, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, petaRelasi, PETA, DOMAINS, terhubung, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, levelIndikator, pemetaanBukti, berkasKegiatan, riwayatIps, bangunInstrumen, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, petaRelasi, PETA, terhubung, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
+
+// Instrumen dari bentuk API: 2 domain, 5 aspek, 6 indikator (kode diurutkan numerik, bukan teks)
+const d1 = { id: 'd1', kode: '1', nama: 'Prinsip Satu Data Indonesia (SDI)' }
+const d2 = { id: 'd2', kode: '2', nama: 'Kualitas Data' }
+const api = (id, kode, nama, bobot, domain, aspek, levels) => ({ id, kode, nama, bobot: String(bobot), domain, aspek: { id: `${domain.id}${aspek}`, nama: aspek }, levels })
+const INSTRUMEN = bangunInstrumen([
+  api('i10', '10', 'Relevansi Data', 4, d2, 'Relevansi'),
+  api('i3', '3', 'Penerapan Interoperabilitas Data', 4, d1, 'Interoperabilitas Data'),
+  api('i1', '1', 'Penerapan Standar Data Statistik', 3.5, d1, 'Standar Data Statistik', [{ level: 2, kriteria: 'Kriteria L2', pemenuhan: [], syarat: ['SK Tim'] }]),
+  api('i2', '2', 'Penerapan Metadata Statistik', 3.5, d1, 'Metadata Statistik'),
+  api('i4', '4', 'Penerapan Kode Referensi', 4, d1, 'Kode Referensi dan/atau Data Induk'),
+  api('i9', '9', 'Akurasi Data', 3, d2, 'Relevansi'),
+])
+const { indikator: INDIKATOR, domains: DOMAINS } = INSTRUMEN
+assert.deepEqual(INDIKATOR.map((i) => i.kode), ['1', '2', '3', '4', '9', '10'])
+assert.deepEqual(DOMAINS.map((d) => [d.nomor, d.indikator.length]), [[1, 4], [2, 2]])
+assert.equal(INDIKATOR[0].bobot, 3.5)
+assert.deepEqual(INDIKATOR[0].levels[1], { kriteria: 'Kriteria L2', pemenuhan: INDIKATOR[1].levels[1].pemenuhan, syarat: ['SK Tim'] }) // dari API
+assert.equal(INDIKATOR[0].levels[0], INDIKATOR[1].levels[0]) // belum diisi di database → bawaan
+const urutanAspek = INDIKATOR.map((i) => i.domain.id + i.aspek).filter((a, n, semua) => a !== semua[n - 1])
+assert.equal(new Set(urutanAspek).size, urutanAspek.length)
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -16,7 +37,7 @@ assert.deepEqual(levelIndikator([ajuan('a', 1), ajuan('a', 2), ajuan('a', 4)]), 
 assert.deepEqual(levelIndikator([ajuan('a', 1), ajuan('a', 2), ajuan('a', 4), ajuan('a', 3)]), { a: 4 })
 assert.deepEqual(levelIndikator([ajuan('a', 2), ajuan('b', 1), ajuan('b', 2, 'menunggu')]), { b: 1 })
 assert.deepEqual(levelIndikator([]), {})
-const riwayat = riwayatIps([ajuan('i1', 2), ajuan('i1', 1), ajuan('i1', 3, 'menunggu')])
+const riwayat = riwayatIps(INSTRUMEN, [ajuan('i1', 2), ajuan('i1', 1), ajuan('i1', 3, 'menunggu')])
 assert.deepEqual(riwayat.map((r) => r.perubahan), ['Indikator 1 Level 2 terverifikasi', 'Indikator 1 Level 1 terverifikasi'])
 assert.ok(riwayat[0].nilai > riwayat[1].nilai) // level 2 baru terhitung setelah level 1
 
@@ -63,12 +84,12 @@ assert.ok(validasiPeriode(form, lain).data) // 2027-2028 bersebelahan, tidak ber
 assert.ok(validasiPeriode({ ...form, tahun1: '2026', tahun2: '2027' }, lain).error) // 2026 dipakai dua periode
 assert.ok(validasiPeriode({ ...form, tahun1: '2025', tahun2: '2026' }, lain).error) // tahun sama
 
-const csv = lkeCsv({ i1: 2 }, { 'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1', catatan: 'Lengkapi "SK"' } }, { k1: [{}, {}] }, { k1: 'Survei; SKM' }).split('\r\n')
+const csv = lkeCsv(INSTRUMEN, { i1: 2 }, { 'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1', catatan: 'Lengkapi "SK"' } }, { k1: [{}, {}] }, { k1: 'Survei; SKM' }).split('\r\n')
 assert.equal(csv.length, INDIKATOR.length + 1)
 assert.equal(csv[1], '"1";"Domain 1 - Prinsip Satu Data Indonesia (SDI)";"Penerapan Standar Data Statistik";"3.5";"2";"Terkelola";"2";"Survei; SKM";"Lengkapi ""SK"""')
 
 // Peta relasi: k1 (indikator 1 & 3) di tengahnya, k2 tidak menumpuk k1, k3 tanpa indikator di bawah tanpa edge
-const peta = petaRelasi([{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }], {
+const peta = petaRelasi(INSTRUMEN, [{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }], {
   'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1' },
   'k1:i3': { kegiatanId: 'k1', indikatorId: 'i3' },
   'k2:i1': { kegiatanId: 'k2', indikatorId: 'i1' },
@@ -86,12 +107,6 @@ assert.ok(['i:i1', 'i:i3', 'a:d1:Standar Data Statistik', 'd:d1'].every((id) => 
 assert.ok(!jalur.has('k:k2') && !jalur.has('i:i2'))
 assert.ok(terhubung(peta.edges, 'i:i1').has('k:k2'))
 
-// 32 indikator dengan id unik; indikator satu aspek berurutan (kalau tidak, garis peta relasi bersilangan)
-assert.equal(INDIKATOR.length, 32)
-assert.equal(new Set(INDIKATOR.map((i) => i.id)).size, 32)
-const urutanAspek = INDIKATOR.map((i) => i.domain.id + i.aspek).filter((a, n, semua) => a !== semua[n - 1])
-assert.equal(new Set(urutanAspek).size, urutanAspek.length)
-
 // Filter bertingkat: pilih indikator → aspek & domain ikut terisi; kosongkan aspek → indikator ikut kosong, domain tetap
 const kosong = { domain: '', aspek: '', indikator: '' }
 const lengkap = pilihTingkat(peta.edges, kosong, 'indikator', 'i:i2')
@@ -104,6 +119,7 @@ assert.deepEqual(pilihTingkat(peta.edges, lengkap, 'domain', 'd:d2'), { domain: 
 // entri tanpa periodeId ikut tahun unggah; berkas kegiatan yang sudah dihapus tidak ikut
 const lamaF = { id: 'f1', nama: 'SK.pdf', ukuran: 1, tanggal: '2024-03-01', oleh: 'ani' }
 const arsip = arsipBerkas(
+  INSTRUMEN,
   { k1: [lamaF], k2: [{ ...lamaF, periodeId: 'p2025' }, { id: 'f2', nama: 'b', ukuran: 1, tanggal: '2026-01-01', oleh: 'ani', periodeId: 'p2025' }], hilang: [{ id: 'f3', tanggal: '2026-02-01' }] },
   [{ id: 'k1' }, { id: 'k2' }],
   { 'k1:i2': { kegiatanId: 'k1', indikatorId: 'i2' }, 'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1' }, 'k2:i1': { kegiatanId: 'k2', indikatorId: 'i1' }, 'k2:i3': { kegiatanId: 'k2', indikatorId: 'i3' } },

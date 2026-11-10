@@ -51,8 +51,8 @@ export const periodeLabel = (p) => `${p.tahun1} - ${p.tahun2} (${p.terkunci ? 'T
 export const LEVELS = ['Rintisan', 'Terkelola', 'Terstandarisasi', 'Terpadu', 'Optimum']
 export const levelLabel = (level) => (level ? `Level ${level} (${LEVELS[level - 1]})` : 'Belum terverifikasi')
 
-// Kriteria & checklist bawaan tiap level; indikator boleh menimpa lewat `levels`
-const DEFAULT_LEVELS = [
+// Kriteria & checklist bawaan tiap level, dipakai untuk level yang kriterianya belum diisi di database
+export const DEFAULT_LEVELS = [
   {
     kriteria: 'Kegiatan statistik sudah dilakukan namun belum memiliki standar dan masih bergantung pada individu.',
     pemenuhan: ['Belum ada penetapan penanggung jawab kegiatan', 'Pelaksanaan belum terdokumentasi'],
@@ -80,101 +80,45 @@ const DEFAULT_LEVELS = [
   },
 ]
 
-// ponytail: 32 indikator contoh (19 aspek) dengan nama & bobot sementara; ganti dengan indikator, aspek & bobot resmi
-// Peraturan BPS No 3/2022 dari seed/API backend. Id i16–i32 ditambahkan belakangan, jadi urutan nomor ≠ urutan id.
-// Indikator satu aspek harus berurutan supaya peta relasi tidak bersilangan.
-export const DOMAINS = [
-  {
-    id: 'd1',
-    nama: 'Prinsip Satu Data Indonesia (SDI)',
-    indikator: [
-      {
-        id: 'i1',
-        nama: 'Penerapan Standar Data Statistik',
-        aspek: 'Standar Data Statistik',
-        bobot: 3.5,
-        levels: DEFAULT_LEVELS.map((level, i) =>
-          i === 1
-            ? {
-                ...level,
-                kriteria: 'Penerapan SDS telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing',
-                pemenuhan: ['Seluruh produsen belum menerapkan SDS; atau', 'Baru sebagian produsen data yang telah menerapkan SDS'],
-              }
-            : level,
-        ),
-      },
-      { id: 'i16', nama: 'Penetapan Standar Data oleh Pembina Data', aspek: 'Standar Data Statistik', bobot: 3 },
-      { id: 'i2', nama: 'Penerapan Metadata Statistik', aspek: 'Metadata Statistik', bobot: 3.5 },
-      { id: 'i17', nama: 'Kelengkapan Metadata Kegiatan Statistik', aspek: 'Metadata Statistik', bobot: 3 },
-      { id: 'i3', nama: 'Penerapan Interoperabilitas Data', aspek: 'Interoperabilitas Data', bobot: 4 },
-      { id: 'i4', nama: 'Penerapan Kode Referensi dan/atau Data Induk', aspek: 'Kode Referensi dan/atau Data Induk', bobot: 4 },
-    ],
-  },
-  {
-    id: 'd2',
-    nama: 'Kualitas Data',
-    indikator: [
-      { id: 'i5', nama: 'Relevansi Data terhadap Pengguna', aspek: 'Relevansi', bobot: 4 },
-      { id: 'i18', nama: 'Identifikasi Kebutuhan Data Pengguna', aspek: 'Relevansi', bobot: 3 },
-      { id: 'i6', nama: 'Akurasi Data', aspek: 'Akurasi', bobot: 4 },
-      { id: 'i19', nama: 'Penilaian Akurasi Data', aspek: 'Akurasi', bobot: 3 },
-      { id: 'i7', nama: 'Aktualitas dan Ketepatan Waktu', aspek: 'Aktualitas dan Ketepatan Waktu', bobot: 3 },
-      { id: 'i20', nama: 'Jadwal Rilis Data Statistik', aspek: 'Aktualitas dan Ketepatan Waktu', bobot: 3 },
-      { id: 'i21', nama: 'Aksesibilitas Data', aspek: 'Aksesibilitas', bobot: 3 },
-      { id: 'i22', nama: 'Keterbandingan dan Konsistensi Data', aspek: 'Keterbandingan dan Konsistensi', bobot: 3 },
-    ],
-  },
-  {
-    id: 'd3',
-    nama: 'Proses Bisnis Statistik',
-    indikator: [
-      { id: 'i8', nama: 'Perencanaan Kebutuhan Data', aspek: 'Perencanaan Data', bobot: 5 },
-      { id: 'i23', nama: 'Penyusunan Rancangan Kegiatan Statistik', aspek: 'Perencanaan Data', bobot: 4 },
-      { id: 'i9', nama: 'Pengumpulan Data Statistik Sektoral', aspek: 'Pengumpulan Data', bobot: 6 },
-      { id: 'i24', nama: 'Pengawasan Lapangan Pengumpulan Data', aspek: 'Pengumpulan Data', bobot: 3 },
-      { id: 'i10', nama: 'Pengolahan dan Analisis Data', aspek: 'Pemeriksaan Data', bobot: 5 },
-      { id: 'i25', nama: 'Validasi dan Verifikasi Data', aspek: 'Pemeriksaan Data', bobot: 4 },
-      { id: 'i11', nama: 'Diseminasi Data', aspek: 'Penyebarluasan Data', bobot: 4 },
-      { id: 'i26', nama: 'Pemanfaatan Portal Satu Data', aspek: 'Penyebarluasan Data', bobot: 3 },
-    ],
-  },
-  {
-    id: 'd4',
-    nama: 'Kelembagaan',
-    indikator: [
-      { id: 'i12', nama: 'Profesionalitas', aspek: 'Profesionalitas', bobot: 4 },
-      { id: 'i27', nama: 'Penerapan Kode Etik Statistisi', aspek: 'Profesionalitas', bobot: 3 },
-      { id: 'i13', nama: 'Kompetensi Sumber Daya Manusia', aspek: 'SDM yang Memadai dan Kapabel', bobot: 4 },
-      { id: 'i28', nama: 'Pengembangan Kompetensi Pegawai', aspek: 'SDM yang Memadai dan Kapabel', bobot: 3 },
-      { id: 'i29', nama: 'Pengorganisasian Penyelenggaraan Statistik', aspek: 'Pengorganisasian Statistik', bobot: 3 },
-    ],
-  },
-  {
-    id: 'd5',
-    nama: 'Statistik Nasional',
-    indikator: [
-      { id: 'i30', nama: 'Pemanfaatan Data untuk Perencanaan Pembangunan', aspek: 'Pemanfaatan Data Statistik', bobot: 4 },
-      { id: 'i14', nama: 'Tata Kelola Statistik Sektoral', aspek: 'Pengelolaan Kegiatan Statistik', bobot: 4 },
-      { id: 'i31', nama: 'Rekomendasi Kegiatan Statistik', aspek: 'Pengelolaan Kegiatan Statistik', bobot: 3 },
-      { id: 'i15', nama: 'Kolaborasi Penyelenggaraan Statistik', aspek: 'Penguatan Penyelenggaraan Statistik Sektoral', bobot: 3 },
-      { id: 'i32', nama: 'Pembinaan Statistik Sektoral', aspek: 'Penguatan Penyelenggaraan Statistik Sektoral', bobot: 3 },
-    ],
-  },
-]
+// Instrumen dari API (GET /api/periode-evaluasi/{id}/indikator) → { domains, indikator, byId }.
+// Domain & indikator diurutkan menurut kode secara numerik; indikator satu aspek berurutan supaya peta relasi tidak bersilangan.
+// Kriteria & persyaratan per level dari API (kriteria_level); level yang belum diisi di database memakai DEFAULT_LEVELS
+const angka = (kode) => Number(kode) || 0
+export function bangunInstrumen(daftar) {
+  const domains = new Map()
+  const urut = [...daftar].sort((a, b) => angka(a.domain.kode) - angka(b.domain.kode) || angka(a.kode) - angka(b.kode))
+  for (const item of urut) {
+    if (!domains.has(item.domain.id)) domains.set(item.domain.id, { id: item.domain.id, kode: item.domain.kode, nama: item.domain.nama, aspek: new Map() })
+    const domain = domains.get(item.domain.id)
+    if (!domain.aspek.has(item.aspek.id)) domain.aspek.set(item.aspek.id, [])
+    domain.aspek.get(item.aspek.id).push(item)
+  }
+  const hasilDomain = [...domains.values()].map((d, n) => ({ id: d.id, kode: d.kode, nama: d.nama, nomor: n + 1, indikator: [] }))
+  const indikator = []
+  hasilDomain.forEach((domain, n) => {
+    for (const daftarAspek of [...domains.values()][n].aspek.values()) {
+      for (const i of daftarAspek) {
+        const levels = DEFAULT_LEVELS.map((bawaan, l) => {
+          const api = i.levels?.find((x) => x.level === l + 1)
+          return api?.syarat?.length ? { kriteria: api.kriteria || bawaan.kriteria, pemenuhan: api.pemenuhan?.length ? api.pemenuhan : bawaan.pemenuhan, syarat: api.syarat } : bawaan
+        })
+        const baru = { id: i.id, kode: i.kode, nomor: angka(i.kode), nama: i.nama, aspek: i.aspek.nama, bobot: Number(i.bobot) || 0, levels, domain, domainNomor: domain.nomor }
+        domain.indikator.push(baru)
+        indikator.push(baru)
+      }
+    }
+  })
+  return { domains: hasilDomain, indikator, byId: Object.fromEntries(indikator.map((i) => [i.id, i])) }
+}
+export const INSTRUMEN_KOSONG = { domains: [], indikator: [], byId: {} }
 
-// Daftar datar indikator dengan nomor urut & domain-nya
-export const INDIKATOR = DOMAINS.flatMap((domain, d) =>
-  domain.indikator.map((indikator) => ({ ...indikator, levels: indikator.levels ?? DEFAULT_LEVELS, domain, domainNomor: d + 1 })),
-).map((indikator, i) => ({ ...indikator, nomor: i + 1 }))
-
-export const indikatorById = Object.fromEntries(INDIKATOR.map((i) => [i.id, i]))
 export const bobotDomain = (domain) => domain.indikator.reduce((sum, i) => sum + i.bobot, 0)
 
 // Node & edge React Flow untuk peta Domain → Aspek → Indikator → Rencana Kegiatan (kolom 0–3).
 // Indikator satu baris per indikator; aspek & domain di tengah anak-anaknya;
 // kegiatan sedekat mungkin dengan indikatornya tanpa bertumpuk
 export const PETA = { kolom: 290, baris: 76 }
-export function petaRelasi(kegiatan, bukti) {
+export function petaRelasi({ indikator: INDIKATOR }, kegiatan, bukti) {
   const nodes = []
   const edges = []
   const node = (id, kolom, y, jenis, label, data) => nodes.push({ id, position: { x: kolom * PETA.kolom, y }, data: { jenis, label, kolom, ...data } })
@@ -197,7 +141,7 @@ export function petaRelasi(kegiatan, bukti) {
     domain.set(a.domain, [...(domain.get(a.domain) ?? []), y])
   }
   for (const [d, ys] of domain) {
-    node(`d:${d.id}`, 0, tengah(ys), 'domain', d.nama, { chip: `Domain ${DOMAINS.indexOf(d) + 1}`, info: `${ys.length} aspek · ${d.indikator.length} indikator` })
+    node(`d:${d.id}`, 0, tengah(ys), 'domain', d.nama, { chip: `Domain ${d.nomor}`, info: `${ys.length} aspek · ${d.indikator.length} indikator` })
   }
 
   // Baris indikator tiap kegiatan; kegiatan tanpa indikator (Math.min() = Infinity) di paling bawah
@@ -277,14 +221,14 @@ export function levelIndikator(ajuan) {
 }
 
 // Riwayat skor IPS: satu titik tiap ajuan diverifikasi terpenuhi, terbaru dulu
-export function riwayatIps(ajuan) {
+export function riwayatIps({ indikator: INDIKATOR, byId }, ajuan) {
   const terverifikasi = ajuan.filter((b) => b.status === 'terverifikasi' && b.diverifikasi).sort((a, b) => a.diverifikasi.localeCompare(b.diverifikasi))
   return terverifikasi
     .map((b, n) => ({
       id: b.id,
       waktu: b.diverifikasi,
       nilai: hitungIps(INDIKATOR, levelIndikator(terverifikasi.slice(0, n + 1))),
-      perubahan: `Indikator ${indikatorById[b.indikatorId]?.nomor} Level ${b.level} terverifikasi`,
+      perubahan: `Indikator ${byId[b.indikatorId]?.nomor} Level ${b.level} terverifikasi`,
     }))
     .reverse()
 }
@@ -428,7 +372,7 @@ export const jumlahBukti = (bukti, berkas, indikatorId) =>
 // Tiap entri di berkas[kegiatanId] mencatat periode saat diunggah/ditautkan, jadi berkas lama yang dipakai ulang
 // ikut masuk folder periode sekarang. Entri lama tanpa periodeId masuk periode yang tahunnya memuat tanggal unggah.
 // Tag indikator = gabungan indikator yang dipetakan ke semua kegiatan tertaut (urut nomor), jadi bertambah saat ditautkan
-export function arsipBerkas(berkas, kegiatan, bukti, periode) {
+export function arsipBerkas({ byId }, berkas, kegiatan, bukti, periode) {
   const kegiatanById = new Map(kegiatan.map((k) => [k.id, k]))
   const arsip = new Map()
   for (const [kegiatanId, list] of Object.entries(berkas)) {
@@ -436,7 +380,7 @@ export function arsipBerkas(berkas, kegiatan, bukti, periode) {
     if (!k) continue
     const indikator = Object.values(bukti)
       .filter((b) => b.kegiatanId === kegiatanId)
-      .map((b) => indikatorById[b.indikatorId])
+      .map((b) => byId[b.indikatorId])
       .filter(Boolean)
     for (const f of list) {
       const tahun = f.tanggal.slice(0, 4)
@@ -456,7 +400,7 @@ export const formatUkuran = (byte) => `${(byte / 1024 / 1024).toFixed(1)} MB`
 export const metaBerkas = (f) => `Ukuran: ${formatUkuran(f.ukuran)}  •  Diunggah: ${formatTanggal(f.tanggal)} oleh ${f.oleh}`
 
 // Rekap LKE per indikator sebagai CSV (pemisah ";" agar langsung terbaca Excel berbahasa Indonesia)
-export function lkeCsv(levels, bukti, berkas, namaKegiatan) {
+export function lkeCsv({ indikator: INDIKATOR }, levels, bukti, berkas, namaKegiatan) {
   const sel = (value) => `"${String(value ?? '').replaceAll('"', '""')}"`
   const header = ['No', 'Domain', 'Indikator', 'Bobot (%)', 'Level Terverifikasi', 'Tingkat Kematangan', 'Jumlah Bukti Dukung', 'Kegiatan Tertaut', 'Catatan Verifikator']
   const rows = INDIKATOR.map((i) => {

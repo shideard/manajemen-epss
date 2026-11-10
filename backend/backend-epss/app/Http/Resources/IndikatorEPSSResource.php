@@ -25,6 +25,17 @@ class IndikatorEPSSResource extends JsonResource
                 'kode' => $this->aspek->domain->kode,
                 'nama' => $this->aspek->domain->nama,
             ],
+            // Kriteria per level; persyaratan = checklist bukti dukung yang diisi operator dan verifikator
+            'levels' => $this->whenLoaded(
+                'kriteriaLevels',
+                fn () => $this->kriteriaLevels->map(fn ($kriteria) => [
+                    'level' => $kriteria->level,
+                    'nama' => $kriteria->nama_level,
+                    'kriteria' => $kriteria->deskripsi,
+                    'pemenuhan' => $kriteria->kriteriaPemenuhan->pluck('deskripsi')->values(),
+                    'syarat' => $kriteria->persyaratanBukti->pluck('deskripsi')->values(),
+                ])->values()
+            ),
         ];
     }
 }
