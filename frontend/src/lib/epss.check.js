@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, levelIndikator, riwayatIps, INDIKATOR, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, levelIndikator, pemetaanBukti, berkasKegiatan, riwayatIps, INDIKATOR, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, petaRelasi, PETA, DOMAINS, terhubung, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -92,16 +92,6 @@ assert.equal(new Set(INDIKATOR.map((i) => i.id)).size, 32)
 const urutanAspek = INDIKATOR.map((i) => i.domain.id + i.aspek).filter((a, n, semua) => a !== semua[n - 1])
 assert.equal(new Set(urutanAspek).size, urutanAspek.length)
 
-// Data contoh: tiap pemetaan menunjuk kegiatan & indikator yang ada, semua indikator tercakup,
-// dan ada kegiatan yang sudah selesai, sedang berjalan, dan belum mulai
-const contoh = contohKegiatan('2026-10-17')
-const idKegiatan = new Set(contoh.kegiatan.map((k) => k.id))
-const pemetaan = Object.values(contoh.bukti)
-assert.ok(pemetaan.every((b) => idKegiatan.has(b.kegiatanId) && INDIKATOR.some((i) => i.id === b.indikatorId)))
-assert.equal(new Set(pemetaan.map((b) => b.indikatorId)).size, INDIKATOR.length)
-assert.deepEqual(new Set(contoh.kegiatan.map((k) => statusOf(k, '2026-10-17'))), new Set(['Selesai', 'Berjalan', 'Belum Mulai']))
-assert.ok(contoh.kegiatan.every((k) => k.mulai <= k.selesai && k.tahun === k.mulai.slice(0, 4)))
-
 // Filter bertingkat: pilih indikator → aspek & domain ikut terisi; kosongkan aspek → indikator ikut kosong, domain tetap
 const kosong = { domain: '', aspek: '', indikator: '' }
 const lengkap = pilihTingkat(peta.edges, kosong, 'indikator', 'i:i2')
@@ -128,23 +118,6 @@ assert.equal(formatUkuran(1572864), '1.5 MB')
 
 console.log('epss.check: OK')
 
-// Hak akses PIC: cocok dengan nama atau username, tidak peka huruf besar/spasi
-assert.ok(isPic({ pic: ' Ani ' }, { name: 'ani', username: 'ani1234' }))
-assert.ok(isPic({ pic: 'ani1234' }, { name: 'Ani', username: 'ani1234' }))
-assert.ok(!isPic({ pic: 'Budi' }, { name: 'Ani', username: 'ani1234' }))
-assert.ok(!isPic({ pic: '' }, { name: '', username: undefined }))
-
-// Pemetaan: tambah i2, lepas i1 (draft → hapus) dan i3 (menunggu → tetap), kegiatan lain tidak tersentuh
-const awal = {
-  'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1', status: 'draft' },
-  'k1:i3': { kegiatanId: 'k1', indikatorId: 'i3', status: 'menunggu' },
-  'k2:i1': { kegiatanId: 'k2', indikatorId: 'i1', status: 'draft' },
-}
-const hasil = sinkronPemetaan(awal, 'k1', ['i2'])
-assert.deepEqual(Object.keys(hasil).sort(), ['k1:i2', 'k1:i3', 'k2:i1'])
-assert.equal(hasil['k1:i2'].status, 'draft')
-assert.equal(sinkronPemetaan(awal, 'k1', ['i1', 'i3'])['k1:i1'], awal['k1:i1']) // yang sudah ada tidak di-reset
-
 assert.equal(statusOf(k, '2026-09-09'), 'Belum Mulai')
 assert.equal(statusOf(k, '2026-09-10'), 'Berjalan')
 assert.equal(statusOf(k, '2026-09-20'), 'Berjalan')
@@ -162,3 +135,10 @@ assert.equal(gantiSaat({ must_change_password: false, password_changed_at: '2026
 assert.equal(gantiSaat({ must_change_password: false, password_changed_at: '2026-10-01T00:00:00Z' }, '2027-10-01T00:00:00Z'), true)
 
 console.log('epss.check (akses): OK')
+
+// Pemetaan dari API: pasangan tanpa ajuan jadi draft, ajuan yang ada dipakai apa adanya
+const dipetakan = pemetaanBukti([{ id: 'k1', indikatorIds: ['i1', 'i2'] }], { 'k1:i2': { kegiatanId: 'k1', indikatorId: 'i2', status: 'menunggu' }, 'k9:i1': { status: 'terverifikasi' } })
+assert.deepEqual(Object.keys(dipetakan), ['k1:i1', 'k1:i2'])
+assert.equal(dipetakan['k1:i1'].status, 'draft')
+assert.equal(dipetakan['k1:i2'].status, 'menunggu')
+assert.deepEqual(berkasKegiatan([{ id: 'k1', pic: 'Ani', dokumen: [{ id: 'd1' }] }, { id: 'k2', pic: 'Budi' }], 'p1'), { k1: [{ id: 'd1', oleh: 'Ani', periodeId: 'p1' }], k2: [] })

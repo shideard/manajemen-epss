@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../lib/store'
-import { lkeCsv } from '../lib/epss'
+import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
+import { berkasKegiatan, lkeCsv, pemetaanBukti } from '../lib/epss'
 import { Memuat, PageHeader } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
@@ -28,13 +28,13 @@ function ExportCard({ title, description, button, onClick }) {
 
 function ExportLke() {
   const { aktif } = usePeriode()
-  const muat = [useKegiatan(), useSkor(), useBukti(), useBerkas()]
-  const [{ kegiatan }, { levels }, { bukti }, { berkas }] = muat
+  const muat = [useSemuaKegiatan(aktif?.id), useSkor(), useBukti()]
+  const [{ kegiatan }, { levels }, { bukti }] = muat
   const [pesan, setPesan] = useState('')
 
   function unduhLke() {
     const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
-    unduh(`LKE-EPSS-${aktif.tahun1}-${aktif.tahun2}.csv`, lkeCsv(levels, bukti, berkas, namaKegiatan))
+    unduh(`LKE-EPSS-${aktif.tahun1}-${aktif.tahun2}.csv`, lkeCsv(levels, pemetaanBukti(kegiatan, bukti), berkasKegiatan(kegiatan, aktif.id), namaKegiatan))
   }
 
   return (

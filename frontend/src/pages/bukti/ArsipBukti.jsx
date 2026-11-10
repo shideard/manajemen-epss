@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { Link, useOutletContext } from 'react-router-dom'
-import { berkasUrl, useBerkas, useBukti, useKegiatan, usePeriode } from '../../lib/store'
-import { arsipBerkas, formatTanggal, formatUkuran, includesText, isPic, paginate } from '../../lib/epss'
-import { bolehUbah } from '../../config/menu'
-import { Badge, DialogHeader, Dropdown, Memuat, Notice, PageHeader, Pagination, SearchBox } from '../../components/ui'
+import { Link } from 'react-router-dom'
+import { bukaDokumen, usePeriode, useSemuaKegiatan } from '../../lib/store'
+import { arsipBerkas, berkasKegiatan, formatTanggal, formatUkuran, includesText, paginate, pemetaanBukti } from '../../lib/epss'
+import { Badge, DialogHeader, FormError, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import folderIcon from '../../assets/sidebar/folder-5-fill.svg'
 import fileText from '../../assets/icons/file-text-fill.svg'
@@ -36,13 +35,9 @@ function Ikon({ src, besar = false }) {
 }
 
 // Panel detail di kanan tabel (referensi: panel detail berkas ala Google Drive)
-function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
-  const [target, setTarget] = useState('')
-  const url = berkasUrl.get(f.id)
+function DetailBerkas({ f, onClose }) {
+  const [error, setError] = useState('')
   const [, ekstensi] = pecahNama(f.nama)
-  // Tautan baru masuk periode berjalan, jadi hanya kegiatan yang user ini PIC-nya dan periodenya belum dikunci
-  const boleh = bolehUbah(user, 'unggahBukti', aktif)
-  const pilihan = kegiatan.filter((k) => isPic(k, user) && !f.kegiatan.includes(k))
 
   return (
     <aside className="flex w-[360px] max-w-full flex-col overflow-hidden rounded-lg bg-white">
@@ -50,14 +45,11 @@ function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
       <div className="flex flex-col gap-6 p-6">
         <div className="flex h-40 flex-col items-center justify-center gap-4 rounded-md bg-grey2-75">
           <Ikon src={fileText} besar />
-          {url ? (
-            <a href={url} target="_blank" rel="noreferrer" className={buttonClass('outline', 'sm')}>
-              <img src={eyeIcon} alt="" width={15} height={15} />
-              Lihat Berkas
-            </a>
-          ) : (
-            <p className="px-6 text-center text-small text-grey-200">Pratinjau hanya tersedia pada sesi saat berkas diunggah.</p>
-          )}
+          <button type="button" onClick={() => bukaDokumen(f.kegiatan[0].id, f).catch((err) => setError(err.message))} className={buttonClass('outline', 'sm')}>
+            <img src={eyeIcon} alt="" width={15} height={15} />
+            Lihat Berkas
+          </button>
+          <FormError>{error}</FormError>
         </div>
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
@@ -101,57 +93,24 @@ function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
             ))}
           </ul>
         </section>
-        <hr className="border-grey-75" />
-
-        <section className="flex flex-col gap-3">
-          <h3 className="font-semibold">Kaitkan ke Bukti Dukung Lain</h3>
-          {!boleh ? (
-            <p className="text-small text-grey-200">{aktif?.terkunci ? 'Periode berjalan sudah dikunci.' : 'Hanya operator yang bisa mengaitkan berkas.'}</p>
-          ) : pilihan.length === 0 ? (
-            <p className="text-small text-grey-200">Tidak ada kegiatan lain dengan Anda sebagai PIC.</p>
-          ) : (
-            <>
-              <p className="text-small text-grey-200">
-                Pakai ulang berkas ini tanpa mengunggah lagi. Indikator kegiatan tujuan ikut ditambahkan ke tag berkas, dan berkas masuk folder periode {aktif.tahun1} - {aktif.tahun2}.
-              </p>
-              <Dropdown
-                label="Kegiatan tujuan"
-                value={target}
-                onChange={setTarget}
-                options={[{ value: '', label: 'Pilih kegiatan...' }, ...pilihan.map((k) => ({ value: k.id, label: k.nama }))]}
-              />
-              <button
-                type="button"
-                disabled={!target}
-                onClick={() => {
-                  onKaitkan(target)
-                  setTarget('')
-                }}
-                className={buttonClass()}
-              >
-                Kaitkan Berkas
-              </button>
-            </>
-          )}
-        </section>
       </div>
     </aside>
   )
 }
 
 function ArsipBukti() {
-  const { user } = useOutletContext()
-  const muat = [useKegiatan(), useBukti(), useBerkas(), usePeriode()]
-  const [{ kegiatan }, { bukti }, { berkas, kaitkan }, { periode, aktif }] = muat
+  const { periode, aktif } = usePeriode()
   const [periodeId, setPeriodeId] = useState(null)
+  const folder = periode.find((p) => p.id === periodeId) ?? aktif
+  // Isi folder = dokumen semua kegiatan pada periode folder itu
+  const daftar = useSemuaKegiatan(folder?.id)
+  const muat = [daftar]
+  const { kegiatan } = daftar
   const [dipilihId, setDipilihId] = useState(null)
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
-  const [pesan, setPesan] = useState('')
 
-  const arsip = arsipBerkas(berkas, kegiatan, bukti, periode)
-  const folder = periode.find((p) => p.id === periodeId) ?? aktif
-  const isiFolder = arsip.filter((f) => f.periode.includes(folder?.id))
+  const isiFolder = arsipBerkas(berkasKegiatan(kegiatan, folder?.id), kegiatan, pemetaanBukti(kegiatan, {}), periode)
   const cocok = isiFolder.filter((f) =>
     includesText([f.nama, f.oleh, ...f.kegiatan.map((k) => k.nama), ...f.indikator.flatMap((i) => [i.nama, `indikator ${i.nomor}`, `ind. ${i.nomor}`])], query),
   )
@@ -162,7 +121,6 @@ function ArsipBukti() {
     setPeriodeId(id)
     setDipilihId(null)
     setPage(1)
-    setPesan('')
   }
 
   return (
@@ -182,8 +140,8 @@ function ArsipBukti() {
       {/* Folder = periode evaluasi (referensi: kartu folder storage) */}
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-6">
         {periode.map((p) => {
-          const isi = arsip.filter((f) => f.periode.includes(p.id))
           const terpilih = p.id === folder?.id
+          const isi = terpilih ? isiFolder : null
           return (
             <li key={p.id}>
               <button
@@ -205,8 +163,8 @@ function ArsipBukti() {
                     Periode {p.tahun1} - {p.tahun2}
                   </span>
                   <span className="flex items-center justify-between gap-4 text-small">
-                    <span className="text-grey-200">{isi.length} berkas</span>
-                    <span className="rounded-sm bg-white px-2.5 py-1 font-medium">{formatUkuran(isi.reduce((total, f) => total + f.ukuran, 0))}</span>
+                    <span className="text-grey-200">{isi ? `${isi.length} berkas` : 'Buka folder'}</span>
+                    {isi && <span className="rounded-sm bg-white px-2.5 py-1 font-medium">{formatUkuran(isi.reduce((total, f) => total + f.ukuran, 0))}</span>}
                   </span>
                 </span>
               </button>
@@ -214,8 +172,6 @@ function ArsipBukti() {
           )
         })}
       </ul>
-
-      {pesan && <Notice tone="green">{pesan}</Notice>}
 
       <div className="flex flex-wrap items-start gap-6">
         <section className="flex min-w-0 flex-1 flex-col gap-3 rounded-lg bg-grey-500 px-2 pt-6 pb-2">
@@ -299,18 +255,7 @@ function ArsipBukti() {
         </section>
 
         {dipilih && (
-          <DetailBerkas
-            key={dipilih.id}
-            f={dipilih}
-            user={user}
-            aktif={aktif}
-            kegiatan={kegiatan}
-            onClose={() => setDipilihId(null)}
-            onKaitkan={(kegiatanId) => {
-              kaitkan(kegiatanId, dipilih, aktif.id)
-              setPesan(`"${dipilih.nama}" ditautkan ke ${kegiatan.find((k) => k.id === kegiatanId).nama}.`)
-            }}
-          />
+          <DetailBerkas key={dipilih.id} f={dipilih} onClose={() => setDipilihId(null)} />
         )}
       </div>
     </div>

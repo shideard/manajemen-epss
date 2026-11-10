@@ -23,11 +23,8 @@ export function agendaTerdekat(list, today, limit = 4) {
 // Key localStorage untuk useStore
 // ponytail: data disimpan di localStorage browser; pindahkan ke API Laravel saat endpoint-nya siap
 export const KEYS = {
-  kegiatan: 'epss.rencana-kegiatan',
   periode: 'epss.periode',
   periodeAktif: 'epss.periode-aktif',
-  bukti: 'epss.bukti', // { 'kegiatanId:indikatorId': { checked, status, level, catatan } }
-  berkas: 'epss.berkas', // { kegiatanId: [{ id, nama, ukuran, tanggal, oleh }] }
   notifDibaca: 'epss.notif-dibaca',
   pengingat: 'epss.pengingat',
   users: 'epss.akun', // akun dari POST /api/users; key baru supaya akun lama yang hanya ada di browser tidak ikut tampil
@@ -307,6 +304,22 @@ export const predikat = (ips) => PREDIKAT_BATAS.find(([batas]) => ips >= batas)?
 
 export const buktiKey = (kegiatanId, indikatorId) => `${kegiatanId}:${indikatorId}`
 
+// Semua pasangan kegiatan-indikator dari API (kegiatan.indikatorIds) beserta ajuannya; belum ada ajuan = draft
+export function pemetaanBukti(kegiatan, ajuan) {
+  const hasil = {}
+  for (const k of kegiatan) {
+    for (const indikatorId of k.indikatorIds) {
+      const key = buktiKey(k.id, indikatorId)
+      hasil[key] = ajuan[key] ?? { kegiatanId: k.id, indikatorId, status: 'draft', checked: {} }
+    }
+  }
+  return hasil
+}
+
+// Dokumen tiap kegiatan (dari API) → { kegiatanId: [berkas] }; pengunggah = PIC (hanya PIC yang bisa mengunggah)
+export const berkasKegiatan = (kegiatan, periodeId) =>
+  Object.fromEntries(kegiatan.map((k) => [k.id, (k.dokumen ?? []).map((d) => ({ ...d, oleh: k.pic, periodeId }))]))
+
 export function statusKegiatan(kegiatan, bukti, jumlahBerkas, today) {
   if (bukti.length > 0 && bukti.every((b) => b.status === 'terverifikasi')) return 'Terverifikasi'
   if (jumlahBerkas > 0) return 'Bukti dukung diunggah'
@@ -462,72 +475,4 @@ export function lkeCsv(levels, bukti, berkas, namaKegiatan) {
     ]
   })
   return [header, ...rows].map((row) => row.map(sel).join(';')).join('\r\n')
-}
-
-// PIC kegiatan disimpan sebagai teks; cocokkan dengan nama atau username akun yang login
-export const isPic = (kegiatan, user) => {
-  const pic = kegiatan.pic?.trim().toLowerCase()
-  return Boolean(pic) && [user.name, user.username].some((v) => v?.trim().toLowerCase() === pic)
-}
-
-// Samakan record bukti suatu kegiatan dengan daftar indikator dari form Rencana Kegiatan.
-// Indikator baru → record draft; indikator yang dilepas dihapus hanya jika masih draft (bukti yang sudah diajukan tidak hilang)
-export function sinkronPemetaan(bukti, kegiatanId, indikatorIds) {
-  const next = Object.fromEntries(
-    Object.entries(bukti).filter(([, b]) => b.kegiatanId !== kegiatanId || indikatorIds.includes(b.indikatorId) || b.status !== 'draft'),
-  )
-  for (const indikatorId of indikatorIds) {
-    next[buktiKey(kegiatanId, indikatorId)] ??= { kegiatanId, indikatorId, status: 'draft', checked: {} }
-  }
-  return next
-}
-
-// ponytail: rencana kegiatan contoh untuk demo, dipakai store.js selama browser belum pernah menyimpan kegiatan;
-// hapus saat data diambil dari API. [nama, OPD, indikator yang didukung]; bersama-sama mencakup ke-32 indikator.
-const CONTOH_KEGIATAN = [
-  ['Survei Kepuasan Masyarakat', 'DPMPTSP', ['i5', 'i18']],
-  ['Pendataan Keluarga Penerima Manfaat', 'DINSOS', ['i9', 'i24']],
-  ['Survei Harga Kebutuhan Pokok', 'DISDAGIN', ['i9', 'i7', 'i20']],
-  ['Pemutakhiran Data Kependudukan', 'DISDUKCAPIL', ['i4', 'i6']],
-  ['Survei Angkatan Kerja Daerah', 'DISNAKER', ['i23', 'i9']],
-  ['Pendataan UMKM', 'DINKOPUKM', ['i9', 'i25']],
-  ['Survei Kesehatan Ibu dan Anak', 'DINKES', ['i6', 'i19']],
-  ['Pendataan Sekolah dan Siswa', 'DISDIK', ['i4', 'i22']],
-  ['Survei Lalu Lintas Harian', 'DISHUB', ['i24', 'i10']],
-  ['Pendataan Rumah Tidak Layak Huni', 'DISPERUMKIM', ['i9', 'i25']],
-  ['Survei Wisatawan Nusantara', 'DISPARBUD', ['i5', 'i11']],
-  ['Penyusunan Kota Bogor Dalam Angka', 'BAPPEDALITBANG', ['i30', 'i11', 'i20']],
-  ['Forum Satu Data Kota Bogor', 'DISKOMINFO', ['i15', 'i32', 'i29']],
-  ['Penyusunan Metadata Statistik Sektoral', 'DISKOMINFO', ['i2', 'i17']],
-  ['Bimbingan Teknis Statistik untuk ASN', 'BKPSDM', ['i13', 'i28']],
-  ['Survei Produksi Pertanian Perkotaan', 'DKPP', ['i9', 'i10']],
-  ['Penyusunan Standar Data Sektoral', 'DISKOMINFO', ['i1', 'i16']],
-  ['Integrasi Data Antar-OPD', 'DISKOMINFO', ['i3', 'i4']],
-  ['Survei Pengelolaan Sampah Rumah Tangga', 'DLH', ['i9', 'i6']],
-  ['Pengembangan Portal Satu Data', 'DISKOMINFO', ['i21', 'i26']],
-  ['Pendataan Penyandang Disabilitas', 'DINSOS', ['i8', 'i9']],
-  ['Evaluasi Rekomendasi Kegiatan Statistik', 'BAPPEDALITBANG', ['i31', 'i14']],
-  ['Pemetaan Data Kebencanaan', 'BPBD', ['i3', 'i10']],
-  ['Sosialisasi Kode Etik Statistisi', 'DISKOMINFO', ['i12', 'i27']],
-]
-const PIC_CONTOH = ['ani1234', 'Rina Kartika', 'ani1234', 'Dodi Pratama'] // separuh milik operator ani1234
-
-// Jadwal disebar tiap 23 hari mulai ±9 bulan sebelum hariIni, jadi selalu ada yang selesai, berjalan, dan akan datang
-export function contohKegiatan(hariIni) {
-  const kegiatan = CONTOH_KEGIATAN.map(([nama, opd], n) => {
-    const mulai = geserHari(hariIni, (n - 12) * 23)
-    return {
-      id: `contoh-${n + 1}`,
-      nama: `${nama} ${mulai.slice(0, 4)}`,
-      deskripsi: `Kegiatan statistik sektoral ${opd} Kota Bogor.`,
-      opd,
-      pic: PIC_CONTOH[n % PIC_CONTOH.length],
-      tahun: mulai.slice(0, 4),
-      mulai,
-      selesai: geserHari(mulai, [14, 30, 7, 45, 21, 60][n % 6]),
-      warna: n % WARNA.length,
-    }
-  })
-  const bukti = CONTOH_KEGIATAN.reduce((semua, [, , indikator], n) => sinkronPemetaan(semua, `contoh-${n + 1}`, indikator), {})
-  return { kegiatan, bukti }
 }
