@@ -52,11 +52,8 @@ class DokumenBuktiController extends Controller
         RencanaKegiatan $rencanaKegiatan
     ): JsonResponse {
         $file = $request->file('file');
-        $disk = Storage::disk('local');
-        $storageKey = $file->store(
-            "bukti/{$rencanaKegiatan->id}",
-            'local'
-        );
+        $disk = Storage::disk();
+        $storageKey = $file->store("bukti/{$rencanaKegiatan->id}");
 
         if (! is_string($storageKey) || $storageKey === '') {
             throw new RuntimeException('File bukti gagal disimpan.');
@@ -130,7 +127,7 @@ class DokumenBuktiController extends Controller
             ->dokumenBukti()
             ->findOrFail($dokumenBukti->id);
 
-        $disk = Storage::disk('local');
+        $disk = Storage::disk();
 
         abort_unless(
             $disk->exists($document->storage_key),
@@ -155,11 +152,8 @@ class DokumenBuktiController extends Controller
     ): JsonResponse 
     {
         $file = $request->file('file');
-        $disk = Storage::disk('local');
-        $storageKey = $file->store(
-            "bukti/{$rencanaKegiatan->id}",
-            'local'
-        );
+        $disk = Storage::disk();
+        $storageKey = $file->store("bukti/{$rencanaKegiatan->id}");
 
         if (! is_string($storageKey) || $storageKey === '') {
             throw new RuntimeException('File bukti gagal disimpan.');
