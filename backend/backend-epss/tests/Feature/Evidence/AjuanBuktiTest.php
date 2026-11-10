@@ -18,6 +18,8 @@ use App\Models\RencanaKegiatan;
 use App\Models\User;
 use App\Models\VersiInstrumenEPSS;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -295,6 +297,42 @@ class AjuanBuktiTest extends TestCase
             ->assertForbidden();
 
         $this->assertSame(StatusAjuanBukti::MENUNGGU, $ajuan->refresh()->status);
+    }
+
+    public function test_uploaded_file_can_be_downloaded_submitted_and_verified(): void
+    {
+        Storage::fake();
+        $s = $this->createScenario(denganDokumen: false);
+        $base = '/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti';
+
+        $dokumenId = $this->sebagai($s['pic'], 'web')
+            ->post($base, [
+                'file' => UploadedFile::fake()->create('bukti.pdf', 100, 'application/pdf'),
+                'evidence_date' => today()->toDateString(),
+            ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->json('data.id');
+
+        Storage::assertExists(DokumenBukti::findOrFail($dokumenId)->storage_key);
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->get($base . '/' . $dokumenId . '/download')
+            ->assertOk()
+            ->assertDownload('bukti.pdf');
+
+        $this->sebagai($s['pic'], 'web')
+            ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
+            ->assertCreated();
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->patchJson('/api/ajuan-bukti/' . AjuanBukti::firstOrFail()->id . '/verifikasi', [
+                'keputusan' => 'TERVERIFIKASI',
+                'checklist' => self::CHECKLIST,
+                'level' => 1,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'TERVERIFIKASI')
+            ->assertJsonPath('data.level', 1);
     }
 
     public function test_period_listing_returns_its_submissions(): void
