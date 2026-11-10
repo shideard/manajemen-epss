@@ -1,5 +1,5 @@
 import { CheckCircle2, Sparkles, Building, User, Calendar, Sliders, Database, Layers, Send } from 'lucide-react'
-import { JADWAL_GRUP } from '../metadataData'
+import { JADWAL_GRUP, formatBulanTahun } from '../metadataData'
 
 function SummaryItem({ label, value }) {
   const displayValue = Array.isArray(value)
@@ -107,7 +107,8 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
                         <div key={j.id} className="rounded-lg bg-grey2-75 p-2.5 text-[12px]">
                           <p className="font-semibold text-grey-300">{j.tahapan || '-'}</p>
                           <p className="text-grey-100">
-                            {j.mulai || '-'} s.d. {j.selesai || '-'}
+                            {formatBulanTahun(j.mulaiBulan, j.mulaiTahun, j.mulai) || '-'} s.d.{' '}
+                            {formatBulanTahun(j.selesaiBulan, j.selesaiTahun, j.selesai) || '-'}
                           </p>
                         </div>
                       ))}

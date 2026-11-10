@@ -2,6 +2,25 @@
 
 export const STORAGE_METADATA_KEY = 'epss_metadata_submissions'
 
+// Kerangka satu baris 3.3 Rencana Jadwal Kegiatan.
+// `mulaiBulan`/`mulaiTahun` dan `selesaiBulan`/`selesaiTahun` wajib diisi,
+// sedangkan `mulai`/`selesai` (tanggal lengkap) bersifat opsional.
+export function buatBarisJadwal(id, grup, kode, tahapan, tambahan = {}) {
+  return {
+    id,
+    grup,
+    kode,
+    tahapan,
+    mulaiBulan: '',
+    mulaiTahun: '',
+    selesaiBulan: '',
+    selesaiTahun: '',
+    mulai: '',
+    selesai: '',
+    ...tambahan,
+  }
+}
+
 export const INITIAL_METADATA_FORM = {
   // Metadata Dasar
   id: '',
@@ -44,17 +63,18 @@ export const INITIAL_METADATA_FORM = {
     latarBelakang: '',
     tujuan: '',
     // Baris tahapan dipertahankan sebagai kerangka (nama tahapan baku),
-    // tetapi tanggal mulai/selesai dikosongkan agar diisi manual.
+    // tetapi bulan/tahun dan tanggal dikosongkan agar diisi manual.
     // `grup` + `kode` dipakai untuk mengelompokkan tampilan (A-D) dan
     // menentukan urutan validasi antartahapan.
+    // INDAH 3.3: bulan & tahun wajib, tanggal (hari) boleh dikosongkan.
     jadwal: [
-      { id: 1, grup: 'A', kode: '1', tahapan: 'Perencanaan Kegiatan', mulai: '', selesai: '' },
-      { id: 2, grup: 'A', kode: '2', tahapan: 'Desain Instrumen', mulai: '', selesai: '' },
-      { id: 3, grup: 'B', kode: '3', tahapan: 'Pengumpulan Data', mulai: '', selesai: '' },
-      { id: 4, grup: 'C', kode: '4', tahapan: 'Pengolahan Data', mulai: '', selesai: '' },
-      { id: 5, grup: 'D', kode: '5', tahapan: 'Analisis Hasil', mulai: '', selesai: '' },
-      { id: 6, grup: 'D', kode: '6', tahapan: 'Diseminasi Hasil', mulai: '', selesai: '' },
-      { id: 7, grup: 'D', kode: '7', tahapan: 'Evaluasi', mulai: '', selesai: '' },
+      buatBarisJadwal(1, 'A', '1', 'Perencanaan Kegiatan'),
+      buatBarisJadwal(2, 'A', '2', 'Desain Instrumen'),
+      buatBarisJadwal(3, 'B', '3', 'Pengumpulan Data'),
+      buatBarisJadwal(4, 'C', '4', 'Pengolahan Data'),
+      buatBarisJadwal(5, 'D', '5', 'Analisis Hasil'),
+      buatBarisJadwal(6, 'D', '6', 'Diseminasi Hasil'),
+      buatBarisJadwal(7, 'D', '7', 'Evaluasi'),
     ],
     // Satu baris kosong supaya tabel variabel sudah bisa diisi langsung.
     variabel: [
@@ -78,7 +98,7 @@ export const INITIAL_METADATA_FORM = {
   blok5: {
     rancanganSampel: '', // 'Single Stage Atau Phase' | 'Multi Stage Atau Phase'
     metodePemilihanSampel: '', // 'Sampel Probabilitas' | 'Sampel Nonprobabilitas'
-    metodeSampel: '', // Probabilitas: 'Simple Random Sampling' | 'Systematic Random Sampling' | 'Stratified Random Sampling' | 'Cluster Sampling' | 'Probability Proportional to Size Sampling'
+    metodeSampel: '', // Probabilitas: 'Simple Random Sampling' | 'Systematic Random Sampling' | 'Stratified Random Sampling' | 'Cluster Sampling' | 'Multistage Sampling'
     // Nonprobabilitas: 'Quota Sampling' | 'Accidental Sampling' | 'Purposive Sampling' | 'Snowball Sampling' | 'Saturation Sampling'
     kerangkaSampel: '', // 'List Frame' | 'Area Frame'
     fraksiSampel: '', // teks bebas
@@ -135,18 +155,48 @@ export const JADWAL_GRUP = [
   { kode: 'D', nama: 'Penyebarluasan' },
 ]
 
-// Draft lama menyimpan jadwal sebagai array datar tanpa id/grup.
-// Normalisasi menambahkan id, grup, dan kode; urutan baris dipertahankan.
+// Draft lama menyimpan jadwal sebagai array datar tanpa id/grup, dan
+// menyimpan tanggal lengkap di `mulai`/`selesai` saja. Normalisasi mengisi
+// id/grup/kode serta memecah tanggal lama menjadi bulan + tahun agar
+// draft lama tidak kehilangan isian. Urutan baris dipertahankan.
 export function normalisasiJadwal(jadwal) {
   if (!Array.isArray(jadwal)) return INITIAL_METADATA_FORM.blok3.jadwal
-  return jadwal.map((j, idx) => ({
-    id: j.id ?? idx + 1,
-    grup: j.grup ?? JADWAL_GRUP[Math.min(Math.floor(idx / 2), JADWAL_GRUP.length - 1)].kode,
-    kode: j.kode ?? String(idx + 1),
-    tahapan: j.tahapan ?? '',
-    mulai: j.mulai ?? '',
-    selesai: j.selesai ?? '',
-  }))
+  return jadwal.map((j, idx) => {
+    const mulai = j.mulai ?? ''
+    const selesai = j.selesai ?? ''
+    return {
+      ...buatBarisJadwal(
+        j.id ?? idx + 1,
+        j.grup ?? JADWAL_GRUP[Math.min(Math.floor(idx / 2), JADWAL_GRUP.length - 1)].kode,
+        j.kode ?? String(idx + 1),
+        j.tahapan ?? ''
+      ),
+      mulaiBulan: j.mulaiBulan ?? (mulai ? mulai.slice(5, 7) : ''),
+      mulaiTahun: j.mulaiTahun ?? (mulai ? mulai.slice(0, 4) : ''),
+      selesaiBulan: j.selesaiBulan ?? (selesai ? selesai.slice(5, 7) : ''),
+      selesaiTahun: j.selesaiTahun ?? (selesai ? selesai.slice(0, 4) : ''),
+      mulai,
+      selesai,
+      ...(j.indukId ? { indukId: j.indukId } : {}),
+    }
+  })
+}
+
+const NAMA_BULAN = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+]
+
+// Label ringkas untuk tampilan: "Maret 2026" atau "12 Maret 2026".
+export function formatBulanTahun(bulan, tahun, tanggal) {
+  if (tanggal) {
+    const [y, m, d] = tanggal.split('-')
+    const nama = NAMA_BULAN[Number(m) - 1]
+    if (nama) return `${Number(d)} ${nama} ${y}`
+  }
+  if (!bulan || !tahun) return ''
+  const nama = NAMA_BULAN[Number(bulan) - 1]
+  return nama ? `${nama} ${tahun}` : ''
 }
 
 // Minimal panjang judul kegiatan sebelum rekomendasi boleh ditampilkan.

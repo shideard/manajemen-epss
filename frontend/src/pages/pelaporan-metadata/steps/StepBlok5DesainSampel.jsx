@@ -1,13 +1,16 @@
+import { useEffect } from 'react'
+
 const OPSI_RANCANGAN = ['Single Stage Atau Phase', 'Multi Stage Atau Phase']
 
 const OPSI_METODE_PEMILIHAN = ['Sampel Probabilitas', 'Sampel Nonprobabilitas']
 
+// Nama metode mengikuti Formulir MS-Keg INDAH (blok 5.3 Sampel Probabilitas).
 const OPSI_METODE_PROBABILITAS = [
   'Simple Random Sampling',
   'Systematic Random Sampling',
   'Stratified Random Sampling',
   'Cluster Sampling',
-  'Probability Proportional to Size Sampling',
+  'Multistage Sampling',
 ]
 
 const OPSI_METODE_NONPROBABILITAS = [
@@ -36,6 +39,19 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
       updateBlok5('metodeSampel', '')
     }
   }
+
+  // Draft lama bisa menyimpan nama metode dari daftar versi sebelumnya
+  // (mis. 'Probability Proportional to Size Sampling'). Nilai seperti itu
+  // tidak ada lagi di opsi 5.3 sehingga tampil sebagai "tidak terpilih";
+  // kosongkan saat cabang probabilitas dibuka agar isian tidak menggantung.
+  useEffect(() => {
+    if (!isProbabilitas) return
+    if (data.metodeSampel && !OPSI_METODE_PROBABILITAS.includes(data.metodeSampel)) {
+      updateBlok5('metodeSampel', '')
+    }
+    // updateBlok5 stabil dari parent; cukup dipicu saat nilai berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isProbabilitas, data.metodeSampel])
 
   return (
     <div className="flex flex-col gap-6">
