@@ -27,7 +27,7 @@ class AjuanBuktiTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const CHECKLIST = ['1' => [true, true], '2' => [true, false]];
+    private const CHECKLIST = ['3' => [true, true]];
 
     private function createUser(UserRole $role): User
     {
@@ -109,6 +109,7 @@ class AjuanBuktiTest extends TestCase
         KegiatanIndikator::create([
             'kegiatan_id' => $kegiatan->id,
             'indikator_id' => $indikator->id,
+            'level' => 3,
             'created_by' => $verifikator->id,
         ]);
 
@@ -144,6 +145,65 @@ class AjuanBuktiTest extends TestCase
         return AjuanBukti::firstOrFail();
     }
 
+    public function test_checklist_is_limited_to_the_target_level(): void
+    {
+        $s = $this->createScenario();
+
+        $this->sebagai($s['pic'], 'web')
+            ->putJson($this->updateUrl($s), ['checklist' => ['2' => [true]], 'ajukan' => false])
+            ->assertStatus(422);
+
+        $this->sebagai($s['pic'], 'web')
+            ->putJson($this->updateUrl($s), ['checklist' => ['3' => [true, false]], 'ajukan' => true])
+            ->assertStatus(422);
+
+        $ajuan = $this->ajuanMenunggu($s);
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->patchJson('/api/ajuan-bukti/' . $ajuan->id . '/verifikasi', [
+                'keputusan' => 'TERVERIFIKASI',
+                'checklist' => ['3' => [true, false]],
+            ])
+            ->assertStatus(422);
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->patchJson('/api/ajuan-bukti/' . $ajuan->id . '/verifikasi', [
+                'keputusan' => 'TERVERIFIKASI',
+                'checklist' => self::CHECKLIST,
+                'level' => 5,
+            ])
+            ->assertJsonValidationErrors(['level']);
+    }
+
+    public function test_sync_stores_target_level_and_locks_submitted_mapping(): void
+    {
+        $s = $this->createScenario();
+        $url = '/api/rencana-kegiatan/' . $s['kegiatan']->id . '/indikator';
+        $id = $s['indikator']->id;
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->putJson($url, ['indikator_ids' => [$id], 'levels' => [$id => 4]])
+            ->assertNoContent();
+        $this->assertDatabaseHas('kegiatan_indikator', ['indikator_id' => $id, 'level' => 4]);
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->getJson('/api/rencana-kegiatan/' . $s['kegiatan']->id)
+            ->assertJsonPath('data.indikator.0.level', 4);
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->putJson($url, ['indikator_ids' => [$id], 'levels' => [$id => 3]])
+            ->assertNoContent();
+        $this->ajuanMenunggu($s);
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->putJson($url, ['indikator_ids' => [$id], 'levels' => [$id => 2]])
+            ->assertStatus(409);
+        $this->sebagai($s['verifikator'], 'web')
+            ->putJson($url, ['indikator_ids' => []])
+            ->assertStatus(409);
+        $this->assertDatabaseHas('kegiatan_indikator', ['indikator_id' => $id, 'level' => 3]);
+    }
+
     public function test_pic_can_save_draft_checklist_then_submit(): void
     {
         $s = $this->createScenario();
@@ -152,7 +212,7 @@ class AjuanBuktiTest extends TestCase
             ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => false])
             ->assertCreated()
             ->assertJsonPath('data.status', 'DRAFT')
-            ->assertJsonPath('data.checklist.1', [true, true])
+            ->assertJsonPath('data.checklist.3', [true, true])
             ->assertJsonPath('data.pengaju', null);
 
         $this->sebagai($s['pic'], 'web')
@@ -223,11 +283,10 @@ class AjuanBuktiTest extends TestCase
             ->patchJson('/api/ajuan-bukti/' . $ajuan->id . '/verifikasi', [
                 'keputusan' => 'TERVERIFIKASI',
                 'checklist' => self::CHECKLIST,
-                'level' => 1,
             ])
             ->assertOk()
             ->assertJsonPath('data.status', 'TERVERIFIKASI')
-            ->assertJsonPath('data.level', 1)
+            ->assertJsonPath('data.level', 3)
             ->assertJsonPath('data.catatan', null)
             ->assertJsonPath('data.verifikator', $s['verifikator']->name);
     }
@@ -274,7 +333,6 @@ class AjuanBuktiTest extends TestCase
             ->patchJson('/api/ajuan-bukti/' . AjuanBukti::firstOrFail()->id . '/verifikasi', [
                 'keputusan' => 'TERVERIFIKASI',
                 'checklist' => self::CHECKLIST,
-                'level' => 1,
             ])
             ->assertStatus(409);
     }
@@ -283,7 +341,7 @@ class AjuanBuktiTest extends TestCase
     {
         $s = $this->createScenario();
         $ajuan = $this->ajuanMenunggu($s);
-        $payload = ['keputusan' => 'TERVERIFIKASI', 'checklist' => self::CHECKLIST, 'level' => 1];
+        $payload = ['keputusan' => 'TERVERIFIKASI', 'checklist' => self::CHECKLIST];
 
         $this->sebagai($s['pic'], 'web')
             ->patchJson('/api/ajuan-bukti/' . $ajuan->id . '/verifikasi', $payload)
@@ -328,11 +386,10 @@ class AjuanBuktiTest extends TestCase
             ->patchJson('/api/ajuan-bukti/' . AjuanBukti::firstOrFail()->id . '/verifikasi', [
                 'keputusan' => 'TERVERIFIKASI',
                 'checklist' => self::CHECKLIST,
-                'level' => 1,
             ])
             ->assertOk()
             ->assertJsonPath('data.status', 'TERVERIFIKASI')
-            ->assertJsonPath('data.level', 1);
+            ->assertJsonPath('data.level', 3);
     }
 
     public function test_period_listing_returns_its_submissions(): void

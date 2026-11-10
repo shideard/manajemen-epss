@@ -31,13 +31,8 @@ class VerifyAjuanBuktiRequest extends FormRequest
             'checklist' => ['present', 'array'],
             'checklist.*' => ['array'],
             'checklist.*.*' => ['boolean'],
-            'level' => [
-                'required_if:keputusan,' . StatusAjuanBukti::TERVERIFIKASI->value,
-                'prohibited_if:keputusan,' . StatusAjuanBukti::PERBAIKAN->value,
-                'integer',
-                'min:1',
-                'max:5',
-            ],
+            // Level yang ditetapkan = level target pemetaan kegiatan-indikator, bukan pilihan verifikator
+            'level' => ['missing'],
             'catatan' => [
                 'required_if:keputusan,' . StatusAjuanBukti::PERBAIKAN->value,
                 'nullable',

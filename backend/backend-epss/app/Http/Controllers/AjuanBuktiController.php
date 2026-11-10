@@ -8,6 +8,7 @@ use App\Http\Requests\Evidence\VerifyAjuanBuktiRequest;
 use App\Http\Resources\AjuanBuktiResource;
 use App\Models\AjuanBukti;
 use App\Models\IndikatorEPSS;
+use App\Models\KegiatanIndikator;
 use App\Models\PeriodeEvaluasi;
 use App\Models\RencanaKegiatan;
 use Illuminate\Http\JsonResponse;
@@ -44,21 +45,21 @@ class AjuanBuktiController extends Controller
         RencanaKegiatan $rencanaKegiatan,
         IndikatorEPSS $indikator
     ): JsonResponse {
-        abort_unless(
-            $rencanaKegiatan->indikatorMappings()
-                ->where('indikator_id', $indikator->id)
-                ->exists(),
-            404,
-            'Indikator tidak dipetakan ke kegiatan ini.'
-        );
+        $level = $rencanaKegiatan->indikatorMappings()
+            ->where('indikator_id', $indikator->id)
+            ->value('level');
+
+        abort_if($level === null, 404, 'Indikator tidak dipetakan ke kegiatan ini.');
 
         $validated = $request->validated();
         $actorId = $request->user()->id;
+        $this->pastikanHanyaLevelTarget($validated['checklist'], $level);
 
         $ajuan = DB::transaction(function () use (
             $rencanaKegiatan,
             $indikator,
             $validated,
+            $level,
             $actorId
         ): AjuanBukti {
             $ajuan = AjuanBukti::query()
@@ -80,8 +81,12 @@ class AjuanBuktiController extends Controller
             $ajuan->checklist = $validated['checklist'];
 
             if ($validated['ajukan']) {
-                // ponytail: kelengkapan persyaratan level 1 masih diperiksa di frontend;
-                // pindahkan ke sini saat persyaratan_bukti dipakai frontend
+                abort_unless(
+                    $this->levelLengkap($validated['checklist'], $level),
+                    422,
+                    "Centang seluruh persyaratan Level {$level} sebelum mengajukan verifikasi."
+                );
+
                 abort_unless(
                     $rencanaKegiatan->dokumenBukti()
                         ->where('is_current', true)
@@ -105,17 +110,31 @@ class AjuanBuktiController extends Controller
         ))->response();
     }
 
-    // Verifikator: setujui dengan level, atau kembalikan ke operator dengan catatan
+    // Verifikator: setujui (level = level target pemetaan), atau kembalikan ke operator dengan catatan
     public function verify(
         VerifyAjuanBuktiRequest $request,
         AjuanBukti $ajuanBukti
     ): JsonResponse {
         $validated = $request->validated();
         $actorId = $request->user()->id;
+        $level = KegiatanIndikator::query()
+            ->where('kegiatan_id', $ajuanBukti->kegiatan_id)
+            ->where('indikator_id', $ajuanBukti->indikator_id)
+            ->value('level');
+
+        abort_if($level === null, 409, 'Indikator ini sudah tidak dipetakan ke kegiatannya.');
+        $this->pastikanHanyaLevelTarget($validated['checklist'], $level);
+        abort_if(
+            $validated['keputusan'] === StatusAjuanBukti::TERVERIFIKASI->value
+                && ! $this->levelLengkap($validated['checklist'], $level),
+            422,
+            "Seluruh persyaratan Level {$level} harus terpenuhi untuk menyetujui ajuan."
+        );
 
         $ajuan = DB::transaction(function () use (
             $ajuanBukti,
             $validated,
+            $level,
             $actorId
         ): AjuanBukti {
             $ajuan = AjuanBukti::query()
@@ -132,7 +151,7 @@ class AjuanBuktiController extends Controller
 
             $ajuan->status = StatusAjuanBukti::from($validated['keputusan']);
             $ajuan->checklist = $validated['checklist'];
-            $ajuan->level = $disetujui ? $validated['level'] : null;
+            $ajuan->level = $disetujui ? $level : null;
             $ajuan->catatan = $disetujui ? null : trim($validated['catatan']);
             $ajuan->diverifikasi_oleh = $actorId;
             $ajuan->diverifikasi_pada = now();
@@ -144,5 +163,22 @@ class AjuanBuktiController extends Controller
         return (new AjuanBuktiResource(
             $ajuan->refresh()->load(['indikator:id,kode', 'pengaju:id,name', 'verifikator:id,name'])
         ))->response();
+    }
+
+    // Checklist hanya boleh berisi level yang ditargetkan verifikator untuk kegiatan ini
+    private function pastikanHanyaLevelTarget(array $checklist, int $level): void
+    {
+        abort_if(
+            array_diff(array_map('strval', array_keys($checklist)), [(string) $level]) !== [],
+            422,
+            "Checklist hanya boleh diisi untuk Level {$level}."
+        );
+    }
+
+    private function levelLengkap(array $checklist, int $level): bool
+    {
+        $baris = $checklist[$level] ?? [];
+
+        return $baris !== [] && ! in_array(false, $baris, true);
     }
 }

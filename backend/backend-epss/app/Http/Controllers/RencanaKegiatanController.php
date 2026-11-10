@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\StatusAjuanBukti;
 use App\Http\Requests\Planning\StoreRencanaKegiatanRequest;
 use App\Http\Resources\RencanaKegiatanResource;
 use App\Models\RencanaKegiatan;
@@ -70,22 +71,52 @@ class RencanaKegiatanController extends Controller
     public function syncIndikator(SyncKegiatanIndikatorRequest $request, RencanaKegiatan $rencanaKegiatan): Response 
     {
         $indikatorIds = $request->validated('indikator_ids');
+        $levels = $request->validated('levels', []);
         $userId = $request->user()->id;
 
         DB::transaction(function () use (
             $rencanaKegiatan,
             $indikatorIds,
+            $levels,
             $userId
         ): void {
-            $indikatorSaatIni = $rencanaKegiatan
+            // indikator_id => level yang tersimpan
+            $levelSaatIni = $rencanaKegiatan
                 ->indikatorMappings()
-                ->pluck('indikator_id')
+                ->lockForUpdate()
+                ->pluck('level', 'indikator_id')
                 ->all();
+            $indikatorSaatIni = array_keys($levelSaatIni);
 
             $indikatorUntukDihapus = array_diff(
                 $indikatorSaatIni,
                 $indikatorIds
             );
+
+            // Ajuan yang sedang/sudah diverifikasi terikat pada level-nya: pemetaannya tidak boleh dilepas atau diubah levelnya
+            $levelBerubah = array_filter(
+                array_intersect($indikatorSaatIni, $indikatorIds),
+                fn ($id) => (int) ($levels[$id] ?? 1) !== (int) $levelSaatIni[$id]
+            );
+            $terkunci = $rencanaKegiatan->ajuanBukti()
+                ->whereIn('indikator_id', [...$indikatorUntukDihapus, ...$levelBerubah])
+                ->whereIn('status', [
+                    StatusAjuanBukti::MENUNGGU->value,
+                    StatusAjuanBukti::TERVERIFIKASI->value,
+                ])
+                ->exists();
+
+            abort_if(
+                $terkunci,
+                409,
+                'Indikator dengan ajuan yang menunggu verifikasi atau sudah terverifikasi tidak dapat dilepas atau diubah levelnya.'
+            );
+
+            foreach ($levelBerubah as $indikatorId) {
+                $rencanaKegiatan->indikatorMappings()
+                    ->where('indikator_id', $indikatorId)
+                    ->update(['level' => $levels[$indikatorId] ?? 1]);
+            }
 
             if ($indikatorUntukDihapus !== []) {
                 $rencanaKegiatan
@@ -102,6 +133,7 @@ class RencanaKegiatanController extends Controller
             foreach ($indikatorUntukDitambahkan as $indikatorId) {
                 $rencanaKegiatan->indikatorMappings()->create([
                     'indikator_id' => $indikatorId,
+                    'level' => $levels[$indikatorId] ?? 1,
                     'created_by' => $userId,
                 ]);
             }

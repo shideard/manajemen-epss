@@ -102,4 +102,9 @@ class RencanaKegiatan extends Model
         return $this->hasMany(DokumenBukti::class, 'kegiatan_id');
     }
 
+    public function ajuanBukti(): HasMany
+    {
+        return $this->hasMany(AjuanBukti::class, 'kegiatan_id');
+    }
+
 }

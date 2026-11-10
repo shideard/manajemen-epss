@@ -31,6 +31,9 @@ class SyncKegiatanIndikatorRequest extends FormRequest
                 'distinct',
                 Rule::exists('indikator_epss', 'id'),
             ],
+            // { "<indikator_id>": level 1-5 } = level yang ditargetkan kegiatan ini; tanpa entri = level 1
+            'levels' => ['sometimes', 'array'],
+            'levels.*' => ['integer', 'min:1', 'max:5'],
         ];
     }
 

@@ -15,6 +15,7 @@ class KegiatanIndikator extends Model
     protected $fillable = [
         'kegiatan_id',
         'indikator_id',
+        'level',
         'created_by',
     ];
 
