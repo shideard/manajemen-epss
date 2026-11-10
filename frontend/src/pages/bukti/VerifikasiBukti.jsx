@@ -38,7 +38,7 @@ function  VerifikasiBukti() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="daftar" />
       <PageHeader title="Ajuan Terbaru">
         <SearchBox
           value={query}

@@ -22,7 +22,7 @@ function KonfigurasiPeriode() {
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const p = periode.find((item) => item.id === id)
-  if (!p && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} />
+  if (!p && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} bentuk="detail" />
   if (!p) return <Navigate to="/pengaturan-periode" replace />
 
   const lainnya = periode.filter((item) => item.id !== id && item.actual != null)
@@ -82,7 +82,7 @@ function KonfigurasiPeriode() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="detail" />
       <PageHeader
         back="/pengaturan-periode"
         title="Konfigurasi Periode & Target IPS"

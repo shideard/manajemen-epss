@@ -104,6 +104,8 @@ const mapRencanaKegiatan = (item) => ({
   mulai: item.tanggal_mulai_rencana,
   selesai: item.tanggal_selesai_rencana,
   tahun: String(item.tahun_kegiatan),
+  // API tidak menyimpan warna: diturunkan dari id supaya tetap sama di kalender, agenda, dan peta
+  warna: [...String(item.id)].reduce((n, c) => n + c.charCodeAt(0), 0) % WARNA.length,
   indikator: item.indikator ?? [],
   // Indikator API → id instrumen lokal (kode = nomor indikator); checklist & status bukti masih memakai id lokal
   indikatorIds: (item.indikator ?? []).map((i) => INDIKATOR.find((l) => String(l.nomor) === String(i.kode))?.id).filter(Boolean),

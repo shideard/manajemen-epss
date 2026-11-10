@@ -39,7 +39,7 @@ function RepositoriBukti() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="daftar" />
       <PageHeader title="Upload Bukti Dukung" />
 
       <div className="flex flex-wrap items-center justify-between gap-4">

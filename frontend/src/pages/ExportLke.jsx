@@ -39,7 +39,7 @@ function ExportLke() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="daftar" />
       <PageHeader
         title="Ekspor Lembar Kerja Evaluasi dan Bukti Dukung yang Terstruktur"
         subtitle="Hasilkan format resmi pelaporan BPS untuk keperluan penilaian Tim Penilai Internal (TPI) dan Tim Penilai Evaluasi Penyelenggaraan Statistik Sektoral (TPSS)."

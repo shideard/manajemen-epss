@@ -145,7 +145,7 @@ function RepositoriDetail() {
   const fileInput = useRef(null)
 
   if (detail.error?.status === 404) return <Navigate to={daftarKegiatanPath} replace />
-  if (!detail.kegiatan) return <Memuat dari={[detail]} />
+  if (!detail.kegiatan) return <Memuat dari={[detail]} bentuk="detail" />
   const k = detail.kegiatan
 
   // Berkas hanya bisa diunggah PIC kegiatan, jadi pengunggahnya = PIC
@@ -190,7 +190,7 @@ function RepositoriDetail() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="detail" />
       <PageHeader
         back={daftarKegiatanPath}
         title="Pengumpulan Bukti Dukung"

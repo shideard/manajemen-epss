@@ -31,7 +31,7 @@ function GantiPassword() {
     navigate('/login', { replace: true })
   }
 
-  if (!auth.user) return auth.loading || auth.error ? <Memuat dari={[auth]} /> : <Navigate to="/login" replace />
+  if (!auth.user) return auth.loading || auth.error ? <Memuat dari={[auth]} layar /> : <Navigate to="/login" replace />
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-grey2-100 p-4 font-sans">

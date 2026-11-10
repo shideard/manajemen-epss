@@ -92,8 +92,8 @@ function KanbanKegiatan({ periodeId, cocok, hrefOf }) {
   const [terbuka, setTerbuka] = useState([]) // status kolom yang sedang menampilkan semua kartu
   const toggle = (status) => setTerbuka((list) => (list.includes(status) ? list.filter((s) => s !== status) : [...list, status]))
   return (
-    <div className="overflow-x-auto rounded-lg bg-white p-4">
-      <Memuat dari={[semua]} />
+    <div className="relative overflow-x-auto rounded-lg bg-white p-4">
+      <Memuat dari={[semua]} bentuk="kanban" />
       <div className="grid min-w-[920px] grid-cols-4 gap-3">
         {KOLOM_KANBAN.map((status) => {
           const warna = KOLOM[status]

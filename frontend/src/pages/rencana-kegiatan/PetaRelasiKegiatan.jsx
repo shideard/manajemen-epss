@@ -25,7 +25,7 @@ function PetaRelasiKegiatan() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="peta" />
       <PageHeader title="Peta Relasi Kegiatan" subtitle="Keterkaitan domain, aspek, dan indikator EPSS dengan rencana kegiatan." />
       <PetaKegiatan kegiatan={kegiatan} bukti={bukti} onOpen={buka} />
 
