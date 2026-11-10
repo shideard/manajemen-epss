@@ -159,15 +159,15 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ->name('periode-evaluasi.ajuan-bukti.index');
 
         Route::put('/rencana-kegiatan/{rencanaKegiatan}/ajuan-bukti/{indikator}',
-        [AjuanBuktiController::class, 'simpan']
+        [AjuanBuktiController::class, 'update']
         )->whereUuid('rencanaKegiatan')
         ->whereUuid('indikator')
-        ->name('rencana-kegiatan.ajuan-bukti.simpan');
+        ->name('rencana-kegiatan.ajuan-bukti.update');
 
         Route::patch('/ajuan-bukti/{ajuanBukti}/verifikasi',
-        [AjuanBuktiController::class, 'verifikasi']
+        [AjuanBuktiController::class, 'verify']
         )->whereUuid('ajuanBukti')
-        ->name('ajuan-bukti.verifikasi');
+        ->name('ajuan-bukti.verify');
 
     });
 });

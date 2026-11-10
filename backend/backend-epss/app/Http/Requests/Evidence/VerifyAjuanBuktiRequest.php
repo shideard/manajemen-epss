@@ -7,7 +7,7 @@ use App\Models\AjuanBukti;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class VerifikasiAjuanBuktiRequest extends FormRequest
+class VerifyAjuanBuktiRequest extends FormRequest
 {
     public function authorize(): bool
     {

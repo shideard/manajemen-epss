@@ -128,7 +128,7 @@ class AjuanBuktiTest extends TestCase
         return compact('periode', 'indikator', 'verifikator', 'pic', 'kegiatan');
     }
 
-    private function simpanUrl(array $s): string
+    private function updateUrl(array $s): string
     {
         return '/api/rencana-kegiatan/' . $s['kegiatan']->id . '/ajuan-bukti/' . $s['indikator']->id;
     }
@@ -136,7 +136,7 @@ class AjuanBuktiTest extends TestCase
     private function ajuanMenunggu(array $s): AjuanBukti
     {
         $this->sebagai($s['pic'], 'web')
-            ->putJson($this->simpanUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
+            ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
             ->assertSuccessful();
 
         return AjuanBukti::firstOrFail();
@@ -147,14 +147,14 @@ class AjuanBuktiTest extends TestCase
         $s = $this->createScenario();
 
         $this->sebagai($s['pic'], 'web')
-            ->putJson($this->simpanUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => false])
+            ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => false])
             ->assertCreated()
             ->assertJsonPath('data.status', 'DRAFT')
             ->assertJsonPath('data.checklist.1', [true, true])
             ->assertJsonPath('data.pengaju', null);
 
         $this->sebagai($s['pic'], 'web')
-            ->putJson($this->simpanUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
+            ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
             ->assertSuccessful()
             ->assertJsonPath('data.status', 'MENUNGGU')
             ->assertJsonPath('data.pengaju', $s['pic']->name)
@@ -168,7 +168,7 @@ class AjuanBuktiTest extends TestCase
         $s = $this->createScenario(denganDokumen: false);
 
         $this->sebagai($s['pic'], 'web')
-            ->putJson($this->simpanUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
+            ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
             ->assertStatus(422);
     }
 
@@ -178,7 +178,7 @@ class AjuanBuktiTest extends TestCase
 
         foreach ([$this->createUser(UserRole::OPERATOR), $s['verifikator']] as $actor) {
             $this->sebagai($actor, 'web')
-                ->putJson($this->simpanUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => false])
+                ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => false])
                 ->assertForbidden();
         }
     }
@@ -208,7 +208,7 @@ class AjuanBuktiTest extends TestCase
         $this->ajuanMenunggu($s);
 
         $this->sebagai($s['pic'], 'web')
-            ->putJson($this->simpanUrl($s), ['checklist' => [], 'ajukan' => false])
+            ->putJson($this->updateUrl($s), ['checklist' => [], 'ajukan' => false])
             ->assertStatus(409);
     }
 
@@ -255,7 +255,7 @@ class AjuanBuktiTest extends TestCase
             ->assertJsonPath('data.catatan', 'Lengkapi SK.');
 
         $this->sebagai($s['pic'], 'web')
-            ->putJson($this->simpanUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
+            ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
             ->assertSuccessful()
             ->assertJsonPath('data.status', 'MENUNGGU');
     }
@@ -265,7 +265,7 @@ class AjuanBuktiTest extends TestCase
         $s = $this->createScenario();
 
         $this->sebagai($s['pic'], 'web')
-            ->putJson($this->simpanUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => false])
+            ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => false])
             ->assertSuccessful();
 
         $this->sebagai($s['verifikator'], 'web')

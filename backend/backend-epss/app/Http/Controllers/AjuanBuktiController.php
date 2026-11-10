@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\StatusAjuanBukti;
-use App\Http\Requests\Evidence\SimpanAjuanBuktiRequest;
-use App\Http\Requests\Evidence\VerifikasiAjuanBuktiRequest;
+use App\Http\Requests\Evidence\UpdateAjuanBuktiRequest;
+use App\Http\Requests\Evidence\VerifyAjuanBuktiRequest;
 use App\Http\Resources\AjuanBuktiResource;
 use App\Models\AjuanBukti;
 use App\Models\IndikatorEPSS;
 use App\Models\PeriodeEvaluasi;
 use App\Models\RencanaKegiatan;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -38,11 +39,11 @@ class AjuanBuktiController extends Controller
     }
 
     // Operator (PIC): simpan checklist sebagai draft, atau ajukan ke verifikator
-    public function simpan(
-        SimpanAjuanBuktiRequest $request,
+    public function update(
+        UpdateAjuanBuktiRequest $request,
         RencanaKegiatan $rencanaKegiatan,
         IndikatorEPSS $indikator
-    ): AjuanBuktiResource {
+    ): JsonResponse {
         abort_unless(
             $rencanaKegiatan->indikatorMappings()
                 ->where('indikator_id', $indikator->id)
@@ -99,16 +100,16 @@ class AjuanBuktiController extends Controller
             return $ajuan;
         });
 
-        return new AjuanBuktiResource(
+        return (new AjuanBuktiResource(
             $ajuan->refresh()->load(['indikator:id,kode', 'pengaju:id,name', 'verifikator:id,name'])
-        );
+        ))->response();
     }
 
     // Verifikator: setujui dengan level, atau kembalikan ke operator dengan catatan
-    public function verifikasi(
-        VerifikasiAjuanBuktiRequest $request,
+    public function verify(
+        VerifyAjuanBuktiRequest $request,
         AjuanBukti $ajuanBukti
-    ): AjuanBuktiResource {
+    ): JsonResponse {
         $validated = $request->validated();
         $actorId = $request->user()->id;
 
@@ -140,8 +141,8 @@ class AjuanBuktiController extends Controller
             return $ajuan;
         });
 
-        return new AjuanBuktiResource(
+        return (new AjuanBuktiResource(
             $ajuan->refresh()->load(['indikator:id,kode', 'pengaju:id,name', 'verifikator:id,name'])
-        );
+        ))->response();
     }
 }

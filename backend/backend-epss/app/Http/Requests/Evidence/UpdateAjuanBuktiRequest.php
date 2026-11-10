@@ -5,7 +5,7 @@ namespace App\Http\Requests\Evidence;
 use App\Models\RencanaKegiatan;
 use Illuminate\Foundation\Http\FormRequest;
 
-class SimpanAjuanBuktiRequest extends FormRequest
+class UpdateAjuanBuktiRequest extends FormRequest
 {
     public function authorize(): bool
     {
