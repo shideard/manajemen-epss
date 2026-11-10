@@ -32,7 +32,8 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
   const syarat = indikator.levels[level - 1].syarat
 
   function centang(index, value) {
-    onSave({ checked: { ...checked, [level]: syarat.map((_, i) => (i === index ? value : Boolean(checked[level]?.[i]))) } })
+    setError('')
+    onSave({ checked: { ...checked, [level]: syarat.map((_, i) => (i === index ? value : Boolean(checked[level]?.[i]))) } }).catch((err) => setError(err.message))
   }
 
   function ajukan() {
@@ -42,7 +43,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
       title: 'Ajukan Verifikasi',
       message: `Ajukan bukti dukung Indikator ${indikator.nomor} (Level Terpenuhi: ${terpenuhi}) ke verifikator? Checklist tidak bisa diubah selama menunggu verifikasi.`,
       confirmLabel: 'Ajukan',
-      onConfirm: () => onSave({ checked, status: 'menunggu', diajukan: new Date().toISOString() }),
+      onConfirm: () => onSave({ checked, ajukan: true }),
     })
   }
 
@@ -138,7 +139,7 @@ function RepositoriDetail() {
   const detail = useDetailKegiatan(kegiatanId)
   const dokumen = useDokumenBukti(kegiatanId)
   const muat = [useBukti(), useSkor(), dokumen]
-  const [{ bukti: semuaBukti, ubah: ubahBukti }, { levels }] = muat
+  const [{ bukti: semuaBukti, simpan: simpanAjuan }, { levels }] = muat
   const [cari, setCari] = useState('')
   const [mengunggah, setMengunggah] = useState(false)
   const [errorBerkas, setErrorBerkas] = useState('')
@@ -150,7 +151,6 @@ function RepositoriDetail() {
 
   // Berkas hanya bisa diunggah PIC kegiatan, jadi pengunggahnya = PIC
   const files = dokumen.dokumen.map((f) => ({ ...f, oleh: k.pic }))
-  // Checklist & status verifikasi per indikator masih di browser sampai endpoint pengajuan/verifikasi ada
   const tertaut = k.indikatorIds.map((id) => semuaBukti[buktiKey(k.id, id)] ?? { kegiatanId: k.id, indikatorId: id, status: 'draft' })
   // Operator lain boleh melihat sebagai referensi; hanya PIC yang bisa mengunggah, dan tidak saat periode dikunci
   const pic = k.pic_user_id === user.id
@@ -185,8 +185,7 @@ function RepositoriDetail() {
     }
   }
 
-  const simpanBukti = (indikatorId, perubahan) =>
-    ubahBukti(buktiKey(k.id, indikatorId), { kegiatanId: k.id, indikatorId, ...perubahan, pengaju: user.name })
+  const simpanBukti = (indikatorId, perubahan) => simpanAjuan(k, indikatorId, perubahan)
 
   return (
     <div className="flex w-full flex-col gap-8">

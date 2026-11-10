@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { api, unduh } from './api'
 import {
+  buktiKey,
   contohKegiatan,
   EMPTY_LIST,
   EMPTY_OBJECT,
   hitungIps,
   INDIKATOR,
+  indikatorById,
   KEYS,
   notifikasi,
   SEED_PENGINGAT,
@@ -245,13 +247,78 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
   }
 }
 
-// bukti = { 'kegiatanId:indikatorId': { kegiatanId, indikatorId, checked, status, level, catatan, ... } }
+// Ajuan bukti dari API → bentuk yang dipakai halaman. Indikator API dicocokkan ke id lokal lewat kode = nomor
+const STATUS_AJUAN = { DRAFT: 'draft', MENUNGGU: 'menunggu', PERBAIKAN: 'perbaikan', TERVERIFIKASI: 'terverifikasi' }
+const indikatorLokalByKode = Object.fromEntries(INDIKATOR.map((i) => [String(i.nomor), i.id]))
+const mapAjuan = (a) => ({
+  id: a.id,
+  kegiatanId: a.kegiatan_id,
+  indikatorId: indikatorLokalByKode[String(a.indikator.kode)],
+  status: STATUS_AJUAN[a.status],
+  checked: a.checklist ?? {},
+  level: a.level,
+  catatan: a.catatan ?? '',
+  pengaju: a.pengaju,
+  diajukan: a.diajukan_pada,
+  verifikator: a.verifikator,
+  diverifikasi: a.diverifikasi_pada,
+})
+
+// bukti = { 'kegiatanId:indikatorId': { kegiatanId, indikatorId, checked, status, level, catatan, ... } } untuk periode aktif.
+// Belum ada ajuan = draft kosong (pemanggil memakai `?? { status: 'draft' }`).
 export function useBukti() {
-  const [bukti, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
+  const { aktif } = usePeriode()
+  const periodeId = aktif?.id
+  const ambil = useCallback(
+    () => api(`/api/periode-evaluasi/${periodeId}/ajuan-bukti`).then((res) => Object.fromEntries((res.data ?? []).map(mapAjuan).map((b) => [buktiKey(b.kegiatanId, b.indikatorId), b]))),
+    [periodeId],
+  )
+  const { data, ...state } = useMuat(periodeId, ambil)
+  // Hasil simpan dari halaman ini ditimpakan di atas hasil GET, tanpa memuat ulang semuanya
+  const [ubahan, setUbahan] = useState(EMPTY_OBJECT)
+  const bukti = { ...(data ?? EMPTY_OBJECT), ...ubahan }
+  const terima = (a) => {
+    const b = mapAjuan(a)
+    setUbahan((u) => ({ ...u, [buktiKey(b.kegiatanId, b.indikatorId)]: b }))
+    return b
+  }
+
   return {
     bukti,
-    ...SIAP,
-    ubah: (key, perubahan) => setBukti((all) => ({ ...all, [key]: { ...all[key], ...perubahan } })),
+    ...state,
+    // Operator (PIC): simpan checklist sebagai draft, atau ajukan = true untuk mengirim ke verifikator.
+    // kegiatan = hasil API (punya daftar indikator beserta id API-nya)
+    async simpan(kegiatan, indikatorId, { checked, ajukan = false }) {
+      const key = buktiKey(kegiatan.id, indikatorId)
+      const nomor = String(indikatorById[indikatorId].nomor)
+      const indikatorApi = kegiatan.indikator.find((i) => String(i.kode) === nomor)
+      if (!indikatorApi) throw new Error('Indikator ini belum dipetakan ke kegiatan.')
+      const sebelum = bukti[key]
+      // Centang langsung tampil; dikembalikan jika server menolak
+      setUbahan((u) => ({ ...u, [key]: { kegiatanId: kegiatan.id, indikatorId, status: 'draft', ...sebelum, checked } }))
+      try {
+        const { data: a } = await api(`/api/rencana-kegiatan/${kegiatan.id}/ajuan-bukti/${indikatorApi.id}`, {
+          method: 'PUT',
+          body: { checklist: checked, ajukan },
+        })
+        return terima(a)
+      } catch (error) {
+        setUbahan((u) => ({ ...u, [key]: sebelum }))
+        throw error
+      }
+    },
+    // Verifikator: keputusan 'terverifikasi' (dengan level) atau 'perbaikan' (dengan catatan)
+    async verifikasi(ajuan, { keputusan, checked, level, catatan }) {
+      const { data: a } = await api(`/api/ajuan-bukti/${ajuan.id}/verifikasi`, {
+        method: 'PATCH',
+        body: {
+          keputusan: keputusan === 'terverifikasi' ? 'TERVERIFIKASI' : 'PERBAIKAN',
+          checklist: checked,
+          ...(keputusan === 'terverifikasi' ? { level } : { catatan }),
+        },
+      })
+      return terima(a)
+    },
   }
 }
 
