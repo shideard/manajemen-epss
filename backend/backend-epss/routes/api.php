@@ -29,6 +29,7 @@ use App\Http\Controllers\DokumenBuktiController;
 // ajuan & verifikasi bukti
 use App\Http\Controllers\AjuanBuktiController;
 use App\Http\Controllers\EksporBuktiController;
+use App\Http\Controllers\OutputBuktiController;
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
@@ -156,6 +157,23 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         )->whereUuid('rencanaKegiatan')
         ->whereUuid('dokumenBukti')
         ->name('rencana-kegiatan.dokumen-bukti.revision.store');
+
+        Route::post('/rencana-kegiatan/{rencanaKegiatan}/output-bukti',
+        [OutputBuktiController::class, 'store']
+        )->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.output-bukti.store');
+
+        Route::delete('/rencana-kegiatan/{rencanaKegiatan}/output-bukti/{outputBukti}',
+        [OutputBuktiController::class, 'destroy']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('outputBukti')
+        ->name('rencana-kegiatan.output-bukti.destroy');
+
+        Route::get('/rencana-kegiatan/{rencanaKegiatan}/output-bukti/{outputBukti}/contoh',
+        [OutputBuktiController::class, 'contoh']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('outputBukti')
+        ->name('rencana-kegiatan.output-bukti.contoh');
 
         Route::get('/periode-evaluasi/{periode}/ekspor-bukti', EksporBuktiController::class
         )->whereUuid('periode')

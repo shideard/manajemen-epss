@@ -38,6 +38,7 @@ class RencanaKegiatanController extends Controller
             'opd:id,nama',
             'pic:id,name',
             'indikatorMappings.indikator:id,kode,nama',
+            'outputBukti',
         ]);
 
         return (new RencanaKegiatanResource($rencanaKegiatan))

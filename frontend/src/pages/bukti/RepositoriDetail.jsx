@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { useBukti, useDetailKegiatan, useDokumenBukti, useInstrumen, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
+import { bukaContohOutput, useBukti, useDetailKegiatan, useDokumenBukti, useInstrumen, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
 import { buktiKey, formatTanggal, LEVELS, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { ChecklistItem, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
@@ -253,18 +253,26 @@ function RepositoriDetail() {
           </p>
           <hr className="w-full border-grey-50" />
 
-          {/* Target output diisi verifikator di form Rencana Kegiatan */}
+          {/* Target output diisi verifikator di form Rencana Kegiatan; berkas contohnya bisa dibuka operator */}
           {k.output?.length > 0 && (
             <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
               <h3 className="font-semibold">Output Bukti Dukung yang Ditargetkan :</h3>
               <ul className="flex w-full flex-col gap-2">
                 {k.output.map((o) => (
-                  <li key={o.id} className="flex min-h-[45px] flex-col justify-center rounded-md bg-lime-300 px-5 py-2">
-                    <span>
-                      {o.judul}
-                      {o.jenis && <span className="text-small"> ({o.jenis})</span>}
+                  <li key={o.id} className="flex min-h-[45px] flex-wrap items-center justify-between gap-3 rounded-md bg-lime-300 px-5 py-2">
+                    <span className="flex min-w-0 flex-col">
+                      <span>
+                        {o.judul}
+                        {o.jenis && <span className="text-small"> ({o.jenis})</span>}
+                      </span>
+                      {o.contoh && <span className="truncate text-small text-grey-200">Contoh dari verifikator: {o.contoh.nama}</span>}
                     </span>
-                    {o.contoh && <span className="truncate text-small text-grey-200">Contoh dari verifikator: {o.contoh.nama}</span>}
+                    {o.contoh && (
+                      <button type="button" onClick={() => bukaContohOutput(k.id, o).catch((error) => setErrorBerkas(error.message))} className={buttonClass('outline', 'sm')}>
+                        <img src={eyeIcon} alt="" width={15} height={15} />
+                        Lihat Contoh
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

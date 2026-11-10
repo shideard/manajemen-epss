@@ -107,4 +107,9 @@ class RencanaKegiatan extends Model
         return $this->hasMany(AjuanBukti::class, 'kegiatan_id');
     }
 
+    public function outputBukti(): HasMany
+    {
+        return $this->hasMany(OutputBukti::class, 'kegiatan_id')->orderBy('created_at')->orderBy('id');
+    }
+
 }

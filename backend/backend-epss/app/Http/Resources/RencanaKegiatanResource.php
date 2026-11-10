@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Controllers\OutputBuktiController;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -37,6 +38,11 @@ class RencanaKegiatanResource extends JsonResource
                         'level' => $mapping->level,
                     ])
                     ->values()
+            ),
+            // Output bukti dukung yang ditargetkan verifikator (opsional dengan berkas contoh)
+            'output' => $this->whenLoaded(
+                'outputBukti',
+                fn () => $this->outputBukti->map(fn ($output) => OutputBuktiController::data($output))->values()
             ),
         ];
     }

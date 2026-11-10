@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { bangunInstrumen, bobotDomain, LEVELS } from '../../lib/epss'
+import { bangunInstrumen, bobotDomain, formatUkuran, LEVELS } from '../../lib/epss'
 import { DialogHeader, Field, FormError, Input, ModalActions, Select } from '../../components/ui'
 import { buttonClass, fieldClass } from '../../components/classes'
 import bookIcon from '../../assets/icons/book-mark-fill.svg'
 import removeIcon from '../../assets/icons/close-circle-line.svg'
+import uploadIcon from '../../assets/icons/upload-cloud-2-fill.svg'
+
+// Jenis file output bukti dukung → atribut accept untuk berkas contoh (daftar sama dengan StoreOutputBuktiRequest::JENIS)
+const JENIS_FILE = { PDF: '.pdf', 'Gambar (JPG/PNG)': '.jpg,.jpeg,.png', Word: '.doc,.docx', Excel: '.xls,.xlsx', Lainnya: '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png' }
 
 // Modal pakai <dialog> bawaan browser: Esc, fokus, dan backdrop sudah ditangani
 // indikator = record bukti kegiatan ini; yang sudah diajukan/diverifikasi tidak bisa dilepas
@@ -50,6 +54,25 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
     return i ? `Indikator ${i.kode}: ${i.nama}` : id
   }
   const [daftarIndikator, setDaftarIndikator] = useState(false)
+  // Output bukti dukung yang ditargetkan: yang tersimpan (id dari API) + yang baru ({ baru: true, file? })
+  const [output, setOutput] = useState(kegiatan.output ?? [])
+  const [outputDihapus, setOutputDihapus] = useState([])
+  const [judulOutput, setJudulOutput] = useState('')
+  const [jenisOutput, setJenisOutput] = useState('')
+  const fileContoh = useRef(null)
+
+  // Judul kosong + berkas → judul = nama berkas; tanpa berkas judul wajib
+  function tambahOutput(file) {
+    const judul = judulOutput.trim() || file?.name
+    if (!judul) return
+    setOutput((list) => [...list, { id: crypto.randomUUID(), baru: true, judul, jenis: jenisOutput, file, contoh: file && { nama: file.name, ukuran: file.size } }])
+    setJudulOutput('')
+  }
+
+  function hapusOutput(o) {
+    setOutput((list) => list.filter((x) => x.id !== o.id))
+    if (!o.baru) setOutputDihapus((ids) => [...ids, o.id])
+  }
 
   useEffect(() => {
     dialogRef.current.showModal()
@@ -64,7 +87,13 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
     }
     // Tahun pelaksanaan selalu mengikuti tanggal mulai, jadi tidak bisa berbeda
     try {
-      await onSave({ ...data, indikator_ids: dipetakan.map((d) => d.id), levels: Object.fromEntries(dipetakan.map((d) => [d.id, d.level])) })
+      await onSave({
+        ...data,
+        indikator_ids: dipetakan.map((d) => d.id),
+        levels: Object.fromEntries(dipetakan.map((d) => [d.id, d.level])),
+        outputBaru: output.filter((o) => o.baru),
+        outputDihapus,
+      })
     } catch (err) {
       setError(err.message || 'Gagal menyimpan rencana kegiatan.')
     }
@@ -143,24 +172,98 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
             </Select>
             {dipetakan.length > 0 && <p className="text-small text-grey-200">Tentukan level indikator yang dipenuhi oleh kegiatan ini. Operator hanya dapat mengisi checklist level tersebut.</p>}
             {dipetakan.map(({ id, level }) => (
-              <div key={id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-lime-300 px-2.5 py-1.5 text-small">
+              <div key={id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-lime-300 px-5 py-2">
                 <span className="min-w-0 flex-1">{namaIndikator(id)}</span>
-                <label className="flex items-center gap-2">
-                  <span className="sr-only">Level untuk {namaIndikator(id)}</span>
-                  <select
-                    value={level}
-                    onChange={(e) => setDipetakan((list) => list.map((d) => (d.id === id ? { ...d, level: Number(e.target.value) } : d)))}
-                    className="rounded-sm border border-grey-500 bg-white px-2 py-1"
-                  >
-                    {LEVELS.map((nama, i) => (
-                      <option key={nama} value={i + 1}>
-                        Level {i + 1} ({nama})
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <Select
+                  value={level}
+                  onChange={(e) => setDipetakan((list) => list.map((d) => (d.id === id ? { ...d, level: Number(e.target.value) } : d)))}
+                  aria-label={`Level yang dipenuhi untuk ${namaIndikator(id)}`}
+                  className="w-[230px]"
+                >
+                  {LEVELS.map((nama, i) => (
+                    <option key={nama} value={i + 1}>
+                      Level {i + 1} ({nama})
+                    </option>
+                  ))}
+                </Select>
                 <button type="button" onClick={() => setDipetakan((list) => list.filter((d) => d.id !== id))} aria-label={`Lepas ${namaIndikator(id)}`}>
-                  <img src={removeIcon} alt="" width={15} height={15} className="grayscale" />
+                  <img src={removeIcon} alt="" width={19} height={19} className="grayscale" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <p className="font-semibold">Output Bukti Dukung yang Ditargetkan</p>
+            <p className="text-small text-grey-200">Bukti dukung yang diharapkan dari kegiatan ini. Lampirkan contoh berkas bila ada; operator dapat membukanya sebagai acuan.</p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                value={judulOutput}
+                onChange={(e) => setJudulOutput(e.target.value)}
+                // Enter menambah target, bukan mengirim form
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    tambahOutput()
+                  }
+                }}
+                aria-label="Judul output bukti dukung"
+                placeholder="Contoh: Notulen rapat forum koordinasi"
+                className="sm:flex-3"
+              />
+              <Select value={jenisOutput} onChange={(e) => setJenisOutput(e.target.value)} aria-label="Jenis file" className="sm:flex-1">
+                <option value="">Pilih Jenis File</option>
+                {Object.keys(JENIS_FILE).map((jenis) => (
+                  <option key={jenis}>{jenis}</option>
+                ))}
+              </Select>
+            </div>
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault()
+                if (e.dataTransfer.files[0]) tambahOutput(e.dataTransfer.files[0])
+              }}
+              className="flex flex-col items-center justify-center gap-2.5 rounded-md border-2 border-dashed border-grey-75 px-5 py-6 text-center text-grey-200"
+            >
+              <img src={uploadIcon} alt="" width={24} height={24} />
+              <p>
+                <span className="block font-semibold">Unggah Contoh Berkas (opsional)</span>
+                <span className="block text-small">Seret dan lepas ke kotak ini. PDF, Word, Excel, JPG, atau PNG, maksimal 10 MB.</span>
+              </p>
+              <input
+                ref={fileContoh}
+                type="file"
+                accept={JENIS_FILE[jenisOutput] ?? JENIS_FILE.Lainnya}
+                onChange={(e) => {
+                  if (e.target.files[0]) tambahOutput(e.target.files[0])
+                  e.target.value = ''
+                }}
+                className="hidden"
+              />
+              <div className="flex flex-wrap justify-center gap-4">
+                <button type="button" onClick={() => fileContoh.current.click()} className={buttonClass('secondary', 'sm')}>
+                  Pilih Berkas Contoh
+                </button>
+                <button type="button" onClick={() => tambahOutput()} disabled={!judulOutput.trim()} className={buttonClass('outline', 'sm')}>
+                  Tambah Tanpa Berkas
+                </button>
+              </div>
+            </div>
+            {output.map((o) => (
+              <div key={o.id} className="flex min-h-[45px] items-center justify-between gap-3 rounded-md bg-lime-300 px-5 py-2">
+                <span className="min-w-0">
+                  {o.judul}
+                  {o.jenis && <span className="text-small"> ({o.jenis})</span>}
+                  {o.contoh && (
+                    <span className="block truncate text-small text-grey-200">
+                      Contoh: {o.contoh.nama}
+                      {o.contoh.ukuran != null && ` · ${formatUkuran(o.contoh.ukuran)}`}
+                    </span>
+                  )}
+                </span>
+                <button type="button" onClick={() => hapusOutput(o)} aria-label={`Hapus output ${o.judul}`} className="shrink-0">
+                  <img src={removeIcon} alt="" width={19} height={19} className="grayscale" />
                 </button>
               </div>
             ))}

@@ -229,6 +229,16 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
         method: 'PUT',
         body: { indikator_ids: data.indikator_ids ?? [], levels: data.levels ?? {} },
       })
+      // Output bukti dukung yang ditargetkan: hapus yang dilepas, tambah yang baru (berkas contoh opsional)
+      const outputPath = `/api/rencana-kegiatan/${saved.id}/output-bukti`
+      for (const id of data.outputDihapus ?? []) await api(`${outputPath}/${id}`, { method: 'DELETE' })
+      for (const o of data.outputBaru ?? []) {
+        const body = new FormData()
+        body.append('judul', o.judul)
+        if (o.jenis) body.append('jenis', o.jenis)
+        if (o.file) body.append('contoh', o.file)
+        await api(outputPath, { method: 'POST', body })
+      }
       await muat()
       return await detail(saved.id)
     },
@@ -367,6 +377,13 @@ const mapDokumen = (d) => ({ id: d.id, nama: d.nama_file, ukuran: d.size_bytes, 
 // Buka isi dokumen di tab baru; URL dicabut setelah tab sempat memuatnya
 export async function bukaDokumen(kegiatanId, dokumen) {
   const url = URL.createObjectURL(await unduh(`/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti/${dokumen.id}/download`))
+  window.open(url, '_blank', 'noopener')
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
+
+// Berkas contoh dari verifikator untuk satu output bukti dukung, dibuka di tab baru
+export async function bukaContohOutput(kegiatanId, output) {
+  const url = URL.createObjectURL(await unduh(`/api/rencana-kegiatan/${kegiatanId}/output-bukti/${output.id}/contoh`))
   window.open(url, '_blank', 'noopener')
   setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
