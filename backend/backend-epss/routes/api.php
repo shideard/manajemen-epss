@@ -28,6 +28,7 @@ use App\Http\Controllers\DokumenBuktiController;
 
 // ajuan & verifikasi bukti
 use App\Http\Controllers\AjuanBuktiController;
+use App\Http\Controllers\EksporBuktiController;
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
@@ -155,6 +156,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         )->whereUuid('rencanaKegiatan')
         ->whereUuid('dokumenBukti')
         ->name('rencana-kegiatan.dokumen-bukti.revision.store');
+
+        Route::get('/periode-evaluasi/{periode}/ekspor-bukti', EksporBuktiController::class
+        )->whereUuid('periode')
+        ->name('periode-evaluasi.ekspor-bukti');
 
         Route::get('/periode-evaluasi/{periode}/ajuan-bukti',
         [AjuanBuktiController::class, 'index']

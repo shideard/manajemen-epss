@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
+import { unduh } from '../lib/api'
 import { berkasKegiatan, lkeCsv, pemetaanBukti } from '../lib/epss'
 import { Memuat, PageHeader } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
-function unduh(nama, isi) {
-  // BOM agar Excel membaca UTF-8 dengan benar
-  const url = URL.createObjectURL(new Blob(['﻿', isi], { type: 'text/csv;charset=utf-8' }))
+function simpan(nama, blob) {
+  const url = URL.createObjectURL(blob)
   const link = Object.assign(document.createElement('a'), { href: url, download: nama })
   link.click()
   setTimeout(() => URL.revokeObjectURL(url))
@@ -31,10 +31,25 @@ function ExportLke() {
   const muat = [useSemuaKegiatan(aktif?.id), useSkor(), useBukti()]
   const [{ kegiatan }, { levels }, { bukti }] = muat
   const [pesan, setPesan] = useState('')
+  const [menyiapkan, setMenyiapkan] = useState(false)
 
   function unduhLke() {
     const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
-    unduh(`LKE-EPSS-${aktif.tahun1}-${aktif.tahun2}.csv`, lkeCsv(levels, pemetaanBukti(kegiatan, bukti), berkasKegiatan(kegiatan, aktif.id), namaKegiatan))
+    // BOM agar Excel membaca UTF-8 dengan benar
+    simpan(`LKE-EPSS-${aktif.tahun1}-${aktif.tahun2}.csv`, new Blob(['﻿', lkeCsv(levels, pemetaanBukti(kegiatan, bukti), berkasKegiatan(kegiatan, aktif.id), namaKegiatan)], { type: 'text/csv;charset=utf-8' }))
+  }
+
+  // Server menyusun ZIP Domain/Indikator/Kegiatan/berkas dari berkas bukti terbaru periode aktif
+  async function unduhZip() {
+    setPesan('')
+    setMenyiapkan(true)
+    try {
+      simpan(`Bukti-EPSS-${aktif.tahun1}-${aktif.tahun2}.zip`, await unduh(`/api/periode-evaluasi/${aktif.id}/ekspor-bukti`))
+    } catch (error) {
+      setPesan(error.message || 'Paket ZIP gagal diunduh.')
+    } finally {
+      setMenyiapkan(false)
+    }
   }
 
   return (
@@ -52,12 +67,11 @@ function ExportLke() {
           button="Unduh LKE Resmi"
           onClick={unduhLke}
         />
-        {/* ponytail: paket ZIP butuh berkas asli di server; sambungkan ke endpoint ekspor backend */}
         <ExportCard
           title="Ekspor Paket Arsip Berkas Bukti Terstruktur"
-          description="Mengompres seluruh berkas di database secara asinkron ke dalam struktur folder resmi BPS: Domain/Aspek/Indikator/Level."
-          button="Unduh Paket ZIP"
-          onClick={() => setPesan('Paket ZIP dibuat oleh server dan belum tersedia: berkas bukti saat ini belum tersimpan di backend.')}
+          description="Mengompres berkas bukti dukung terbaru periode aktif ke dalam struktur folder Domain/Indikator/Kegiatan."
+          button={menyiapkan ? 'Menyiapkan Paket ZIP…' : 'Unduh Paket ZIP'}
+          onClick={unduhZip}
         />
         {pesan && (
           <p role="status" className="text-small text-grey-200">

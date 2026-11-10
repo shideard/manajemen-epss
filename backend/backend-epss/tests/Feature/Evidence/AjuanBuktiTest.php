@@ -392,6 +392,35 @@ class AjuanBuktiTest extends TestCase
             ->assertJsonPath('data.level', 3);
     }
 
+    public function test_period_zip_export_contains_files_per_domain_and_indicator(): void
+    {
+        Storage::fake();
+        $s = $this->createScenario(denganDokumen: false);
+
+        $this->sebagai($s['pic'], 'web')
+            ->post('/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti', [
+                'file' => UploadedFile::fake()->create('SK Tim.pdf', 10, 'application/pdf'),
+                'evidence_date' => today()->toDateString(),
+            ], ['Accept' => 'application/json'])
+            ->assertCreated();
+
+        $response = $this->sebagai($s['pic'], 'web')
+            ->get('/api/periode-evaluasi/' . $s['periode']->id . '/ekspor-bukti')
+            ->assertOk();
+
+        $zip = new \ZipArchive();
+        $zip->open($response->baseResponse->getFile()->getPathname());
+        $nama = $zip->getNameIndex(0);
+        $zip->close();
+
+        $this->assertStringStartsWith('Domain 1 - Domain Pengujian/Indikator 1 - Indikator Pengujian/Kegiatan Pengujian/', $nama);
+        $this->assertStringEndsWith('-SK Tim.pdf', $nama);
+
+        $this->sebagai($this->createUser(UserRole::SUPER_ADMIN_BIDANG), 'web')
+            ->get('/api/periode-evaluasi/' . $s['periode']->id . '/ekspor-bukti')
+            ->assertForbidden();
+    }
+
     public function test_period_listing_returns_its_submissions(): void
     {
         $s = $this->createScenario();
