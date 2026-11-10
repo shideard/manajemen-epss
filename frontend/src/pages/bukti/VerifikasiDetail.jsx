@@ -57,7 +57,7 @@ function VerifikasiDetail() {
     }
   }, [file?.id]) // eslint-disable-line react-hooks/exhaustive-deps -- dokumen.url baru tiap render; cukup unduh ulang saat berkasnya ganti
 
-  if ((!bukti || !k) && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} />
+  if ((!bukti || !k) && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} bentuk="detail" />
   if (!bukti || !k || !indikator) return <Navigate to="/verifikasi-bukti-dukung" replace />
 
   // Hanya ajuan berstatus "menunggu" yang bisa diputuskan, dan tidak saat periode dikunci
@@ -105,7 +105,7 @@ function VerifikasiDetail() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="detail" />
       <PageHeader back="/verifikasi-bukti-dukung" title="Verifikasi Bukti Dukung Kegiatan" />
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(440px,2fr)_3fr]">

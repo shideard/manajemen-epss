@@ -167,7 +167,7 @@ function ArsipBukti() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="kartu" />
       <PageHeader title="Repositori Bukti Dukung" subtitle="Arsip semua berkas bukti dukung per periode, beserta kegiatan yang memakainya.">
         <SearchBox
           value={query}

@@ -104,6 +104,8 @@ const mapRencanaKegiatan = (item) => ({
   mulai: item.tanggal_mulai_rencana,
   selesai: item.tanggal_selesai_rencana,
   tahun: String(item.tahun_kegiatan),
+  // API tidak menyimpan warna: diturunkan dari id supaya tetap sama di kalender, agenda, dan peta
+  warna: [...String(item.id)].reduce((n, c) => n + c.charCodeAt(0), 0) % WARNA.length,
   indikator: item.indikator ?? [],
   // Indikator API → id instrumen lokal (kode = nomor indikator); checklist & status bukti masih memakai id lokal
   indikatorIds: (item.indikator ?? []).map((i) => INDIKATOR.find((l) => String(l.nomor) === String(i.kode))?.id).filter(Boolean),
@@ -127,7 +129,9 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
   const [pics, setPics] = useState([])
   const [indikator, setIndikator] = useState([])
   const [meta, setMeta] = useState(null)
-  const [state, setState] = useState(SIAP)
+  const [state, setState] = useState(SIAP) // muat ulang manual (setelah simpan/hapus)
+  const [errorPilihan, setErrorPilihan] = useState(null)
+  const [selesai, setSelesai] = useState(null) // queryString milik data yang sedang tampil
 
   const query = new URLSearchParams({ periode_id: periodeId ?? '', page: String(filters.page ?? 1) })
   for (const key of ['q', 'tahun', 'opd_id', 'pic_user_id', 'status']) {
@@ -135,50 +139,84 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
   }
   const queryString = query.toString()
 
-  const muatPilihan = useCallback(async () => {
-    const [pilihanOpd, pilihanPic] = await Promise.allSettled([
+  // Pilihan OPD, PIC, dan indikator untuk form; state hanya diisi setelah respons datang
+  useEffect(() => {
+    let hidup = true
+    Promise.allSettled([
       apiAll('/api/pilihan/opd'),
       apiAll('/api/pilihan/pic'),
-    ])
-    if (pilihanOpd.status === 'fulfilled') setOpds(pilihanOpd.value)
-    if (pilihanPic.status === 'fulfilled') setPics(pilihanPic.value)
-    const error = [pilihanOpd, pilihanPic].find((result) => result.status === 'rejected')?.reason
-    if (error) setState({ loading: false, error })
-
-    if (!periodeId) return
-    try {
-      const pilihanIndikator = await api(`/api/periode-evaluasi/${periodeId}/indikator`)
-      setIndikator(pilihanIndikator.data ?? [])
-    } catch (errorIndikator) {
-      if (!error) setState({ loading: false, error: errorIndikator })
+      periodeId ? api(`/api/periode-evaluasi/${periodeId}/indikator`) : null,
+    ]).then(([opd, pic, ind]) => {
+      if (!hidup) return
+      if (opd.status === 'fulfilled') setOpds(opd.value)
+      if (pic.status === 'fulfilled') setPics(pic.value)
+      if (periodeId && ind.status === 'fulfilled') setIndikator(ind.value.data ?? [])
+      setErrorPilihan([opd, pic, ind].find((r) => r.status === 'rejected')?.reason ?? null)
+    })
+    return () => {
+      hidup = false
     }
   }, [periodeId])
 
+  const terima = useCallback((daftar) => {
+    setKegiatan((daftar.data ?? []).map(mapRencanaKegiatan))
+    setMeta(daftar.meta ?? null)
+  }, [setKegiatan, setMeta])
+
+  // Daftar mengikuti periode & filter; loading = data yang tampil belum milik queryString ini
+  useEffect(() => {
+    if (!periodeId) return
+    let hidup = true
+    api(`/api/rencana-kegiatan?${queryString}`).then(
+      (daftar) => {
+        if (!hidup) return
+        terima(daftar)
+        setState(SIAP)
+        setSelesai(queryString)
+      },
+      (error) => {
+        if (!hidup) return
+        setState({ loading: false, error })
+        setSelesai(queryString)
+      },
+    )
+    return () => {
+      hidup = false
+    }
+  }, [periodeId, queryString, terima])
+
   const muat = useCallback(async () => {
-    if (!periodeId) { setKegiatan([]); setMeta(null); setState(SIAP); return [] }
+    if (!periodeId) return []
     setState({ loading: true, error: null })
     try {
       const daftar = await api(`/api/rencana-kegiatan?${queryString}`)
-      setKegiatan((daftar.data ?? []).map(mapRencanaKegiatan))
-      setMeta(daftar.meta ?? null)
+      terima(daftar)
       setState(SIAP)
       return daftar.data ?? []
     } catch (error) {
       setState({ loading: false, error })
       return []
     }
-  }, [periodeId, queryString])
+  }, [periodeId, queryString, terima, setState])
 
   const detail = useCallback(async (id) => {
     const response = await api(`/api/rencana-kegiatan/${id}`)
     return mapRencanaKegiatan(response.data)
   }, [])
 
-  useEffect(() => { muatPilihan() }, [muatPilihan])
-  useEffect(() => { muat() }, [muat])
+  const milik = !periodeId || selesai === queryString
+  const loading = state.loading || !milik
+  const error = (milik ? state.error : null) ?? errorPilihan
 
   return {
-    kegiatan, opds, pics, indikator, meta, ...state, muat,
+    kegiatan: periodeId ? kegiatan : EMPTY_LIST,
+    opds,
+    pics,
+    indikator,
+    meta: periodeId ? meta : null,
+    loading,
+    error,
+    muat,
     detail,
     async hapus(id) {
       await api(`/api/rencana-kegiatan/${id}`, { method: 'DELETE' })
@@ -523,28 +561,24 @@ export function usePeriode() {
 // Versi instrumen yang bisa dipilih saat membuat periode.
 export function useVersiInstrumen() {
   const [daftar, setDaftar] = useStore('epss.versi-instrumen', EMPTY_LIST)
-  const [state, setState] = useState(SIAP)
+  const [state, setState] = useState({ loading: true, error: null })
 
-  const muat = useCallback(async () => {
-    setState({ loading: true, error: null })
-    try {
-      const response = await api('/api/pilihan/versi-instrumen')
-      const versi = (response.data ?? []).map((item) => ({
-        id: item.id,
-        nama: item.nama,
-        versi: item.versi,
-      }))
-      setDaftar(versi)
-      setState(SIAP)
-      return versi
-    } catch (error) {
-      setState({ loading: false, error })
-      return []
+  useEffect(() => {
+    let hidup = true
+    api('/api/pilihan/versi-instrumen').then(
+      (response) => {
+        if (!hidup) return
+        setDaftar((response.data ?? []).map((item) => ({ id: item.id, nama: item.nama, versi: item.versi })))
+        setState(SIAP)
+      },
+      (error) => hidup && setState({ loading: false, error }),
+    )
+    return () => {
+      hidup = false
     }
   }, [setDaftar])
 
-  useEffect(() => { muat() }, [muat])
-  return { daftar, ...state, muat }
+  return { daftar, ...state }
 }
 
 // Akun dibuat & diaktifkan/dinonaktifkan lewat API; error validasi (error.errors) dilempar ke pemanggil.

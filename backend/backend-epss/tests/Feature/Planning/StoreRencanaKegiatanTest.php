@@ -1303,4 +1303,237 @@ class StoreRencanaKegiatanTest extends TestCase
             ->assertOk()
             ->assertDownload('bukti-pengujian.pdf');
     }
+
+
+    public function test_pic_can_upload_new_version_of_evidence_document(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $createResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($scenario['pic'], 'web')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(
+                "/api/rencana-kegiatan/{$activityId}/dokumen-bukti",
+                [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        'bukti-versi-1.pdf',
+                        1,
+                        'application/pdf'
+                    ),
+                ]
+            )
+            ->assertCreated()
+            ->assertJsonPath('data.version_number', 1)
+            ->assertJsonPath('data.is_current', true);
+
+        $firstDocument = DokumenBukti::query()
+            ->where('kegiatan_id', $activityId)
+            ->firstOrFail();
+
+        $this->app['auth']->forgetGuards();
+
+        $revisionResponse = $this->actingAs($scenario['pic'], 'web')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(
+                "/api/rencana-kegiatan/{$activityId}/dokumen-bukti/{$firstDocument->id}/versi",
+                [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        'bukti-versi-2.pdf',
+                        1,
+                        'application/pdf'
+                    ),
+                ]
+            );
+
+        $revisionResponse->assertCreated()
+            ->assertJsonPath('data.version_number', 2)
+            ->assertJsonPath('data.is_current', true);
+
+        $secondDocumentId = $revisionResponse->json('data.id');
+
+        $this->assertDatabaseHas('dokumen_bukti', [
+            'id' => $secondDocumentId,
+            'kegiatan_id' => $activityId,
+            'parent_document_id' => $firstDocument->id,
+            'version_number' => 2,
+            'is_current' => true,
+        ]);
+
+        $this->assertFalse($firstDocument->fresh()->is_current);
+
+        $this->assertCount(
+            2,
+            Storage::disk('local')->allFiles("bukti/{$activityId}")
+        );
+    }
+
+    public function test_superseded_document_version_cannot_be_revised_again(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $createResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $this->app['auth']->forgetGuards();
+
+        $firstResponse = $this->actingAs($scenario['pic'], 'web')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(
+                "/api/rencana-kegiatan/{$activityId}/dokumen-bukti",
+                [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        'bukti-versi-1.pdf',
+                        1,
+                        'application/pdf'
+                    ),
+                ]
+            )
+            ->assertCreated();
+
+        $firstDocumentId = $firstResponse->json('data.id');
+
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($scenario['pic'], 'web')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(
+                "/api/rencana-kegiatan/{$activityId}/dokumen-bukti/{$firstDocumentId}/versi",
+                [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        'bukti-versi-2.pdf',
+                        1,
+                        'application/pdf'
+                    ),
+                ]
+            )
+            ->assertCreated()
+            ->assertJsonPath('data.version_number', 2);
+
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($scenario['pic'], 'web')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(
+                "/api/rencana-kegiatan/{$activityId}/dokumen-bukti/{$firstDocumentId}/versi",
+                [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        'bukti-versi-3.pdf',
+                        1,
+                        'application/pdf'
+                    ),
+                ]
+            )
+            ->assertStatus(409);
+
+        $this->assertDatabaseCount('dokumen_bukti', 2);
+
+        $this->assertCount(
+            2,
+            Storage::disk('local')->allFiles("bukti/{$activityId}")
+        );
+
+        $this->assertDatabaseHas('dokumen_bukti', [
+            'id' => $firstDocumentId,
+            'is_current' => false,
+        ]);
+    }
+
+    public function test_document_from_another_activity_cannot_be_revised(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $activityAResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityAId = $activityAResponse->json('data.id');
+
+        $activityBResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityBId = $activityBResponse->json('data.id');
+
+        $this->app['auth']->forgetGuards();
+
+        $documentResponse = $this->actingAs($scenario['pic'], 'web')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(
+                "/api/rencana-kegiatan/{$activityBId}/dokumen-bukti",
+                [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        'bukti-kegiatan-b.pdf',
+                        1,
+                        'application/pdf'
+                    ),
+                ]
+            )
+            ->assertCreated();
+
+        $documentId = $documentResponse->json('data.id');
+
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($scenario['pic'], 'web')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(
+                "/api/rencana-kegiatan/{$activityAId}/dokumen-bukti/{$documentId}/versi",
+                [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        'revisi-tidak-valid.pdf',
+                        1,
+                        'application/pdf'
+                    ),
+                ]
+            )
+            ->assertNotFound();
+
+        $this->assertDatabaseCount('dokumen_bukti', 1);
+
+        $this->assertSame(
+            [],
+            Storage::disk('local')->allFiles("bukti/{$activityAId}")
+        );
+
+        $this->assertCount(
+            1,
+            Storage::disk('local')->allFiles("bukti/{$activityBId}")
+        );
+    }
 }

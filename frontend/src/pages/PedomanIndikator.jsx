@@ -14,7 +14,7 @@ function PedomanIndikator() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="daftar" />
       <PageHeader title="Daftar Indikator dan Pedoman Bukti Dukung EPSS" subtitle="Struktur indikator beserta pedoman dan syarat pemenuhannya.">
         <SearchBox value={query} onChange={setQuery} placeholder="Cari domain atau indikator..." />
       </PageHeader>

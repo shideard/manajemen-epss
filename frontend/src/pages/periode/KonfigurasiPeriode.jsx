@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { PeriodeFields } from './PengaturanPeriode'
 import { usePeriode, useSkor, useVersiInstrumen } from '../../lib/store'
-import { hitungIps, INDIKATOR, predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
+import { predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
 import { Badge, Memuat, PageHeader } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
@@ -17,12 +17,12 @@ function KonfigurasiPeriode() {
     ubah: ubahPeriode,
     kunci: kunciPeriode,
     aktifkan: aktifkanPeriode,
-  }, { levels, snapshot }, versiInstrumen] = muat
+  }, { snapshot }, versiInstrumen] = muat
   const [pesan, setPesan] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const p = periode.find((item) => item.id === id)
-  if (!p && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} />
+  if (!p && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} bentuk="detail" />
   if (!p) return <Navigate to="/pengaturan-periode" replace />
 
   const lainnya = periode.filter((item) => item.id !== id && item.actual != null)
@@ -82,7 +82,7 @@ function KonfigurasiPeriode() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="detail" />
       <PageHeader
         back="/pengaturan-periode"
         title="Konfigurasi Periode & Target IPS"

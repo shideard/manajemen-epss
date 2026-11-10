@@ -41,30 +41,28 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 rounded-md bg-white p-4">
-          {HARI.map((hari) => (
-            <p key={hari} className="text-center text-small font-semibold text-grey-500">
+        <div className="grid grid-cols-7 gap-1.5 rounded-md bg-white p-2.5">
+          {HARI.map((hari, i) => (
+            <p key={hari} className={`text-center text-small ${i % 6 === 0 ? 'text-grey-200' : 'font-medium text-grey-300'}`}>
               {hari}
             </p>
           ))}
           {monthCells(year, month).map((day, i) => {
-            if (!day) return <div key={i} className="aspect-square xl:aspect-[3/2] rounded-sm border-2 border-grey-200/10 bg-grey-50/10" />
+            const weekend = i % 7 === 0 || i % 7 === 6
+            const kotak = `flex min-h-25 flex-col gap-0.5 overflow-hidden rounded-sm px-1.5 pt-1.5 pb-1.5 ${weekend ? 'bg-grey2-75' : 'bg-white'}`
+            if (!day) return <div key={i} className={`${kotak} border border-grey2-300 opacity-60`} />
 
             const date = toISODate(new Date(year, month, day))
-            const weekend = i % 7 === 0 || i % 7 === 6
+            const hariIni = date === today
             const events = kegiatan.filter((k) => isOnDate(k, date))
             return (
-              <div
-                key={i}
-                className={`relative aspect-square xl:aspect-[3/2] overflow-hidden rounded-sm border-2 border-grey-200 ${
-                  date === today ? 'bg-lime-300' : weekend ? 'bg-grey-50' : 'bg-green-50'
-                }`}
-              >
-                <span className="absolute top-[3px] left-[3px] grid h-4 min-w-4 place-items-center rounded-xs bg-white px-0.5 text-small font-semibold text-grey-200">
+              <div key={i} className={`${kotak} ${hariIni ? 'border-2 border-grey-300' : 'border border-grey2-300'}`}>
+                <span className={`self-start rounded-full px-1.5 py-0.5 text-small font-semibold ${hariIni ? 'bg-grey-300 text-lime-300' : 'text-grey-300'}`}>
                   {day}
                 </span>
+                {hariIni && <span className="text-caption font-semibold text-grey-300">Hari ini</span>}
                 {/* ponytail: maksimal 3 bar per hari; tambahkan penanda "+N" jika kegiatan sering bertumpuk */}
-                <div className="absolute inset-x-0 bottom-[14px] flex flex-col-reverse gap-0.5">
+                <div className="mt-auto flex flex-col gap-0.5">
                   {events.slice(0, 3).map((k) => (
                     <button
                       key={k.id}
@@ -72,7 +70,7 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
                       onClick={() => onOpen(k)}
                       title={k.nama}
                       aria-label={k.nama}
-                      className="h-[14px] w-full"
+                      className="h-3.5 w-full rounded-xs"
                       style={{ backgroundColor: WARNA[k.warna] }}
                     />
                   ))}

@@ -108,7 +108,7 @@ function Users() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="tabel" />
       <PageHeader title="Kelola Pengguna" subtitle="Kelola peran dan akses pengguna sebagai operator atau verifikator.">
         <button type="button" onClick={() => setMembuat(true)} className={buttonClass()}>
           <img src={addIcon} alt="" width={19} height={19} />

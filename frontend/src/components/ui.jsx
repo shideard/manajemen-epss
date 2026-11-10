@@ -237,34 +237,97 @@ export function Spinner({ className = 'size-4' }) {
   return <span aria-hidden className={`inline-block shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent ${className}`} />
 }
 
-// Status muat dari hook data (useKegiatan, useBukti, ...); tidak merender apa pun saat semuanya siap
-export function Memuat({ dari }) {
+// Status muat dari hook data (useKegiatan, useBukti, ...); tidak merender apa pun saat semuanya siap.
+// Muat pertama: kerangka (skeleton) menutupi area halaman (induknya relative, lihat AppLayout).
+// Muat ulang setelah pernah siap (ganti filter/halaman tabel): hanya penanda kecil, isi halaman tetap terlihat.
+// layar = sebelum layout ada (cek sesi): layar penuh dengan spinner.
+// bentuk = kerangka yang mirip tata letak halaman: dashboard, tabel, daftar, kartu, detail, peta, kanban
+export function Memuat({ dari, layar = false, bentuk = 'dashboard' }) {
+  const [pernahSiap, setPernahSiap] = useState(false)
   const error = dari.find((d) => d.error)?.error
+  const loading = dari.some((d) => d.loading)
+  if (!loading && !error && !pernahSiap) setPernahSiap(true)
+
   if (error)
     return (
       <Notice tone="red" role="alert">
         {error.message ?? 'Gagal memuat data.'}
       </Notice>
     )
-  if (!dari.some((d) => d.loading)) return null
+  if (!loading) return null
+  if (layar)
+    return (
+      <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-grey2-100 font-sans text-grey-500">
+        <Spinner className="size-8" />
+        <span className="text-grey-200">Memuat…</span>
+      </div>
+    )
+  if (pernahSiap)
+    return (
+      <div role="status" aria-live="polite" className="fixed top-6 left-1/2 z-50 -translate-x-1/2 flex animate-none items-center gap-2.5 rounded-full bg-grey-500 px-4 py-2.5 text-small text-white shadow-lg">
+        <Spinner />
+        Memuat data…
+      </div>
+    )
+  const kanban = bentuk === 'kanban'
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-grey-500/40 p-4">
-      <section
-        role="status"
-        aria-live="polite"
-        aria-busy="true"
-        className="w-full max-w-[520px] overflow-hidden rounded-lg bg-white font-sans shadow-lg"
-      >
-        <header className="flex min-h-16 items-center bg-grey-500 px-8.5 py-4">
-          <h2 className="text-h3 text-white">Memuat Data</h2>
-        </header>
-        <div className="flex min-h-36 items-center justify-center gap-3 px-8.5 py-7 text-body text-grey-500">
-          <Spinner className="size-5" />
-          <span>Memuat data…</span>
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      className={`absolute inset-x-0 top-0 z-10 flex min-h-full animate-none flex-col gap-8 ${kanban ? 'rounded-lg bg-white p-4' : 'bg-grey2-100'}`}
+    >
+      <span className="sr-only">Memuat data…</span>
+      {!kanban && (
+        <div className="flex flex-col gap-3">
+          {bentuk === 'detail' && <Tulang className="mb-1 h-11 w-32" />}
+          <Tulang className="h-9 w-2/5" />
+          <Tulang className="h-6 w-3/5" />
         </div>
-      </section>
+      )}
+      {KERANGKA[bentuk]}
     </div>
   )
+}
+
+const ulang = (n, el) => Array.from({ length: n }, (_, i) => <Tulang key={i} className={el} />)
+
+const KERANGKA = {
+  dashboard: (
+    <>
+      <Tulang className="h-40 w-full" />
+      <div className="grid gap-6 sm:grid-cols-3">{ulang(3, 'h-28')}</div>
+      <Tulang className="h-72 w-full" />
+    </>
+  ),
+  tabel: (
+    <div className="flex flex-col gap-3 rounded-lg bg-white p-5">
+      <div className="mb-3 flex justify-between gap-4">
+        <Tulang className="h-11 w-1/4" />
+        <Tulang className="h-11 w-1/3" />
+      </div>
+      {ulang(6, 'h-10 w-full')}
+    </div>
+  ),
+  daftar: (
+    <>
+      <div className="flex flex-wrap gap-2">{ulang(3, 'h-11 w-28')}</div>
+      <div className="flex flex-col gap-4">{ulang(4, 'h-20 w-full')}</div>
+    </>
+  ),
+  kartu: <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-6">{ulang(6, 'h-44')}</div>,
+  detail: (
+    <div className="grid items-start gap-6 lg:grid-cols-[3fr_2fr]">
+      <Tulang className="h-96" />
+      <Tulang className="h-64" />
+    </div>
+  ),
+  peta: <Tulang className="h-120 w-full" />,
+  kanban: <div className="grid min-w-[920px] grid-cols-4 gap-3">{ulang(4, 'h-64')}</div>,
+}
+
+function Tulang({ className }) {
+  return <div className={`animate-pulse rounded-lg bg-grey-50 ${className}`} />
 }
 
 export function ConfirmDialog({ title, message, confirmLabel = 'Ya, lanjutkan', danger = false, onConfirm, onClose }) {

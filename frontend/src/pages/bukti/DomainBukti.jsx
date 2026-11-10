@@ -53,7 +53,7 @@ function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bole
 
   return (
     <>
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="daftar" />
       {!adaHasil && <p className="rounded-lg bg-white py-10 text-center text-grey-200">Tidak ada indikator pada kategori ini.</p>}
       {DOMAINS.map((domain, d) => {
         const indikator = INDIKATOR.filter((i) => i.domain === domain && includesText([i.nama, `indikator ${i.nomor}`], query) && cocokFilter(i))

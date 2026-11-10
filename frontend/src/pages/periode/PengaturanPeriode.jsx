@@ -72,7 +72,6 @@ export function PeriodeFields({ periode = {}, disabled, namaAside, versiInstrume
 
 function TambahPeriode({ periode, versiInstrumen, onSave, onClose }) {
   const [error, setError] = useState('')
-  const [saving, setSaving] = useState(false)
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -86,12 +85,9 @@ function TambahPeriode({ periode, versiInstrumen, onSave, onClose }) {
     if (error) return setError(error)
 
     try {
-      setSaving(true)
       await onSave(data)
     } catch (err) {
       setError(err.message || 'Gagal menyimpan periode.')
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -147,7 +143,7 @@ function PengaturanPeriode() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={dataHooks} />
+      <Memuat dari={dataHooks} bentuk="tabel" />
       <PageHeader title="Pengaturan Periode EPSS Biennial" subtitle="Konfigurasi siklus 2 tahunan year-agnostic dan penetapan target IPS.">
         <button type="button" onClick={() => setTambah(true)} className={buttonClass()}>
           <img src={addIcon} alt="" width={19} height={19} />

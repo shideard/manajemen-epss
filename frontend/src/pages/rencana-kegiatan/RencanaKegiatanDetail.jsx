@@ -2,31 +2,37 @@ import { useEffect, useState } from 'react'
 import { Building2, CalendarDays, UserRound } from 'lucide-react'
 import { Navigate, useOutletContext, useParams } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
-import { bolehUbah } from '../../config/menu'
+import RepositoriDetail from '../bukti/RepositoriDetail'
+import { bolehUbah, ROLES } from '../../config/menu'
 import { buttonClass } from '../../components/classes'
 import editIcon from '../../assets/rencana/edit-2-fill.svg'
 import { usePeriode, useRencanaKegiatan } from '../../lib/store'
 import { formatTanggal, statusOf } from '../../lib/epss'
 import { Memuat, PageHeader } from '../../components/ui'
 
-function RencanaKegiatanDetail() {
+function RencanaKegiatanDetailVerifikator() {
   const { kegiatanId } = useParams()
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
   const rencana = useRencanaKegiatan(aktif?.id)
   const muat = [rencana]
-  const [k, setK] = useState(null)
-  const [detailLoading, setDetailLoading] = useState(true)
+  const { detail } = rencana
+  // Hasil detail ditandai id-nya: loading = hasil yang ada belum milik kegiatan ini
+  const [hasil, setHasil] = useState({ id: null, item: null })
   const [editing, setEditing] = useState(false)
   useEffect(() => {
     if (!kegiatanId) return
     let hidup = true
-    setK(null)
-    setDetailLoading(true)
-    rencana.detail(kegiatanId).then((item) => { if (hidup) setK(item) }).catch((error) => { if (hidup) setK({ error }) }).finally(() => { if (hidup) setDetailLoading(false) })
+    detail(kegiatanId).then(
+      (item) => hidup && setHasil({ id: kegiatanId, item }),
+      (error) => hidup && setHasil({ id: kegiatanId, item: { error } }),
+    )
     return () => { hidup = false }
-  }, [kegiatanId, rencana.detail])
-  if ((!k && detailLoading) || muat.some((data) => data.loading)) return <Memuat dari={muat} />
+  }, [kegiatanId, detail])
+  const detailLoading = Boolean(kegiatanId) && hasil.id !== kegiatanId
+  const k = detailLoading ? null : hasil.item
+  const setK = (item) => setHasil({ id: kegiatanId, item })
+  if ((!k && detailLoading) || muat.some((data) => data.loading)) return <Memuat dari={muat} bentuk="detail" />
   if (k?.error) return <p role="alert" className="text-red-500">{k.error.message}</p>
   if (!k) return <Navigate to="/rencana-kegiatan" replace />
 
@@ -41,7 +47,7 @@ function RencanaKegiatanDetail() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="detail" />
       <PageHeader back="/rencana-kegiatan" title="Detail Rencana Kegiatan" subtitle="Informasi dan pemetaan indikator kegiatan.">
         {bolehEdit && (
           <button type="button" onClick={() => setEditing(true)} className={buttonClass()}>
@@ -116,6 +122,12 @@ function RencanaKegiatanDetail() {
       )}
     </div>
   )
+}
+
+function RencanaKegiatanDetail() {
+  const { user } = useOutletContext()
+  if (user.role === ROLES.OPERATOR) return <RepositoriDetail />
+  return <RencanaKegiatanDetailVerifikator />
 }
 
 export default RencanaKegiatanDetail

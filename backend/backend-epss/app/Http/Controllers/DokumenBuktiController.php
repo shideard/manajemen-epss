@@ -147,4 +147,90 @@ class DokumenBuktiController extends Controller
             ]
         );
     }
+
+    public function storeRevision(
+    StoreDokumenBuktiRequest $request,
+    RencanaKegiatan $rencanaKegiatan,
+    DokumenBukti $dokumenBukti
+    ): JsonResponse 
+    {
+        $file = $request->file('file');
+        $disk = Storage::disk('local');
+        $storageKey = $file->store(
+            "bukti/{$rencanaKegiatan->id}",
+            'local'
+        );
+
+        if (! is_string($storageKey) || $storageKey === '') {
+            throw new RuntimeException('File bukti gagal disimpan.');
+        }
+
+        try {
+            $document = DB::transaction(function () use (
+                $request,
+                $rencanaKegiatan,
+                $dokumenBukti,
+                $file,
+                $storageKey
+            ): DokumenBukti {
+                $previous = $rencanaKegiatan
+                    ->dokumenBukti()
+                    ->lockForUpdate()
+                    ->findOrFail($dokumenBukti->id);
+
+                abort_unless(
+                    $previous->is_current,
+                    409,
+                    'Versi dokumen ini sudah digantikan.'
+                );
+
+                $previous->is_current = false;
+                $previous->save();
+
+                $originalName = basename(
+                    str_replace('\\', '/', $file->getClientOriginalName())
+                );
+
+                $document = new DokumenBukti();
+                $document->forceFill([
+                    'uploaded_by' => $request->user()->id,
+                    'parent_document_id' => $previous->id,
+                    'version_number' => $previous->version_number + 1,
+                    'is_current' => true,
+                    'evidence_date' => $request->validated('evidence_date'),
+                    'nama_file' => Str::limit($originalName, 255, ''),
+                    'storage_key' => $storageKey,
+                    'mime_type' => $file->getMimeType(),
+                    'size_bytes' => $file->getSize(),
+                    'sha256_hash' => hash_file(
+                        'sha256',
+                        $file->getRealPath()
+                    ),
+                ]);
+
+                $rencanaKegiatan->dokumenBukti()->save($document);
+
+                return $document->refresh();
+            });
+        } catch (Throwable $exception) {
+            $disk->delete($storageKey);
+
+            throw $exception;
+        }
+
+        return response()->json([
+            'data' => [
+                'id' => $document->id,
+                'kegiatan_id' => $document->kegiatan_id,
+                'uploaded_by' => $document->uploaded_by,
+                'parent_document_id' => $document->parent_document_id,
+                'evidence_date' => $document->evidence_date->toDateString(),
+                'nama_file' => $document->nama_file,
+                'mime_type' => $document->mime_type,
+                'size_bytes' => $document->size_bytes,
+                'version_number' => $document->version_number,
+                'is_current' => $document->is_current,
+            ],
+        ], 201);
+    }
 }

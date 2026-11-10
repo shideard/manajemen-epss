@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
-import { Link, Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useBukti, useDetailKegiatan, useDokumenBukti, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
 import { buktiKey, formatTanggal, INDIKATOR, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
@@ -127,8 +127,12 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
 
 function RepositoriDetail() {
   const { kegiatanId } = useParams()
+  const { pathname } = useLocation()
   const { user } = useOutletContext()
   const navigate = useNavigate()
+  const dariRencana = pathname.startsWith('/rencana-kegiatan/')
+  const daftarKegiatanPath = dariRencana ? '/rencana-kegiatan' : '/repositori-bukti-dukung'
+  const detailKegiatanPath = daftarKegiatanPath
   const { aktif } = usePeriode()
   const { kegiatan } = useRencanaKegiatan(aktif?.id)
   const detail = useDetailKegiatan(kegiatanId)
@@ -140,8 +144,8 @@ function RepositoriDetail() {
   const [errorBerkas, setErrorBerkas] = useState('')
   const fileInput = useRef(null)
 
-  if (detail.error?.status === 404) return <Navigate to="/repositori-bukti-dukung" replace />
-  if (!detail.kegiatan) return <Memuat dari={[detail]} />
+  if (detail.error?.status === 404) return <Navigate to={daftarKegiatanPath} replace />
+  if (!detail.kegiatan) return <Memuat dari={[detail]} bentuk="detail" />
   const k = detail.kegiatan
 
   // Berkas hanya bisa diunggah PIC kegiatan, jadi pengunggahnya = PIC
@@ -151,6 +155,12 @@ function RepositoriDetail() {
   // Operator lain boleh melihat sebagai referensi; hanya PIC yang bisa mengunggah, dan tidak saat periode dikunci
   const pic = k.pic_user_id === user.id
   const bolehEdit = pic && bolehUbah(user, 'unggahBukti', aktif)
+  const detailKegiatan = [
+    [Building2, 'OPD', k.opd],
+    [UserRound, 'PIC', k.pic],
+    [CalendarDays, 'Jadwal', <>{formatTanggal(k.mulai)}<br />- {formatTanggal(k.selesai)}</>],
+    ...(aktif?.batas ? [[Clock3, 'Deadline Bukti', formatTanggal(aktif.batas)]] : []),
+  ]
 
   async function unggah(event) {
     const pilihan = [...event.target.files]
@@ -180,9 +190,9 @@ function RepositoriDetail() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="detail" />
       <PageHeader
-        back="/repositori-bukti-dukung"
+        back={daftarKegiatanPath}
         title="Pengumpulan Bukti Dukung"
         subtitle="Unggah dan kelola berkas bukti fisik terpusat berdasarkan kegiatan statistik dan indikator EPSS yang telah dipetakan."
       />
@@ -209,7 +219,7 @@ function RepositoriDetail() {
                 const tujuan = kegiatan.find((item) => item.nama === e.target.value)
                 if (tujuan) {
                   setCari('')
-                  navigate(`/repositori-bukti-dukung/${tujuan.id}`)
+                  navigate(`${detailKegiatanPath}/${tujuan.id}`)
                 }
               }}
               placeholder="Cari Rencana Kegiatan..."
@@ -233,12 +243,7 @@ function RepositoriDetail() {
             <h2 className="text-center text-h2">{k.nama}</h2>
             <hr className="w-full border-grey-50" />
             <dl className="grid w-full grid-cols-2 gap-2.5 px-4 text-center md:grid-cols-4 md:px-15">
-              {[
-                [Building2, 'OPD', k.opd],
-                [UserRound, 'PIC', k.pic],
-                [CalendarDays, 'Jadwal', <> {formatTanggal(k.mulai)}<br />- {formatTanggal(k.selesai)}</>],
-                [Clock3, 'Deadline Bukti', formatTanggal(aktif.batas)],
-              ].map(([Icon, label, value]) => (
+              {detailKegiatan.map(([Icon, label, value]) => (
                 <div key={label} className="flex flex-col items-center gap-2">
                   <Icon size={25} aria-hidden="true" className="text-white bg-grey-500 py-1 px-1 rounded-xs" />
                   <dt className="font-bold">{label}</dt>
