@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   Save,
   Send,
   Sparkles,
@@ -41,7 +40,7 @@ const STEPS = [
 
 const getVisibleSteps = (data) => STEPS.filter((step) => !step.isVisible || step.isVisible(data))
 
-function FormMetadataWizard({ initialData, onBack, onSaveSuccess, onBukaGlosarium }) {
+function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
   const [currentStepId, setCurrentStepId] = useState('awal')
   const [formData, setFormData] = useState(initialData || INITIAL_METADATA_FORM)
   const [toastMessage, setToastMessage] = useState(null)
@@ -252,14 +251,6 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess, onBukaGlosariu
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={onBukaGlosarium}
-            className="flex items-center gap-1.5 rounded-full border border-grey-75 bg-white px-4 py-2 text-[13px] font-semibold text-grey-300 hover:bg-grey2-75 transition"
-          >
-            <BookOpen size={16} />
-            Glosarium
-          </button>
           <button
             type="button"
             onClick={handleSaveDraft}

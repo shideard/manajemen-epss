@@ -86,8 +86,6 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
         <div>
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             5.1. Jenis Rancangan Sampel:
-            <IstilahTooltip id="single-stage" className="ml-1.5" />
-            <IstilahTooltip id="multi-stage" className="ml-1" />
           </label>
           <div className="flex flex-wrap gap-6">
             {OPSI_RANCANGAN.map((opt) => (
@@ -111,8 +109,6 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             5.2. Metode Pemilihan Sampel Tahap Terakhir:
-            <IstilahTooltip id="sampel-probabilitas" className="ml-1.5" />
-            <IstilahTooltip id="sampel-nonprobabilitas" className="ml-1" />
           </label>
           <div className="flex flex-wrap gap-6">
             {OPSI_METODE_PEMILIHAN.map((opt) => (
@@ -169,7 +165,6 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
             <div className="border-t border-grey-50 pt-5">
               <label className="block text-[14px] font-bold text-grey-300 mb-2">
                 5.4. Kerangka Sampel Tahap Terakhir:
-                <IstilahTooltip id="kerangka-sampel" className="ml-1.5" />
               </label>
               <div className="flex flex-wrap gap-6">
                 {OPSI_KERANGKA_SAMPEL.map((opt) => (

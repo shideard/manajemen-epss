@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import DaftarMetadata from './DaftarMetadata'
 import FormMetadataWizard from './FormMetadataWizard'
-import GlosariumIstilah from './components/GlosariumIstilah'
 import {
   MOCK_METADATA_SUBMISSIONS,
   STORAGE_METADATA_KEY,
@@ -21,7 +20,7 @@ function loadSavedSubmissions() {
 
 function PelaporanMetadata() {
   const [submissions, setSubmissions] = useState(loadSavedSubmissions)
-  const [viewMode, setViewMode] = useState('list') // 'list' | 'wizard' | 'glosarium'
+  const [viewMode, setViewMode] = useState('list') // 'list' | 'wizard'
   const [currentEditData, setCurrentEditData] = useState(null)
 
   useEffect(() => {
@@ -124,9 +123,7 @@ function PelaporanMetadata() {
         </p>
       </div>
 
-      {viewMode === 'glosarium' ? (
-        <GlosariumIstilah onKembali={() => setViewMode('wizard')} />
-      ) : viewMode === 'list' ? (
+      {viewMode === 'list' ? (
         <DaftarMetadata
           submissions={submissions}
           onOpenCreate={handleOpenCreate}
@@ -137,7 +134,6 @@ function PelaporanMetadata() {
           initialData={currentEditData}
           onBack={() => setViewMode('list')}
           onSaveSuccess={handleSaveSuccess}
-          onBukaGlosarium={() => setViewMode('glosarium')}
         />
       )}
     </div>

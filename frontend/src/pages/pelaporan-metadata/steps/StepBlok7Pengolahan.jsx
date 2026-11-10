@@ -14,10 +14,12 @@ const ID_TAHAPAN = {
 }
 
 // Label wizard -> id entri kamus untuk 7.2.
+// "Deskriptif Dan Inferensia" memakai entri sendiri: PDF menjelaskan kedua
+// metode secara terpisah, jadi gabungannya tidak boleh menumpang salah satu.
 const ID_METODE_ANALISIS = {
   Deskriptif: 'analisis-deskriptif',
   Inferensia: 'analisis-inferensia',
-  'Deskriptif Dan Inferensia': 'analisis-deskriptif',
+  'Deskriptif Dan Inferensia': 'analisis-deskriptif-inferensia',
 }
 
 const LABEL_REKOMENDASI = {
@@ -141,8 +143,6 @@ function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan, onTerapka
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             7.2. Metode Analisis:
-            <IstilahTooltip id="analisis-deskriptif" className="ml-1.5" />
-            <IstilahTooltip id="analisis-inferensia" className="ml-1" />
           </label>
           <div className="flex flex-wrap gap-6">
             {['Deskriptif', 'Inferensia', 'Deskriptif Dan Inferensia'].map((opt) => (

@@ -146,9 +146,6 @@ function StepBlok4Desain({ formData, updateBlok4, caraPengumpulan, onTerapkanRek
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             4.3. Tipe Pengumpulan Data:
-            <IstilahTooltip id="tipe-longitudinal-panel" className="ml-1.5" />
-            <IstilahTooltip id="tipe-longitudinal-cross-sectional" className="ml-1" />
-            <IstilahTooltip id="tipe-cross-sectional" className="ml-1" />
           </label>
           <div className="flex flex-wrap gap-6">
             {['Longitudinal Panel', 'Longitudinal Cross Sectional', 'Cross Sectional'].map((opt) => (

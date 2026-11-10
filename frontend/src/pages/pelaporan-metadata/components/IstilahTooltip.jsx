@@ -9,7 +9,10 @@ import { ambilIstilah } from '../data/kamusIstilah'
  * - Dibuka dengan KLIK (bukan hover), karena pengguna OPD kurang menemukan
  *   affordance hover. Hover hanya memperjelas bahwa ikon bisa diklik.
  * - Popover (bukan modal) supaya wizard tetap terlihat di belakangnya.
- * - Istilah "terkait" ditampilkan sebagai teks biasa, bukan tooltip bertingkat.
+ * - Isi popover hanya definisi singkat. Rujukan ke halaman PDF sengaja tidak
+ *   ditampilkan: pengguna OPD tidak membuka panduan, jadi malah menambah bising.
+ * - Untuk pilihan yang berderet (radio/checkbox), pasang ikon di TIAP pilihan
+ *   saja, jangan juga di judul field, supaya tidak ada ikon kembar.
  *
  * Props:
  * - id        : id entri di `kamusIstilah.js`
@@ -90,22 +93,6 @@ function IstilahTooltip({ id, istilah, className = '', align = 'left' }) {
           </div>
 
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-grey-200">{entri.definisi}</p>
-
-          {entri.terkait?.length > 0 && (
-            <div className="mt-3 border-t border-grey-50 pt-2.5">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-grey-100">
-                Sering tertukar dengan
-              </p>
-              <p className="mt-1 text-[12px] leading-relaxed text-grey-200">
-                {entri.terkait
-                  .map((idTerkait) => ambilIstilah(idTerkait)?.istilah)
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
-            </div>
-          )}
-
-          <p className="mt-2.5 text-[10.5px] text-grey-100">{entri.sumber}</p>
         </div>
       )}
     </span>
