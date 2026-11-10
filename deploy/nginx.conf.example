@@ -1,0 +1,56 @@
+# Contoh konfigurasi nginx produksi: SPA dan API Laravel di satu domain,
+# jadi cookie sesi Sanctum berjalan tanpa CORS (sama seperti proxy Vite saat development).
+# Ganti server_name, path repo, dan socket PHP-FPM sesuai server.
+
+server {
+    listen 80;
+    server_name epss.example.go.id;
+
+    # Hasil `npm run build` di frontend/
+    root /var/www/manajemen-epss/frontend/dist;
+    index index.html;
+
+    # Bukti dukung maksimal 10 MB per berkas (lihat StoreDokumenBuktiRequest)
+    client_max_body_size 12m;
+
+    # API, cookie CSRF Sanctum, dan health check → Laravel
+    location ~ ^/(api|sanctum)(/|$) {
+        try_files /__laravel @laravel;
+    }
+    location = /logout {
+        try_files /__laravel @laravel;
+    }
+    location = /up {
+        try_files /__laravel @laravel;
+    }
+
+    # /login: GET = halaman login SPA, POST = LoginController Laravel
+    location = /login {
+        error_page 418 = @laravel;
+        if ($request_method = POST) {
+            return 418;
+        }
+        try_files /index.html =404;
+    }
+
+    # Aset hasil build punya hash di nama berkas, aman di-cache lama
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # Rute SPA lainnya (React Router)
+    location / {
+        try_files $uri /index.html;
+    }
+
+    location @laravel {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME /var/www/manajemen-epss/backend/backend-epss/public/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/manajemen-epss/backend/backend-epss/public;
+        fastcgi_read_timeout 120s;
+    }
+}
