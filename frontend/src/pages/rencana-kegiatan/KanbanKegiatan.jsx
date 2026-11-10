@@ -56,7 +56,7 @@ function KartuKegiatan({ kartu, warna, href }) {
       <div className="flex flex-col gap-1.5">
         <p className="flex items-center text-small">
           <span className="flex-1 font-light text-grey-200">Bukti dukung</span>
-          <span className={`font-semibold ${jumlah ? warna.teks : 'text-grey-100'}`}>
+          <span className={`font-semibold ${jumlah ? warna.teks : 'text-grey-200'}`}>
             {jumlah ? `${diajukan}/${jumlah} indikator` : 'Belum ada indikator'}
           </span>
         </p>
@@ -106,7 +106,7 @@ function KanbanKegiatan({ periodeId, cocok, hrefOf }) {
                 <span className="flex-1">{warna.judul}</span>
                 <span className="rounded-sm border border-grey2-300 bg-white px-2 py-0.5 text-small text-grey-200">{list.length}</span>
               </h3>
-              {list.length === 0 && <p className="py-6 text-center text-small text-grey-100">Tidak ada kegiatan.</p>}
+              {list.length === 0 && <p className="py-6 text-center text-small text-grey-200">Tidak ada kegiatan.</p>}
               {tampil.map((kartu) => (
                 <KartuKegiatan key={kartu.kegiatan.id} kartu={kartu} warna={warna} href={hrefOf(kartu.kegiatan)} />
               ))}
