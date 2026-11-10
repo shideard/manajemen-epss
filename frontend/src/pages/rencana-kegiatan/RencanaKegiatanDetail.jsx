@@ -16,18 +16,23 @@ function RencanaKegiatanDetailVerifikator() {
   const { aktif } = usePeriode()
   const rencana = useRencanaKegiatan(aktif?.id)
   const muat = [rencana]
-  const [k, setK] = useState(null)
-  const [detailLoading, setDetailLoading] = useState(true)
+  const { detail } = rencana
+  // Hasil detail ditandai id-nya: loading = hasil yang ada belum milik kegiatan ini
+  const [hasil, setHasil] = useState({ id: null, item: null })
   const [editing, setEditing] = useState(false)
   useEffect(() => {
     if (!kegiatanId) return
     let hidup = true
-    setK(null)
-    setDetailLoading(true)
-    rencana.detail(kegiatanId).then((item) => { if (hidup) setK(item) }).catch((error) => { if (hidup) setK({ error }) }).finally(() => { if (hidup) setDetailLoading(false) })
+    detail(kegiatanId).then(
+      (item) => hidup && setHasil({ id: kegiatanId, item }),
+      (error) => hidup && setHasil({ id: kegiatanId, item: { error } }),
+    )
     return () => { hidup = false }
-  }, [kegiatanId, rencana.detail])
-  if ((!k && detailLoading) || muat.some((data) => data.loading)) return <Memuat dari={muat} />
+  }, [kegiatanId, detail])
+  const detailLoading = Boolean(kegiatanId) && hasil.id !== kegiatanId
+  const k = detailLoading ? null : hasil.item
+  const setK = (item) => setHasil({ id: kegiatanId, item })
+  if ((!k && detailLoading) || muat.some((data) => data.loading)) return <Memuat dari={muat} bentuk="detail" />
   if (k?.error) return <p role="alert" className="text-red-500">{k.error.message}</p>
   if (!k) return <Navigate to="/rencana-kegiatan" replace />
 
@@ -42,7 +47,7 @@ function RencanaKegiatanDetailVerifikator() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="detail" />
       <PageHeader back="/rencana-kegiatan" title="Detail Rencana Kegiatan" subtitle="Informasi dan pemetaan indikator kegiatan.">
         {bolehEdit && (
           <button type="button" onClick={() => setEditing(true)} className={buttonClass()}>

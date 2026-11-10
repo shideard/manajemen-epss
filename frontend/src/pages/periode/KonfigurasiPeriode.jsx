@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { PeriodeFields } from './PengaturanPeriode'
 import { usePeriode, useSkor, useVersiInstrumen } from '../../lib/store'
-import { hitungIps, INDIKATOR, predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
+import { predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
 import { Badge, Memuat, PageHeader } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
@@ -17,7 +17,7 @@ function KonfigurasiPeriode() {
     ubah: ubahPeriode,
     kunci: kunciPeriode,
     aktifkan: aktifkanPeriode,
-  }, { levels, snapshot }, versiInstrumen] = muat
+  }, { snapshot }, versiInstrumen] = muat
   const [pesan, setPesan] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
