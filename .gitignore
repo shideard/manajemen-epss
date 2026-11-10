@@ -2,3 +2,5 @@
 node_modules/
 dist/
 .claude/logs/
+# Folder bahan referensi lokal & model
+referensi/

@@ -139,6 +139,13 @@ export const INITIAL_METADATA_FORM = {
       digital: '',
       dataMikro: '',
     },
+    // 8.2 Rencana penerbitan publikasi: satu tanggal (format 'YYYY-MM-DD')
+    // per produk yang dijawab "Ya" pada 8.1. Produk "Tidak" selalu kosong.
+    penerbitan: {
+      tercetak: '',
+      digital: '',
+      dataMikro: '',
+    },
   },
 
   // Catatan rekomendasi historis yang dipilih sendiri oleh pengguna.

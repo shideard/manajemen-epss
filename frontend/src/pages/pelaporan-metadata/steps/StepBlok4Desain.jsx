@@ -154,6 +154,11 @@ function StepBlok4Desain({ formData, updateBlok4, caraPengumpulan, onTerapkanRek
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             4.4. Cakupan Wilayah Pengumpulan Data:
           </label>
+          <p className="text-[12px] text-grey-100 mb-2">
+            Cukup 1 kabupaten/kota di Indonesia yang tidak tercakup, cakupan sudah dianggap
+            sebagian wilayah Indonesia. Untuk kegiatan yang cakupannya kecamatan atau kelurahan,
+            pada 4.5 cukup ditulis nama kabupaten/kota saja.
+          </p>
           <div className="flex flex-wrap gap-6">
             {['Seluruh Wilayah Indonesia', 'Sebagian Wilayah Indonesia'].map((opt) => (
               <label key={opt} className="flex items-center gap-2.5 cursor-pointer text-[14px] font-medium text-grey-200">

@@ -65,6 +65,10 @@ function StepHalamanAwal({ formData, updateHalamanAwal, terapkanRekomendasi }) {
               onChange={(e) => updateHalamanAwal('judulKegiatan', e.target.value)}
               className="w-full rounded-xl border border-grey-75/60 px-4 py-2.5 text-[14px] text-grey-300 placeholder:text-grey-75 focus:border-grey-300 focus:ring-1 focus:ring-grey-300 outline-none transition"
             />
+            <p className="mt-1.5 text-[12px] text-grey-100">
+              Tulis judul tanpa tahun kegiatan; tahun diisi pada kotak terpisah. Pengecualian
+              untuk kegiatan lanjutan atau persiapan (pilot), tahun ditulis melekat pada judul.
+            </p>
             {judulSiap(data.judulKegiatan) && !rekomendasi && (
               <p className="mt-1.5 text-[12px] text-grey-100">
                 Belum ada kegiatan historis yang mirip judul ini, silakan isi manual.

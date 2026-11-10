@@ -23,6 +23,27 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
   const sampel = blok5 || {}
   const isProbabilitas = sampel.metodePemilihanSampel === 'Sampel Probabilitas'
 
+  // 8.2: hanya produk yang punya tanggal rencana terbit yang ditampilkan.
+  // Tanggal disimpan sebagai 'YYYY-MM-DD' dan diubah ke format Indonesia.
+  const rencanaTerbit = [
+    ['tercetak', 'Tercetak'],
+    ['digital', 'Digital'],
+    ['dataMikro', 'Data Mikro'],
+  ]
+    .map(([key, label]) => {
+      const tanggal = blok8.penerbitan?.[key]
+      if (!tanggal) return null
+      const [tahun, bulan, hari] = tanggal.split('-').map(Number)
+      if (!tahun || !bulan || !hari) return null
+      return `${label}: ${new Date(tahun, bulan - 1, hari).toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })}`
+    })
+    .filter(Boolean)
+    .join(', ')
+
   return (
     <div className="flex flex-col gap-6">
       <div className="border-b border-grey-50 pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -217,6 +238,7 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
           <SummaryItem label="Produk Tercetak (Hardcopy)" value={blok8.produkUmum?.tercetak} />
           <SummaryItem label="Produk Digital (Softcopy)" value={blok8.produkUmum?.digital} />
           <SummaryItem label="Data Mikro" value={blok8.produkUmum?.dataMikro} />
+          <SummaryItem label="Rencana Penerbitan Publikasi" value={rencanaTerbit} />
         </div>
       </div>
 

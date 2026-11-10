@@ -9,7 +9,8 @@
 //   karena pill hanya dipasang di opsi yang biasanya DIPILIH.
 // - Opsi "Lainnya" dilewati (isinya teks bebas, tidak bisa ditampilkan sebagai pill).
 // - 4.7 PAPI/CAPI/CATI pada Kompilasi dilewati (bertentangan dengan panduan, sudah berupa modus "Tidak").
-// - 5.1-5.4 dan 6.5 tidak ada field-nya pada wizard ini.
+// - 5.x dan 6.6 tidak dibuatkan entri: berupa daftar/angka bebas, bukan pilihan
+//   opsi, sehingga tidak punya modus yang bisa ditampilkan sebagai pill.
 //
 // Struktur tiap entri:
 //   jenis : 'tunggal' (radio) | 'centang' (checkbox)

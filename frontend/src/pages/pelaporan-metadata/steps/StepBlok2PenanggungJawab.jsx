@@ -21,6 +21,9 @@ function StepBlok2PenanggungJawab({ formData, updateBlok2 }) {
                 onChange={(e) => updateBlok2('eselon1', e.target.value)}
                 className="w-full rounded-xl border border-grey-75/60 px-4 py-2.5 text-[14px] text-grey-300 focus:border-grey-300 outline-none transition"
               />
+              <p className="mt-1.5 text-[12px] text-grey-100">
+                Untuk statistik sektoral di daerah, Unit Eselon 1 boleh tidak diisi.
+              </p>
             </div>
             <div>
               <label className="block text-[13px] font-semibold text-grey-200 mb-1">Eselon 2</label>

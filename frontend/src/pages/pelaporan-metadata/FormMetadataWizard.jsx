@@ -136,10 +136,14 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
     }))
   }
 
-  const updateBlok8 = (field, val) => {
+  // `tambahan` opsional dipakai saat satu aksi mengubah lebih dari satu
+  // sub-field blok8 sekaligus (mis. mengganti 8.1 ke "Tidak" sekaligus
+  // mengosongkan tanggal di 8.2). Semua digabung dalam satu objek karena
+  // pemanggilan beruntun akan saling menimpa nilai yang dikirim.
+  const updateBlok8 = (field, val, tambahan = {}) => {
     setFormData((prev) => ({
       ...prev,
-      blok8: { ...prev.blok8, [field]: val },
+      blok8: { ...prev.blok8, ...tambahan, [field]: val },
     }))
   }
 
