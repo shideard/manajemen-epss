@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class opd extends Model
+class Opd extends Model
 {
     use HasUuids;
 
@@ -17,4 +18,9 @@ class opd extends Model
     protected $casts = [
         'status_aktif' => 'boolean',
     ];
+
+    public function rencanaKegiatan(): HasMany
+    {
+        return $this->hasMany(RencanaKegiatan::class, 'opd_id');
+    }
 }

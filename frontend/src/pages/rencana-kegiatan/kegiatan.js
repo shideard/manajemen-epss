@@ -1,4 +1,28 @@
 // Logika murni rencana kegiatan (tanpa React), dicek oleh kegiatan.check.js
+import { statusKegiatan } from '../../lib/epss.js'
+
+// Kolom kanban, urut sesuai alur; key = hasil statusKegiatan
+export const KOLOM_KANBAN = ['Belum dilaksanakan', 'Sedang dilaksanakan', 'Bukti dukung diunggah', 'Terverifikasi']
+
+// Kanban otomatis: kolom tiap kegiatan diturunkan dari jadwal + bukti, tidak dipindah manual.
+// Progres per indikator: dari indikator yang dipetakan ke kegiatan (k.indikatorIds), berapa yang buktinya sudah diajukan.
+// k.jumlahBerkas = berkas di server; bukti = status per 'kegiatanId:indikatorId' (belum ada = draft)
+export function kartuKanban(kegiatan, bukti, today) {
+  const kolom = Object.fromEntries(KOLOM_KANBAN.map((status) => [status, []]))
+  for (const k of kegiatan) {
+    const milik = k.indikatorIds.map((id) => bukti[`${k.id}:${id}`] ?? { kegiatanId: k.id, indikatorId: id, status: 'draft' })
+    const lampiran = k.jumlahBerkas
+    kolom[statusKegiatan(k, milik, lampiran, today)].push({
+      kegiatan: k,
+      indikatorIds: k.indikatorIds,
+      diajukan: milik.filter((b) => b.status !== 'draft').length,
+      lampiran,
+      catatan: milik.filter((b) => b.catatan).length,
+    })
+  }
+  for (const list of Object.values(kolom)) list.sort((a, b) => a.kegiatan.mulai.localeCompare(b.kegiatan.mulai))
+  return kolom
+}
 
 export const isOnDate = (kegiatan, date) => kegiatan.mulai <= date && date <= kegiatan.selesai
 

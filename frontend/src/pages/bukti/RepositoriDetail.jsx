@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
-import { Link, Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { berkasUrl, useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../../lib/store'
-import { buktiKey, formatTanggal, indikatorById, isPic, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
+import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
+import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
+import { useBukti, useDetailKegiatan, useDokumenBukti, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
+import { buktiKey, formatTanggal, INDIKATOR, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { ChecklistItem, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -16,8 +17,6 @@ import eyeIcon from '../../assets/icons/eye-line.svg'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import mindMap from '../../assets/icons/mind-map.svg'
 import levelArrow from '../../assets/icons/arrow-drop-left-level.svg'
-import arrowSmall from '../../assets/icons/arrow-long-small.svg'
-import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 
 // Checklist satu indikator; tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
 function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, readOnly, onSave }) {
@@ -33,7 +32,8 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
   const syarat = indikator.levels[level - 1].syarat
 
   function centang(index, value) {
-    onSave({ checked: { ...checked, [level]: syarat.map((_, i) => (i === index ? value : Boolean(checked[level]?.[i]))) } })
+    setError('')
+    onSave({ checked: { ...checked, [level]: syarat.map((_, i) => (i === index ? value : Boolean(checked[level]?.[i]))) } }).catch((err) => setError(err.message))
   }
 
   function ajukan() {
@@ -43,7 +43,7 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
       title: 'Ajukan Verifikasi',
       message: `Ajukan bukti dukung Indikator ${indikator.nomor} (Level Terpenuhi: ${terpenuhi}) ke verifikator? Checklist tidak bisa diubah selama menunggu verifikasi.`,
       confirmLabel: 'Ajukan',
-      onConfirm: () => onSave({ checked, status: 'menunggu', diajukan: new Date().toISOString() }),
+      onConfirm: () => onSave({ checked, ajukan: true }),
     })
   }
 
@@ -92,14 +92,22 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
               <img src={levelArrow} alt="" width={46} height={45} className="-scale-x-100" />
             </button>
           </div>
-          <button type="button" onClick={() => setPedoman(true)} className={`gap-4! ${buttonClass('outline')}`}>
-            Lihat Pedoman Indikator
-            <img src={arrowSmall} alt="" width={20} height={10} />
-          </button>
+          <button
+                    type="button"
+                    onClick={() => setPedoman(true)}
+                    className={buttonClass('secondary', 'sm')}
+                  >
+                    <img src={bookIcon} alt="" width={15} height={15} />
+                    Pedoman &amp; Syarat
+            </button>
         </div>
 
         <FormError>{error}</FormError>
-
+        {bukti.status === 'menunggu' && (
+          <p role="status" className="text-small text-lime-500 text-end py-2">
+            Ajuan telah terkirim ke verifikator. Silakan cek status ajuan secara berkala.
+          </p>
+        )}
         {!terkunci && (
           <div className="flex flex-wrap items-center justify-end gap-4">
             <p role="status" className="text-small text-grey-200">
@@ -120,54 +128,70 @@ function IndikatorBukti({ bukti, indikator, levelTerverifikasi, jumlahBerkas, re
 
 function RepositoriDetail() {
   const { kegiatanId } = useParams()
+  const { pathname } = useLocation()
   const { user } = useOutletContext()
   const navigate = useNavigate()
+  const dariRencana = pathname.startsWith('/rencana-kegiatan/')
+  const daftarKegiatanPath = dariRencana ? '/rencana-kegiatan' : '/repositori-bukti-dukung'
+  const detailKegiatanPath = daftarKegiatanPath
   const { aktif } = usePeriode()
-  const muat = [useKegiatan(), useBukti(), useBerkas(), useSkor()]
-  const [{ kegiatan }, { bukti: semuaBukti, ubah: ubahBukti }, { berkas, unggah: unggahBerkas, hapus: hapusBerkasKegiatan }, { levels }] = muat
+  const { kegiatan } = useRencanaKegiatan(aktif?.id)
+  const detail = useDetailKegiatan(kegiatanId)
+  const dokumen = useDokumenBukti(kegiatanId)
+  const muat = [useBukti(), useSkor(), dokumen]
+  const [{ bukti: semuaBukti, simpan: simpanAjuan }, { levels }] = muat
   const [cari, setCari] = useState('')
+  const [mengunggah, setMengunggah] = useState(false)
+  const [errorBerkas, setErrorBerkas] = useState('')
   const fileInput = useRef(null)
-  const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
-  const k = kegiatan.find((item) => item.id === kegiatanId)
-  if (!k && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} />
-  if (!k) return <Navigate to="/repositori-bukti-dukung" replace />
+  if (detail.error?.status === 404) return <Navigate to={daftarKegiatanPath} replace />
+  if (!detail.kegiatan) return <Memuat dari={[detail]} bentuk="detail" />
+  const k = detail.kegiatan
 
-  const files = berkas[k.id] ?? []
-  const tertaut = Object.values(semuaBukti).filter((b) => b.kegiatanId === k.id)
-  // Operator lain boleh melihat sebagai referensi; hanya PIC yang bisa mengubah, dan tidak saat periode dikunci
-  const pic = isPic(k, user)
+  // Berkas hanya bisa diunggah PIC kegiatan, jadi pengunggahnya = PIC
+  const files = dokumen.dokumen.map((f) => ({ ...f, oleh: k.pic }))
+  const tertaut = k.indikatorIds.map((id) => semuaBukti[buktiKey(k.id, id)] ?? { kegiatanId: k.id, indikatorId: id, status: 'draft' })
+  // Operator lain boleh melihat sebagai referensi; hanya PIC yang bisa mengunggah, dan tidak saat periode dikunci
+  const pic = k.pic_user_id === user.id
   const bolehEdit = pic && bolehUbah(user, 'unggahBukti', aktif)
-  // Berkas sedang diperiksa / sudah jadi dasar level → tidak boleh dihapus (status perbaikan boleh).
-  // Tombol tetap tampil (disabled + alasan) supaya PIC tahu kenapa tidak bisa menghapus
-  const alasanTidakBisaHapus = tertaut.some((b) => b.status === 'menunggu')
-    ? 'Berkas tidak bisa dihapus selama ada indikator yang menunggu verifikasi.'
-    : tertaut.some((b) => b.status === 'terverifikasi')
-      ? 'Berkas tidak bisa dihapus karena sudah menjadi dasar indikator yang terverifikasi.'
-      : ''
+  const detailKegiatan = [
+    [Building2, 'OPD', k.opd],
+    [UserRound, 'PIC', k.pic],
+    [CalendarDays, 'Jadwal', <>{formatTanggal(k.mulai)}<br />- {formatTanggal(k.selesai)}</>],
+    ...(aktif?.batas ? [[Clock3, 'Deadline Bukti', formatTanggal(aktif.batas)]] : []),
+  ]
 
-  function hapusBerkas(f) {
-    konfirmasi({
-      title: 'Hapus Berkas',
-      message: `Hapus berkas "${f.nama}" dari kegiatan ini? Tindakan ini tidak bisa dibatalkan.`,
-      confirmLabel: 'Hapus',
-      danger: true,
-      onConfirm: () => hapusBerkasKegiatan(k.id, f.id),
-    })
-  }
-
-  function unggah(event) {
-    unggahBerkas(k.id, event.target.files, user.name, aktif.id)
+  async function unggah(event) {
+    const pilihan = [...event.target.files]
     event.target.value = ''
+    setErrorBerkas('')
+    setMengunggah(true)
+    try {
+      await dokumen.unggah(pilihan)
+    } catch (error) {
+      setErrorBerkas(Object.values(error.errors ?? {}).flat()[0] ?? error.message)
+    } finally {
+      setMengunggah(false)
+    }
   }
 
-  const simpanBukti = (indikatorId, perubahan) => ubahBukti(buktiKey(k.id, indikatorId), { ...perubahan, pengaju: user.name })
+  async function lihat(f) {
+    setErrorBerkas('')
+    try {
+      await dokumen.buka(f)
+    } catch (error) {
+      setErrorBerkas(error.message)
+    }
+  }
+
+  const simpanBukti = (indikatorId, perubahan) => simpanAjuan(k, indikatorId, perubahan)
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="detail" />
       <PageHeader
-        back="/repositori-bukti-dukung"
+        back={daftarKegiatanPath}
         title="Pengumpulan Bukti Dukung"
         subtitle="Unggah dan kelola berkas bukti fisik terpusat berdasarkan kegiatan statistik dan indikator EPSS yang telah dipetakan."
       />
@@ -194,7 +218,7 @@ function RepositoriDetail() {
                 const tujuan = kegiatan.find((item) => item.nama === e.target.value)
                 if (tujuan) {
                   setCari('')
-                  navigate(`/repositori-bukti-dukung/${tujuan.id}`)
+                  navigate(`${detailKegiatanPath}/${tujuan.id}`)
                 }
               }}
               placeholder="Cari Rencana Kegiatan..."
@@ -216,30 +240,26 @@ function RepositoriDetail() {
           <div className="flex w-full flex-col items-center gap-4">
             <span className="rounded-md border border-grey-500 px-5 py-1">Rencana Kegiatan</span>
             <h2 className="text-center text-h2">{k.nama}</h2>
-            <hr className="w-full border-grey-500" />
+            <hr className="w-full border-grey-50" />
             <dl className="grid w-full grid-cols-2 gap-2.5 px-4 text-center md:grid-cols-4 md:px-15">
-              {[
-                ['OPD', k.opd],
-                ['PIC', k.pic],
-                ['Jadwal', `${formatTanggal(k.mulai)} s/d ${formatTanggal(k.selesai)}`],
-                ['Deadline Bukti', formatTanggal(aktif.batas)],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="font-semibold">{label} :</dt>
-                  <dd>{value}</dd>
+              {detailKegiatan.map(([Icon, label, value]) => (
+                <div key={label} className="flex flex-col items-center gap-2">
+                  <Icon size={25} aria-hidden="true" className="text-white bg-grey-500 py-1 px-1 rounded-xs" />
+                  <dt className="font-bold">{label}</dt>
+                  <dd className="bg-lime-100 py-2 px-4 rounded-sm">{value}</dd>
                 </div>
               ))}
             </dl>
           </div>
 
           <p className="flex flex-wrap items-center gap-4 font-semibold">
-            Kelengkapan Bukti Kegiatan :
+            Kelengkapan Bukti Kegiatan:
             <span className="flex h-6 items-center gap-2.5 rounded-sm bg-lime-300 px-5 font-medium">
               <img src={bookIcon} alt="" width={15} height={15} />
               {files.length} Berkas Terunggah
             </span>
           </p>
-          <hr className="w-full border-grey-500" />
+          <hr className="w-full border-grey-50" />
 
           {/* Target output diisi verifikator di form Rencana Kegiatan */}
           {k.output?.length > 0 && (
@@ -260,56 +280,36 @@ function RepositoriDetail() {
           )}
 
           <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
-            <h3 className="font-semibold">Dokumen Bukti yang Terlampir :</h3>
+            <h3 className="font-semibold">Dokumen Bukti yang Terlampir:</h3>
             {files.length === 0 && <p className="text-small text-grey-200">Belum ada berkas yang diunggah.</p>}
-            {files.map((f) => {
-              const url = berkasUrl.get(f.id)
-              return (
-                <div key={f.id} className="flex w-full items-center justify-between gap-4 rounded-sm border border-grey-500 px-7 py-2">
-                  <div className="flex min-w-0 items-center gap-3.5">
-                    <span className="relative size-12 shrink-0 overflow-hidden rounded-sm bg-grey-300">
-                      <img src={fileText} alt="" width={54} height={54} className="absolute top-[3px] left-[-3px] max-w-none" />
-                    </span>
-                    <span className="flex min-w-0 flex-col gap-1">
-                      <span className="truncate text-small font-medium">{f.nama}</span>
-                      <span className="text-caption font-light">{metaBerkas(f)}</span>
-                    </span>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3.5">
-                    <img src={checkBadge} alt="Terunggah" width={30} height={30} />
-                    {url ? (
-                      <a href={url} target="_blank" rel="noreferrer" aria-label={`Lihat ${f.nama}`} className="grid size-[30px] place-items-center rounded-sm bg-lime-200">
-                        <img src={eyeIcon} alt="" width={20} height={20} />
-                      </a>
-                    ) : (
-                      <span title="Pratinjau hanya tersedia pada sesi saat berkas diunggah" className="grid size-[30px] place-items-center rounded-sm bg-lime-200 opacity-40">
-                        <img src={eyeIcon} alt="" width={20} height={20} />
-                      </span>
-                    )}
-                    {bolehEdit && (
-                      <button
-                        type="button"
-                        onClick={() => hapusBerkas(f)}
-                        disabled={Boolean(alasanTidakBisaHapus)}
-                        title={alasanTidakBisaHapus || `Hapus ${f.nama}`}
-                        aria-label={`Hapus ${f.nama}`}
-                        className="grid size-[30px] place-items-center rounded-sm bg-red-200 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <img src={deleteIcon} alt="" width={20} height={20} />
-                      </button>
-                    )}
-                  </div>
+            {files.map((f) => (
+              <div key={f.id} className="flex w-full items-center justify-between gap-4 rounded-sm border border-grey-500 px-7 py-2">
+                <div className="flex min-w-0 items-center gap-3.5">
+                  <span className="relative size-12 shrink-0 overflow-hidden rounded-sm bg-grey-300">
+                    <img src={fileText} alt="" width={54} height={54} className="absolute top-[3px] left-[-3px] max-w-none" />
+                  </span>
+                  <span className="flex min-w-0 flex-col gap-1">
+                    <span className="truncate text-small font-medium">{f.nama}</span>
+                    <span className="text-caption font-light">{metaBerkas(f)}</span>
+                  </span>
                 </div>
-              )
-            })}
-            {bolehEdit && alasanTidakBisaHapus && files.length > 0 && <p className="text-small text-grey-200">{alasanTidakBisaHapus}</p>}
+                <div className="flex shrink-0 items-center gap-3.5">
+                  <img src={checkBadge} alt="Terunggah" width={30} height={30} />
+                  <button type="button" onClick={() => lihat(f)} aria-label={`Lihat ${f.nama}`} className="grid size-[30px] place-items-center rounded-sm bg-lime-200">
+                    <img src={eyeIcon} alt="" width={20} height={20} />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <FormError>{errorBerkas}</FormError>
             {bolehEdit && (
               <>
-                <input ref={fileInput} type="file" multiple onChange={unggah} className="hidden" />
-                <button type="button" onClick={() => fileInput.current.click()} className={buttonClass()}>
+                <input ref={fileInput} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" onChange={unggah} className="hidden" />
+                <button type="button" onClick={() => fileInput.current.click()} disabled={mengunggah} className={buttonClass()}>
                   <img src={addIcon} alt="" width={19} height={19} />
-                  Unggah Berkas Baru
+                  {mengunggah ? 'Mengunggah…' : 'Unggah Berkas Baru'}
                 </button>
+                <p className="text-small text-grey-200">PDF, Word, Excel, JPG, atau PNG, maksimal 10 MB per berkas.</p>
               </>
             )}
           </div>
@@ -329,14 +329,13 @@ function RepositoriDetail() {
         <IndikatorBukti
           key={`${b.indikatorId}:${b.status}`}
           bukti={b}
-          indikator={indikatorById[b.indikatorId]}
+          indikator={INDIKATOR.find((i) => i.id === b.indikatorId)}
           levelTerverifikasi={levels[b.indikatorId]}
           jumlahBerkas={files.length}
           readOnly={!bolehEdit}
           onSave={(perubahan) => simpanBukti(b.indikatorId, perubahan)}
         />
       ))}
-      {dialogKonfirmasi}
     </div>
   )
 }

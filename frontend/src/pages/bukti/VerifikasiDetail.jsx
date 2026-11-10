@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { berkasUrl, useBerkas, useBukti, useKegiatan, usePeriode } from '../../lib/store'
+import { useBukti, useDetailKegiatan, useDokumenBukti, usePeriode } from '../../lib/store'
 import { bolehUbah } from '../../config/menu'
 import { buktiKey, indikatorById, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { ChecklistItem, Field, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
@@ -17,9 +17,12 @@ function VerifikasiDetail() {
   const navigate = useNavigate()
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const muat = [useKegiatan(), useBukti(), useBerkas()]
-  const [{ kegiatan }, { bukti: semuaBukti, ubah: ubahBukti }, { berkas }] = muat
+  const detail = useDetailKegiatan(kegiatanId)
+  const dokumen = useDokumenBukti(kegiatanId)
+  const muat = [detail, useBukti(), dokumen]
+  const [{ kegiatan: k }, { bukti: semuaBukti, verifikasi }] = muat
   const [dipilih, setDipilih] = useState(0)
+  const [pratinjau, setPratinjau] = useState({ id: null })
   const [level, setLevel] = useState(null)
   const [catatan, setCatatan] = useState('')
   const [pedoman, setPedoman] = useState(false)
@@ -30,22 +33,45 @@ function VerifikasiDetail() {
 
   const key = buktiKey(kegiatanId, indikatorId)
   const bukti = semuaBukti[key]
-  const k = kegiatan.find((item) => item.id === kegiatanId)
   const indikator = indikatorById[indikatorId]
-  if ((!bukti || !k) && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} />
+  // Pengunggah berkas = PIC kegiatan (hanya PIC yang bisa mengunggah)
+  const files = dokumen.dokumen.map((f) => ({ ...f, oleh: k?.pic }))
+  const file = files[dipilih]
+
+  // Isi berkas terpilih diunduh dari API → object URL untuk iframe; dicabut saat ganti berkas / keluar halaman
+  useEffect(() => {
+    if (!file) return
+    let hidup = true
+    let url
+    dokumen.url(file).then(
+      (u) => {
+        url = u
+        if (hidup) setPratinjau({ id: file.id, url: u })
+        else URL.revokeObjectURL(u)
+      },
+      (error) => hidup && setPratinjau({ id: file.id, error }),
+    )
+    return () => {
+      hidup = false
+      if (url) URL.revokeObjectURL(url)
+    }
+  }, [file?.id]) // eslint-disable-line react-hooks/exhaustive-deps -- dokumen.url baru tiap render; cukup unduh ulang saat berkasnya ganti
+
+  if ((!bukti || !k) && muat.some((d) => d.loading || d.error)) return <Memuat dari={muat} bentuk="detail" />
   if (!bukti || !k || !indikator) return <Navigate to="/verifikasi-bukti-dukung" replace />
 
   // Hanya ajuan berstatus "menunggu" yang bisa diputuskan, dan tidak saat periode dikunci
   const bolehPutuskan = bolehUbah(user, 'verifikasiBukti', aktif) && bukti.status === 'menunggu'
-  const files = berkas[kegiatanId] ?? []
-  const file = files[dipilih]
   const semuaChecked = draft ?? bukti.checked ?? {}
   const terpenuhi = levelTerpenuhi(indikator.levels, semuaChecked)
   // Berjenjang: hanya boleh membuka level sampai satu di atas level terpenuhi
   const levelAktif = level ?? Math.min(terpenuhi + 1, LEVELS.length)
   const checked = semuaChecked[levelAktif] ?? []
 
-  const simpan = (perubahan) => ubahBukti(key, { ...perubahan, checked: semuaChecked })
+  const simpan = async (perubahan) => {
+    await verifikasi(bukti, { ...perubahan, checked: semuaChecked })
+    navigate('/verifikasi-bukti-dukung')
+  }
 
   function centang(index, value) {
     const baris = indikator.levels[levelAktif - 1].syarat.map((_, i) => (i === index ? value : Boolean(checked[i])))
@@ -58,10 +84,7 @@ function VerifikasiDetail() {
       title: 'Kirim Revisi',
       message: `Kembalikan ajuan "${k.nama}" ke operator dengan status Perlu Perbaikan?`,
       confirmLabel: 'Kirim Revisi',
-      onConfirm: () => {
-        simpan({ status: 'perbaikan', catatan: catatan.trim() })
-        navigate('/verifikasi-bukti-dukung')
-      },
+      onConfirm: () => simpan({ keputusan: 'perbaikan', catatan: catatan.trim() }),
     })
   }
 
@@ -71,18 +94,15 @@ function VerifikasiDetail() {
       title: 'Setujui & Tetapkan Level',
       message: `Tetapkan "${k.nama}" untuk Indikator ${indikator.nomor} pada Level ${terpenuhi} (${LEVELS[terpenuhi - 1]})? Ajuan akan berstatus Terverifikasi.`,
       confirmLabel: 'Setujui',
-      onConfirm: () => {
-        simpan({ status: 'terverifikasi', level: terpenuhi, catatan: '' })
-        navigate('/verifikasi-bukti-dukung')
-      },
+      onConfirm: () => simpan({ keputusan: 'terverifikasi', level: terpenuhi }),
     })
   }
 
-  const url = file && berkasUrl.get(file.id)
+  const url = pratinjau.id === file?.id ? pratinjau.url : null
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="detail" />
       <PageHeader back="/verifikasi-bukti-dukung" title="Verifikasi Bukti Dukung Kegiatan" />
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(440px,2fr)_3fr]">
@@ -95,8 +115,8 @@ function VerifikasiDetail() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-6">
-              <StatusBukti status={bukti.status} label={bukti.status === 'menunggu' ? 'Belum diverifikasi' : undefined} />
-              <p className="font-light text-grey-200">Pengaju: {bukti.pengaju ?? '-'}</p>
+              <StatusBukti status={bukti.status} label={bukti.status === 'menunggu' ? 'Belum diverifikasi' : undefined} className="text-small" />
+              <p className="font-light text-grey-200">Pengaju: <span className="font-semibold">{bukti.pengaju ?? '-'}</span></p>
             </div>
           </div>
           <hr className="border-grey-75" />
@@ -168,7 +188,7 @@ function VerifikasiDetail() {
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="font-semibold">Level Terpenuhi : {terpenuhi}</p>
-            <button type="button" onClick={() => setPedoman(true)} className={buttonClass('secondary')}>
+            <button type="button" onClick={() => setPedoman(true)} className={buttonClass('secondary', 'sm')}>
               <img src={bookIcon} alt="" width={19} height={19} />
               Lihat Pedoman Indikator
             </button>
@@ -223,7 +243,9 @@ function VerifikasiDetail() {
             {url ? (
               <iframe src={url} title={file.nama} className="size-full" />
             ) : (
-              <p className="px-6 text-center text-grey-200">Pratinjau tidak tersedia. Isi berkas hanya bisa dilihat pada sesi saat berkas diunggah.</p>
+              <p className="px-6 text-center text-grey-200">
+                {!file ? 'Belum ada berkas.' : pratinjau.id === file.id ? (pratinjau.error?.message ?? 'Gagal memuat berkas.') : 'Memuat berkas…'}
+              </p>
             )}
           </div>
         </section>

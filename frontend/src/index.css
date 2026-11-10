@@ -4,6 +4,14 @@
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
+  --color-white: #ffffff;
+  --color-lime-50: #fdfff4;
+  --color-lime-75: #f8fdd3;
+  --color-lime-100: #f5fcc1;
+  --color-lime-200: #f1fba6;
+  --color-lime-300: #eefa94;
+  --color-lime-400: #a7af68;
+  --color-lime-500: #878f52;
   --color-grey-50: #e8e8e8;
   --color-grey-75: #a0a0a2;
   --color-grey-100: #78797b;

@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -50,18 +50,16 @@ assert.deepEqual(halamanTerlihat(3, 5), [1, '…', 3, '…', 5])
 assert.deepEqual(halamanTerlihat(5, 5), [1, '…', 5])
 assert.deepEqual(halamanTerlihat(10, 20), [1, '…', 10, '…', 20])
 
-const form = { nama: ' Siklus 2027 ', tahun1: '2027', tahun2: '2028', batas: '2028-05-30', target: '3.5' }
-assert.deepEqual(validasiPeriode(form).data, { nama: 'Siklus 2027', tahun1: '2027', tahun2: '2028', batas: '2028-05-30', target: 3.5 })
+const form = { nama: ' Siklus 2027 ', tahun1: '2027', tahun2: '2028', versi_instrumen_id: 'v1', target: '3.5' }
+assert.deepEqual(validasiPeriode(form).data, { nama_periode: 'Siklus 2027', tahun_mulai: 2027, tahun_selesai: 2028, versi_instrumen_id: 'v1', target_ips: 3.5 })
+assert.ok(validasiPeriode({ ...form, versi_instrumen_id: '' }).error)
 assert.ok(validasiPeriode({ ...form, tahun2: '2029' }).error)
 assert.ok(validasiPeriode({ ...form, target: '5.5' }).error)
 assert.ok(validasiPeriode({ ...form, target: '' }).error)
 const lain = [{ nama: 'Siklus 2025', tahun1: '2025', tahun2: '2026' }]
 assert.ok(validasiPeriode(form, lain).data) // 2027-2028 bersebelahan, tidak beririsan
-assert.ok(validasiPeriode({ ...form, tahun1: '2026', tahun2: '2027', batas: '2027-05-30' }, lain).error) // 2026 dipakai dua periode
-assert.ok(validasiPeriode({ ...form, tahun1: '2025', tahun2: '2026', batas: '2026-05-30' }, lain).error) // tahun sama
-assert.ok(validasiPeriode({ ...form, batas: '2029-01-01' }).error)
-assert.ok(validasiPeriode({ ...form, batas: '2026-12-31' }).error)
-assert.ok(validasiPeriode({ ...form, batas: '2027-01-01' }).data)
+assert.ok(validasiPeriode({ ...form, tahun1: '2026', tahun2: '2027' }, lain).error) // 2026 dipakai dua periode
+assert.ok(validasiPeriode({ ...form, tahun1: '2025', tahun2: '2026' }, lain).error) // tahun sama
 
 const csv = lkeCsv({ i1: 2 }, { 'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1', catatan: 'Lengkapi "SK"' } }, { k1: [{}, {}] }, { k1: 'Survei; SKM' }).split('\r\n')
 assert.equal(csv.length, INDIKATOR.length + 1)
@@ -153,5 +151,12 @@ assert.equal(statusOf(k, '2026-09-21'), 'Selesai')
 const lama = { ...k, mulai: '2026-01-01', selesai: '2026-01-31' }
 const nanti = { ...k, mulai: '2026-12-01', selesai: '2026-12-05' }
 assert.deepEqual(agendaTerdekat([nanti, lama, k], '2026-09-15'), [k, nanti])
+
+// Ganti password: akun baru, belum pernah ganti, atau sudah 1 tahun
+const gantiSaat = (user, now) => wajibGantiPassword(user, new Date(now))
+assert.equal(gantiSaat({ must_change_password: true, password_changed_at: '2026-10-01T00:00:00Z' }, '2026-10-02T00:00:00Z'), true)
+assert.equal(gantiSaat({ must_change_password: false, password_changed_at: null }, '2026-10-02T00:00:00Z'), true)
+assert.equal(gantiSaat({ must_change_password: false, password_changed_at: '2026-10-01T00:00:00Z' }, '2027-09-30T23:59:59Z'), false)
+assert.equal(gantiSaat({ must_change_password: false, password_changed_at: '2026-10-01T00:00:00Z' }, '2027-10-01T00:00:00Z'), true)
 
 console.log('epss.check (akses): OK')

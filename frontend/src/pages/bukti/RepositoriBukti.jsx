@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
-import { useBukti, useKegiatan } from '../../lib/store'
-import { includesText, indikatorById, isPic, paginate } from '../../lib/epss'
+import { useBukti, usePeriode, useSemuaKegiatan } from '../../lib/store'
+import { buktiKey, includesText, indikatorById, paginate } from '../../lib/epss'
 import { Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 
 const PAGE_SIZE = 5
@@ -16,28 +16,30 @@ const FILTER = [
 
 function RepositoriBukti() {
   const { user } = useOutletContext()
-  const muat = [useKegiatan(), useBukti()]
-  const [{ kegiatan }, { bukti }] = muat
+  const { aktif } = usePeriode()
   const [semua, setSemua] = useState(false) // false = hanya kegiatan yang user ini PIC-nya
   const [filter, setFilter] = useState(null)
   const [query, setQuery] = useState('')
   const [queryIndikator, setQueryIndikator] = useState('')
   const [page, setPage] = useState(1)
+  const muat = [useSemuaKegiatan(aktif?.id), useBukti()]
+  const [{ kegiatan }, { bukti }] = muat
 
-  // Satu baris per pasangan kegiatan–indikator; kegiatan yang belum dipetakan tetap tampil
-  const baris = kegiatan.filter((k) => semua || isPic(k, user)).flatMap((k) => {
-    const daftar = Object.values(bukti).filter((b) => b.kegiatanId === k.id)
-    return daftar.length ? daftar.map((b) => ({ kegiatan: k, bukti: b })) : [{ kegiatan: k, bukti: { status: 'draft' } }]
-  })
+  // Satu baris per pasangan kegiatan–indikator; kegiatan yang belum dipetakan tetap tampil. Statusnya masih dari browser
+  const baris = kegiatan
+    .filter((k) => semua || k.pic_user_id === user.id)
+    .flatMap((k) => {
+      const daftar = k.indikatorIds.map((id) => ({ kegiatan: k, indikator: indikatorById[id], bukti: bukti[buktiKey(k.id, id)] ?? { status: 'draft' } }))
+      return daftar.length ? daftar : [{ kegiatan: k, indikator: null, bukti: { status: 'draft' } }]
+    })
   const filtered = baris.filter(
-    ({ kegiatan: k, bukti: b }) =>
-      (!filter || b.status === filter) && includesText([k.nama, k.pic, indikatorById[b.indikatorId]?.nama], query),
+    ({ kegiatan: k, indikator, bukti: b }) => (!filter || b.status === filter) && includesText([k.nama, k.pic, indikator?.nama], query),
   )
   const { rows, page: currentPage, pageCount } = paginate(filtered, page, PAGE_SIZE)
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="daftar" />
       <PageHeader title="Upload Bukti Dukung" />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -94,11 +96,10 @@ function RepositoriBukti() {
                 : 'Tidak ada kegiatan dengan Anda sebagai PIC yang cocok.'}
           </p>
         )}
-        {rows.map(({ kegiatan: k, bukti: b }) => {
-          const indikator = indikatorById[b.indikatorId]
+        {rows.map(({ kegiatan: k, indikator, bukti: b }) => {
           return (
             <Link
-              key={`${k.id}:${b.indikatorId}`}
+              key={`${k.id}:${indikator?.id}`}
               to={`/repositori-bukti-dukung/${k.id}`}
               className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-white px-7 py-4 transition duration-300 ease-out-quint hover:-translate-y-0.5 hover:shadow-md"
             >
@@ -117,7 +118,7 @@ function RepositoriBukti() {
                   </span>
                 </span>
               </span>
-              <StatusBukti status={b.status} />
+              <StatusBukti status={b.status} className="text-small"/>
             </Link>
           )
         })}

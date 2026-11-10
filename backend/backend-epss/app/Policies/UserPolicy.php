@@ -23,4 +23,13 @@ class UserPolicy
         return $actor->status_aktif
         && $actor->role === UserRole::SUPER_ADMIN_BIDANG;
     }
+
+    public function viewPicOptions(User $actor): bool
+    {
+        return $actor->status_aktif
+            && in_array($actor->role, [
+                UserRole::VERIFIKATOR,
+                UserRole::OPERATOR,
+            ], true);
+    }
 }

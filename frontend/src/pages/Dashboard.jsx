@@ -1,25 +1,23 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { useBerkas, useBukti, useKegiatan, usePeriode, useSkor } from '../lib/store'
+import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
 import { ROLES } from '../config/menu'
-import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusKegiatan, toISODate } from '../lib/epss'
-import { ArrowLink, Badge, CountUp, Dropdown, Memuat, PageHeader } from '../components/ui'
+import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusOf, toISODate } from '../lib/epss'
+import { ArrowLink, Badge, Collapse, CountUp, Dropdown, Memuat, PageHeader } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
 import arrowBlack from '../assets/icons/arrow-long-black.svg'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
 import closeCircle from '../assets/icons/close-circle-line.svg'
 import timeIcon from '../assets/icons/time-line.svg'
-import uploadIcon from '../assets/icons/file-upload-line.svg'
 import checkCircle from '../assets/icons/checkbox-circle-line.svg'
 
 const GRADIENT = 'bg-linear-to-b from-green-500 to-grey-500 bg-clip-text font-bold text-transparent'
 
 const STATUS_KEGIATAN = {
-  'Belum dilaksanakan': { tone: 'red', icon: closeCircle },
-  'Sedang dilaksanakan': { tone: 'yellow', icon: timeIcon },
-  'Bukti dukung diunggah': { tone: 'blue', icon: uploadIcon },
-  Terverifikasi: { tone: 'green', icon: checkCircle },
+  'Belum Mulai': { tone: 'red', icon: closeCircle },
+  Berjalan: { tone: 'yellow', icon: timeIcon },
+  Selesai: { tone: 'green', icon: checkCircle },
 }
 
 const angka = (n) => (n == null ? '-' : n.toFixed(2))
@@ -73,19 +71,34 @@ function Dashboard() {
   const { user } = useOutletContext()
   const verifikator = user.role === ROLES.VERIFIKATOR
   const { periode, aktif } = usePeriode()
-  const muat = [useSkor(), useBukti(), useBerkas(), useKegiatan()]
-  const [{ levels }, { bukti }, { berkas }, { kegiatan }] = muat
+  const muat = [useSkor(), useBukti(), useSemuaKegiatan(aktif?.id)]
+  const [{ levels }, { bukti }, { kegiatan }] = muat
   const [simulasi, setSimulasi] = useState([{ indikatorId: '', level: 1 }])
+  const [infoSimulasi, setInfoSimulasi] = useState(false)
   const today = toISODate(new Date())
+
+  if (!aktif) {
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <PageHeader
+        title="Belum Ada Periode Evaluasi"
+        subtitle="Belum tersedia periode evaluasi aktif yang dapat digunakan."
+      />
+    </div>
+    )
+  } 
 
   const ips = hitungIps(INDIKATOR, levels)
   const sebelumnya = periode.filter((p) => p.actual != null && p.tahun2 < aktif.tahun1).sort((a, b) => b.tahun2.localeCompare(a.tahun2))[0]
   const terverifikasi = INDIKATOR.filter((i) => levels[i.id]).length
   const daftarBukti = Object.values(bukti)
   const ajuan = new Set(daftarBukti.filter((b) => b.status === 'menunggu').map((b) => b.indikatorId)).size
-  const sisaHari = Math.max(0, selisihHari(today, aktif.batas))
-  const buktiLink = verifikator ? '/verifikasi-bukti-dukung' : '/repositori-bukti-dukung'
 
+  const sisaHari = aktif.batas
+    ? Math.max(0, selisihHari(today, aktif.batas))
+    : null
+  
+  const buktiLink = verifikator ? '/verifikasi-bukti-dukung' : '/repositori-bukti-dukung'
   const levelSimulasi = { ...levels }
   for (const s of simulasi) if (s.indikatorId) levelSimulasi[s.indikatorId] = s.level
   const hasilSimulasi = hitungIps(INDIKATOR, levelSimulasi)
@@ -234,17 +247,12 @@ function Dashboard() {
             {/* Baris putih membulat seperti kartu di desain */}
             <tbody className="bg-white text-grey-500 [&>tr:first-child>td:first-child]:rounded-tl-md [&>tr:first-child>td:last-child]:rounded-tr-md [&>tr:last-child>td:first-child]:rounded-bl-md [&>tr:last-child>td:last-child]:rounded-br-md">
               {agendaTerdekat(kegiatan, today).map((k) => {
-                const status = statusKegiatan(
-                  k,
-                  daftarBukti.filter((b) => b.kegiatanId === k.id),
-                  berkas[k.id]?.length ?? 0,
-                  today,
-                )
+                const status = statusOf(k, today)
                 return (
                   <tr key={k.id} className="border-b border-grey-75 last:border-0">
                     <td className="px-5 py-4">{k.nama}</td>
                     <td className="px-5 py-4">{formatTanggal(k.mulai)}</td>
-                    <td className="px-5 py-4">{berkas[k.id]?.length ?? 0} berkas diunggah</td>
+                    <td className="px-5 py-4">{k.jumlahBerkas} berkas diunggah</td>
                     <td className="px-5 py-3">
                       <Badge {...STATUS_KEGIATAN[status]} className="w-full text-small">
                         {status}
@@ -302,7 +310,49 @@ function Dashboard() {
         </section>
 
         <section className="flex flex-col gap-6">
-          <PageHeader as="h2" title="Simulasi Perubahan Level & Gap Analysis" />
+          <div>
+            <PageHeader as="h2" title="Simulasi Perubahan Level & Gap Analysis">
+              <button
+                type="button"
+                onClick={() => setInfoSimulasi((buka) => !buka)}
+                aria-expanded={infoSimulasi}
+                aria-controls="info-simulasi"
+                aria-label="Penjelasan simulasi dan gap analysis"
+                title="Penjelasan"
+                className={`grid size-8 place-items-center rounded-full border text-body font-bold transition-colors ${
+                  infoSimulasi ? 'border-grey-500 bg-grey-500 text-lime-300' : 'border-grey-200 text-grey-500 hover:bg-white'
+                }`}
+              >
+                i
+              </button>
+            </PageHeader>
+            <Collapse open={infoSimulasi}>
+              <div id="info-simulasi" className="mt-4 flex flex-col gap-5 rounded-md border border-blue-500 bg-blue-50 px-6 py-5 text-body leading-relaxed text-blue-500">
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-h3">Simulasi perubahan level</h3>
+                  <p>Lihat berapa IPS Bayangan jika indikator tertentu naik ke level yang Anda pilih.</p>
+                  <ol className="flex list-decimal flex-col gap-1 pl-6">
+                    <li>Klik <strong>Tambah indikator</strong>, lalu pilih indikatornya.</li>
+                    <li>Klik level tujuan (L1–L5). Level di bawah level saat ini tidak bisa dipilih, karena simulasi hanya untuk peningkatan.</li>
+                    <li>Angka hijau di tiap baris = kenaikan IPS dari indikator itu saja. <strong>Hasil simulasi</strong> = gabungan semua baris.</li>
+                  </ol>
+                  <p>Indikator berbobot besar menaikkan skor lebih banyak, jadi dahulukan yang dampaknya paling besar.</p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-h3">Gap analysis</h3>
+                  <p>Membandingkan hasil simulasi dengan target periode:</p>
+                  <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li><strong>Kurang x ke target</strong>: skor masih perlu naik sebanyak x.</li>
+                    <li><strong>Target tercapai</strong>: peningkatan yang disimulasikan sudah cukup.</li>
+                  </ul>
+                </div>
+                <div className="flex flex-col gap-2 border-t border-blue-500/30 pt-4">
+                  <p><strong>Rumus IPS</strong> = jumlah (bobot × level) semua indikator ÷ jumlah bobot. Indikator yang belum terverifikasi dihitung level 1.</p>
+                  <p>Simulasi hanya perkiraan. Skor yang sebenarnya tidak disimpan atau diubah. Klik <strong>Reset</strong> untuk mengulang.</p>
+                </div>
+              </div>
+            </Collapse>
+          </div>
           <div className="flex flex-1 flex-col gap-5 rounded-lg bg-white p-6">
             {/* Hasil di atas, jadi langsung terlihat setiap kali level diubah */}
             <div className="flex flex-wrap items-end gap-x-6 gap-y-3 rounded-md bg-grey-500 px-5 py-4 text-white">

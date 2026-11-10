@@ -9,12 +9,12 @@ const BUTTON_VARIANT = {
   danger: 'bg-red-400 text-white hover:bg-red-500',
 }
 const BUTTON_SIZE = {
-  md: 'gap-2.5 rounded-md px-5 py-2.5',
-  sm: 'h-6 gap-2.5 rounded-sm px-5 font-medium',
+  md: 'text-body gap-2.5 rounded-md px-5 py-2.5',
+  sm: 'text-small h-7 gap-2.5 rounded-sm px-5 font-medium',
 }
 export const buttonClass = (variant = 'primary', size = 'md') =>
-  `inline-flex shrink-0 items-center justify-center text-body whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-40 ${BUTTON_VARIANT[variant]} ${BUTTON_SIZE[size]}`
+  `inline-flex shrink-0 items-center justify-center whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-40 ${BUTTON_VARIANT[variant]} ${BUTTON_SIZE[size]}`
 
 // Field form (komponen Form Field di Figma). Tanpa tinggi, jadi bisa dipakai <textarea>
 export const fieldClass =
-  'w-full rounded-md border border-grey-75 bg-white px-5 text-body font-normal text-grey-500 placeholder:font-light placeholder:text-grey-75 focus:border-grey-500 focus:outline-1 focus:outline-grey-500 disabled:cursor-not-allowed disabled:bg-grey2-75'
+  'w-full rounded-md border border-grey-75 bg-white px-5 font-normal text-grey-500 placeholder:font-light placeholder:text-grey-75 focus:border-grey-500 focus:outline-1 focus:outline-grey-500 disabled:cursor-not-allowed disabled:bg-grey2-75'

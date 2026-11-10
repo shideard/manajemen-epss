@@ -32,27 +32,21 @@ export const KEYS = {
   snapshot: 'epss.snapshot',
   notifDibaca: 'epss.notif-dibaca',
   pengingat: 'epss.pengingat',
-  users: 'epss.users',
-  sesi: 'epss.sesi', // username akun yang sedang login
+  users: 'epss.akun', // akun dari POST /api/users; key baru supaya akun lama yang hanya ada di browser tidak ikut tampil
 }
 
 export const SEED_PERIODE = [
-  { id: 'p2025', nama: 'Evaluasi EPSS Kota Bogor Siklus 2025–2026', tahun1: '2025', tahun2: '2026', batas: '2026-05-30', target: 2.85, actual: null, terkunci: false },
-  { id: 'p2023', nama: 'Evaluasi EPSS Kota Bogor Siklus 2023–2024', tahun1: '2023', tahun2: '2024', batas: '2024-05-30', target: 2.5, actual: 2.32, terkunci: true },
+  { id: 'p2025', nama: 'EPSS Kota Bogor Siklus 2025–2026', tahun1: '2025', tahun2: '2026', batas: '2026-05-30', target: 2.85, actual: null, terkunci: false },
+  { id: 'p2023', nama: 'EPSS Kota Bogor Siklus 2023–2024', tahun1: '2023', tahun2: '2024', batas: '2024-05-30', target: 2.5, actual: 2.32, terkunci: true },
 ]
-export const SEED_USERS = [
-  { id: 'u1', username: 'budi1234', email: 'budi1234@gmail.com', role: 'VERIFIKATOR' },
-  { id: 'u2', username: 'ani1234', email: 'ani1234@gmail.com', role: 'OPERATOR' },
-  { id: 'u3', username: 'deshi1234', email: 'deshi1234@gmail.com', role: 'VERIFIKATOR' },
-]
-// ponytail: login hanya di frontend dan semua akun memakai DEMO_PASSWORD; ganti dengan POST /login Laravel saat backend dipakai
-export const DEMO_PASSWORD = 'password'
-// Super admin tidak tampil di Kelola Pengguna supaya tidak bisa menghapus/menonaktifkan dirinya sendiri
-export const SUPER_ADMIN = { id: 'admin', username: 'admin', name: 'Super Admin', role: 'SUPER_ADMIN_BIDANG' }
-// Akun dari Kelola Pengguna belum punya nama; username dipakai untuk sapaan & PIC
-export const cariAkun = (users, username) => {
-  const akun = [SUPER_ADMIN, ...users].find((u) => u.username === username)
-  return akun && { name: akun.username, ...akun }
+// Sama dengan User::requiresPasswordChange di backend: akun baru/direset, atau password sudah berumur 1 tahun.
+// Backend tetap penentunya (403 PASSWORD_CHANGE_REQUIRED); ini supaya user langsung diarahkan ke Ganti Password
+// ponytail: 29 Feb + 1 tahun jadi 1 Mar di JS (backend: 28 Feb), selisih sehari hanya di tahun kabisat
+export function wajibGantiPassword(user, now = new Date()) {
+  if (user.must_change_password || !user.password_changed_at) return true
+  const kedaluwarsa = new Date(user.password_changed_at)
+  kedaluwarsa.setFullYear(kedaluwarsa.getFullYear() + 1)
+  return now >= kedaluwarsa
 }
 export const SEED_PENGINGAT = [1, 7, 14, 30]
 export const EMPTY_OBJECT = {}
@@ -347,17 +341,47 @@ export const includesText = (values, query) => {
   return !q || values.some((v) => String(v ?? '').toLowerCase().includes(q))
 }
 
+
 // Data form periode (hasil Object.fromEntries(FormData)) → { data } atau { error }.
 // periodeLain = periode selain yang sedang diedit; tahunnya tidak boleh beririsan
 export function validasiPeriode(form, periodeLain = []) {
-  const target = Number(form.target)
-  if (Number(form.tahun2) !== Number(form.tahun1) + 1) return { error: 'Tahun kedua harus satu tahun setelah tahun pertama (siklus 2 tahunan).' }
-  const bentrok = periodeLain.find((p) => form.tahun1 <= p.tahun2 && p.tahun1 <= form.tahun2)
-  if (bentrok) return { error: `Tahun ${form.tahun1}-${form.tahun2} beririsan dengan periode "${bentrok.nama}" (${bentrok.tahun1}-${bentrok.tahun2}).` }
-  if (form.batas < `${form.tahun1}-01-01` || form.batas > `${form.tahun2}-12-31`) return { error: `Batas akhir unggah bukti harus di antara tahun ${form.tahun1} dan ${form.tahun2}.` }
-  if (!(target >= 1 && target <= 5)) return { error: 'Target skor harus antara 1.00 dan 5.00.' }
-  return { data: { nama: form.nama.trim(), tahun1: form.tahun1, tahun2: form.tahun2, batas: form.batas, target } }
+  if (Number(form.tahun2) !== Number(form.tahun1) + 1) {
+    return {
+      error: 'Tahun kedua harus satu tahun setelah tahun pertama (siklus 2 tahunan).',
+    }
+  }
+
+  const bentrok = periodeLain.find(
+    (p) =>
+      Number(form.tahun1) <= Number(p.tahun2) &&
+      Number(p.tahun1) <= Number(form.tahun2)
+  )
+
+  if (bentrok) {
+    return {
+      error: `Tahun ${form.tahun1}-${form.tahun2} beririsan dengan periode "${bentrok.nama}" (${bentrok.tahun1}-${bentrok.tahun2}).`,
+    }
+  }
+
+  if (!form.versi_instrumen_id) {
+    return { error: 'Versi instrumen wajib dipilih.' }
+  }
+
+  if (!form.target || Number(form.target) < 0 || Number(form.target) > 5) {
+    return { error: 'Target IPS wajib diisi dengan nilai 0 sampai 5.' }
+  }
+
+  return {
+    data: {
+      nama_periode: form.nama.trim(),
+      tahun_mulai: Number(form.tahun1),
+      tahun_selesai: Number(form.tahun2),
+      versi_instrumen_id: form.versi_instrumen_id,
+      target_ips: Number(form.target),
+    },
+  }
 }
+
 
 export const PREDIKAT_TONE = { Kurang: 'red', Cukup: 'blue', Baik: 'green', 'Sangat Baik': 'green', Memuaskan: 'green' }
 

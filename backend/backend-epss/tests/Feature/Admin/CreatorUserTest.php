@@ -15,9 +15,11 @@ class CreatorUserTest extends TestCase
     public function test_admin_can_create_operator_and_verifikator_Without_email(): void
     {
         $admin = User::factory()->create([
-            'role' => UserRole::SUPER_ADMIN_BIDANG,
-            'status_aktif'  => true,
-        ]);
+        'role' => UserRole::SUPER_ADMIN_BIDANG,
+        'status_aktif' => true,
+        'must_change_password' => false,
+        'password_changed_at' => now(),
+    ]);
 
         $password = 'PassworPengguna-2026!';
 
@@ -58,6 +60,8 @@ class CreatorUserTest extends TestCase
         $admin = User::factory()->create([
             'role' => UserRole::SUPER_ADMIN_BIDANG,
             'status_aktif'  => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $response = $this
@@ -84,6 +88,8 @@ class CreatorUserTest extends TestCase
         $operator = User::factory()->create([
             'role' => UserRole::OPERATOR,
             'status_aktif'  => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $response = $this
@@ -108,12 +114,16 @@ class CreatorUserTest extends TestCase
         $admin = User::factory()->create([
             'role' => UserRole::SUPER_ADMIN_BIDANG,
             'status_aktif'  => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $existingUser = User::factory()->create([
             'username' => 'operator.latihan',
             'role' => UserRole::OPERATOR,
             'status_aktif'  => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $response = $this
@@ -141,9 +151,11 @@ class CreatorUserTest extends TestCase
     public function test_mismatched_password_confirmation_is_rejected(): void
     {
         $admin = User::factory()->create([
-            'role' => UserRole::SUPER_ADMIN_BIDANG,
-            'status_aktif'  => true,
-        ]);
+        'role' => UserRole::SUPER_ADMIN_BIDANG,
+        'status_aktif' => true,
+        'must_change_password' => false,
+        'password_changed_at' => now(),
+    ]);
 
         $response = $this
             ->actingAs($admin, 'web')
@@ -169,6 +181,8 @@ class CreatorUserTest extends TestCase
         $verifikator = User::factory()->create([
             'role' => UserRole::VERIFIKATOR,
             'status_aktif'  => true,
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
 
         $response = $this

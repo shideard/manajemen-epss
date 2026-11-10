@@ -1,22 +1,29 @@
 import { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/store'
 import background from '../assets/login/login-bg.png'
 import logoLine from '../assets/login/logo-line.svg'
 import logo from '../assets/sidebar/logo-kota-bogor.png'
-import { Field, FormError, Input } from '../components/ui'
+import { Field, FormError, Input, Spinner } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
 function Login() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [mengirim, setMengirim] = useState(false)
   const { login } = useAuth()
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const { username, password } = Object.fromEntries(new FormData(event.currentTarget))
-    const gagal = login(username, password)
+    setMengirim(true)
+    setError('')
+    const gagal = await login(username, password)
+    setMengirim(false)
     if (gagal) return setError(gagal)
+    // Akun yang wajib ganti password dialihkan AppLayout ke halaman Ganti Password
     navigate('/pilih-periode', { replace: true })
   }
 
@@ -46,12 +53,31 @@ function Login() {
                 <Input name="username" required autoComplete="username" placeholder="Contoh: operator.dinsos" />
               </Field>
               <Field label="Password">
-                <Input name="password" type="password" required autoComplete="current-password" placeholder="Masukkan password" />
+                <span className="relative block">
+                  <Input
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="current-password"
+                    placeholder="Masukkan password"
+                    className="pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                    aria-pressed={showPassword}
+                    className="absolute inset-y-0 right-3 flex items-center justify-center text-grey-300 hover:text-grey-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-500"
+                  >
+                    {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+                  </button>
+                </span>
               </Field>
               <FormError>{error}</FormError>
             </div>
-            <button type="submit" className={`w-full font-semibold ${buttonClass()}`}>
-              Masuk
+            <button type="submit" disabled={mengirim} aria-busy={mengirim} className={`w-full font-semibold ${buttonClass()}`}>
+              {mengirim && <Spinner />}
+              {mengirim ? 'Memproses...' : 'Masuk'}
             </button>
           </div>
         </form>

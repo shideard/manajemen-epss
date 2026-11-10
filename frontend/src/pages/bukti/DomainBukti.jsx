@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useBerkas, useBukti, useKegiatan, useSkor } from '../../lib/store'
-import { DOMAINS, includesText, INDIKATOR, jumlahBukti, levelLabel } from '../../lib/epss'
+import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../../lib/store'
+import { buktiKey, DOMAINS, includesText, INDIKATOR, levelLabel } from '../../lib/epss'
 import { Badge, Collapse, DomainPanel, Memuat, StatusBukti } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import arrowLime from '../../assets/icons/arrow-down-s-line-lime.svg'
@@ -26,20 +26,38 @@ const toggleSet = (set, id) => {
 
 // Domain → indikator → kegiatan yang dipetakan beserta status buktinya.
 // onVerifikasi ada = tampilan verifikator (tombol Verifikasi Indikator + link ke detail verifikasi)
-function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
-  const muat = [useKegiatan(), useBukti(), useBerkas(), useSkor()]
-  const [{ kegiatan }, { bukti }, { berkas }, { levels }] = muat
+function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bolehVerifikasi = false }) {
+  const { aktif } = usePeriode()
+  const muat = [useSemuaKegiatan(aktif?.id), useBukti(), useSkor()]
+  const [{ kegiatan }, { bukti }, { levels }] = muat
   const [domainTerbuka, setDomainTerbuka] = useState(() => new Set([DOMAINS[0].id]))
   const [indikatorTerbuka, setIndikatorTerbuka] = useState(() => new Set())
   const verifikator = Boolean(onVerifikasi)
   const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
+  // Pemetaan dari API; status per pasangan masih dari browser (belum ada record = draft)
+  const buktiIndikator = (indikatorId) =>
+    kegiatan
+      .filter((k) => k.indikatorIds.includes(indikatorId))
+      .map((k) => bukti[buktiKey(k.id, indikatorId)] ?? { kegiatanId: k.id, indikatorId, status: 'draft' })
+  const jumlahBerkas = (indikatorId) => kegiatan.filter((k) => k.indikatorIds.includes(indikatorId)).reduce((n, k) => n + k.jumlahBerkas, 0)
+
+  function cocokFilter(i) {
+    if (filterIndikator === 'semua') return true
+    const daftar = buktiIndikator(i.id)
+    const semuaValid = daftar.length > 0 && daftar.every((b) => b.status === 'terverifikasi')
+    if (filterIndikator === 'terverifikasi') return semuaValid && Boolean(levels[i.id])
+    if (filterIndikator === 'siap') return semuaValid && !levels[i.id]
+    return !semuaValid
+  }
+  const adaHasil = INDIKATOR.some(cocokFilter)
 
   return (
     <>
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="daftar" />
+      {!adaHasil && <p className="rounded-lg bg-white py-10 text-center text-grey-200">Tidak ada indikator pada kategori ini.</p>}
       {DOMAINS.map((domain, d) => {
-        const indikator = INDIKATOR.filter((i) => i.domain === domain && includesText([i.nama, `indikator ${i.nomor}`], query))
-        if (query && indikator.length === 0) return null
+        const indikator = INDIKATOR.filter((i) => i.domain === domain && includesText([i.nama, `indikator ${i.nomor}`], query) && cocokFilter(i))
+        if ((query || filterIndikator !== 'semua') && indikator.length === 0) return null
         const open = domainTerbuka.has(domain.id) || Boolean(query)
         return (
           <DomainPanel
@@ -65,7 +83,7 @@ function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
               <Collapse open={open}>
                 <ul className="py-2">
                   {indikator.map((i) => {
-                    const daftar = Object.values(bukti).filter((b) => b.indikatorId === i.id && namaKegiatan[b.kegiatanId])
+                    const daftar = buktiIndikator(i.id)
                     const valid = daftar.filter((b) => b.status === 'terverifikasi')
                     const semuaValid = daftar.length > 0 && valid.length === daftar.length
                     const levelBaru = semuaValid ? Math.min(...valid.map((b) => b.level)) : null
@@ -82,7 +100,7 @@ function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
                               <span aria-hidden className="text-grey-75">
                                 |
                               </span>
-                              <span>Tersedia : {jumlahBukti(bukti, berkas, i.id)} Bukti dukung</span>
+                              <span>Tersedia : {jumlahBerkas(i.id)} Bukti dukung</span>
                             </p>
                           </div>
                           {/* Badge rata kanan tepat sebelum tombol buka, jadi sejajar di semua indikator */}
@@ -102,7 +120,7 @@ function DomainBukti({ query = '', onVerifikasi, bolehVerifikasi = false }) {
                                 <li key={b.kegiatanId}>
                                   <Link
                                     to={verifikator ? `/verifikasi-bukti-dukung/${b.kegiatanId}/${i.id}` : `/repositori-bukti-dukung/${b.kegiatanId}`}
-                                    className={`flex items-center justify-between gap-4 px-7 py-2 text-small font-medium text-grey-200 hover:underline ${verifikator ? 'bg-lime-75' : 'bg-grey2-75'}`}
+                                    className={`flex items-center justify-between gap-4 px-7 py-2 text-small font-medium text-grey-200 hover:underline transform transition duration-300 ease-out-quint ${b.status === 'terverifikasi' ? 'bg-green-50 text-green-500' : 'bg-grey2-75 text-grey-500 hover:bg-grey2-100'}`}
                                   >
                                     {namaKegiatan[b.kegiatanId]}
                                     <StatusBukti status={b.status} label={verifikator && b.status === 'draft' ? 'Belum diajukan' : undefined} className="text-small" />

@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { usePeriode } from '../../lib/store'
-import { formatTanggal, includesText, paginate, validasiPeriode } from '../../lib/epss'
-import { Field, FormError, Input, Memuat, Modal, ModalActions, PageHeader, Pagination, SearchBox, Select } from '../../components/ui'
+import { usePeriode, useVersiInstrumen } from '../../lib/store'
+import { includesText, paginate, validasiPeriode } from '../../lib/epss'
+import { Badge, Dropdown, Field, FormError, Input, Memuat, Modal, ModalActions, PageHeader, Pagination, SearchBox, Select } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
@@ -15,11 +15,16 @@ const tahunIni = new Date().getFullYear()
 const OPSI_TAHUN = Array.from({ length: 7 }, (_, i) => String(tahunIni - 3 + i))
 
 // Field form periode, dipakai modal Tambah Periode & halaman Konfigurasi
-export function PeriodeFields({ periode = {}, disabled, namaAside }) {
+export function PeriodeFields({ periode = {}, disabled, namaAside, versiInstrumen }) {
+  const [versiId, setVersiId] = useState(periode.versi_instrumen_id ?? '')
+  const opsiVersi = versiInstrumen.daftar.length
+    ? versiInstrumen.daftar.map((versi) => ({ value: versi.id, label: `${versi.nama} (${versi.versi})` }))
+    : [{ value: '', label: versiInstrumen.loading ? 'Memuat versi instrumen...' : 'Versi instrumen tidak tersedia' }]
+
   return (
     <>
       <Field label="Nama Periode" aside={namaAside}>
-        <Input name="nama" required disabled={disabled} defaultValue={periode.nama} placeholder="Contoh: Evaluasi EPSS Kota Bogor Siklus 2027–2028" />
+        <Input name="nama" required disabled={disabled} defaultValue={periode.nama} placeholder="Contoh: EPSS Kota Bogor Siklus 2027–2028" />
       </Field>
       <div className="grid gap-6 sm:grid-cols-2">
         <Field label="Tahun Pertama">
@@ -36,8 +41,16 @@ export function PeriodeFields({ periode = {}, disabled, namaAside }) {
             ))}
           </Select>
         </Field>
-        <Field label="Batas Akhir Unggah Bukti">
-          <Input type="date" name="batas" required disabled={disabled} defaultValue={periode.batas} />
+        <Field label="Versi Instrumen">
+          <input type="hidden" name="versi_instrumen_id" value={versiId} />
+          <Dropdown
+            value={versiId}
+            options={opsiVersi}
+            onChange={setVersiId}
+            label="Versi instrumen"
+            className={disabled || versiInstrumen.loading ? 'pointer-events-none opacity-60' : ''}
+            tombolClass="rounded-md"
+          />
         </Field>
         <Field label="Target Skor">
           <Input
@@ -57,20 +70,34 @@ export function PeriodeFields({ periode = {}, disabled, namaAside }) {
   )
 }
 
-function TambahPeriode({ periode, onSave, onClose }) {
+function TambahPeriode({ periode, versiInstrumen, onSave, onClose }) {
   const [error, setError] = useState('')
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    const { data, error } = validasiPeriode(Object.fromEntries(new FormData(event.currentTarget)), periode)
+    setError('')
+
+    const { data, error } = validasiPeriode(
+      Object.fromEntries(new FormData(event.currentTarget)),
+      periode
+    )
+
     if (error) return setError(error)
-    onSave(data)
+
+    try {
+      await onSave(data)
+    } catch (err) {
+      setError(err.message || 'Gagal menyimpan periode.')
+    }
   }
 
   return (
     <Modal title="Tambah Periode Penilaian EPSS" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6 px-8.5 pt-7 pb-8">
-        <PeriodeFields />
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-6 px-8.5 pt-7 pb-8"
+      >
+        <PeriodeFields versiInstrumen={versiInstrumen} />
         <FormError>{error}</FormError>
         <ModalActions onCancel={onClose} />
       </form>
@@ -79,21 +106,35 @@ function TambahPeriode({ periode, onSave, onClose }) {
 }
 
 function PengaturanPeriode() {
-  const muat = [usePeriode()]
-  const [{ periode, tambah: tambahPeriode, hapus: hapusPeriode }] = muat
+  const dataHooks = [usePeriode(), useVersiInstrumen()]
+
+  const [{
+    periode,
+    muat,
+    tambah: tambahPeriode,
+    hapus: hapusPeriode,
+  }] = dataHooks
+
+  const [, versiInstrumen] = dataHooks
+
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [tambah, setTambah] = useState(false)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
-  // Periode terkunci = arsip skor resmi, jadi hanya periode yang belum dikunci yang bisa dihapus
+  useEffect(() => {
+    muat()
+  }, [muat])  
+
   function hapus(p) {
     konfirmasi({
-      title: 'Hapus Periode',
-      message: `Hapus periode "${p.nama}"? Riwayat snapshot skor periode ini ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
+      title: 'Hapus Periode?',
+      message: `Apakah kamu yakin ingin menghapus periode "${p.nama}"?`,
       confirmLabel: 'Hapus',
       danger: true,
-      onConfirm: () => hapusPeriode(p.id),
+      onConfirm: async () => {
+        hapusPeriode(p.id)
+      },
     })
   }
 
@@ -102,7 +143,7 @@ function PengaturanPeriode() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={dataHooks} bentuk="tabel" />
       <PageHeader title="Pengaturan Periode EPSS Biennial" subtitle="Konfigurasi siklus 2 tahunan year-agnostic dan penetapan target IPS.">
         <button type="button" onClick={() => setTambah(true)} className={buttonClass()}>
           <img src={addIcon} alt="" width={19} height={19} />
@@ -133,7 +174,8 @@ function PengaturanPeriode() {
               <tr className="border-b border-grey-75 font-semibold">
                 <th className="w-[123px] py-4">Periode Penilaian</th>
                 <th className="py-4">Nama Siklus</th>
-                <th className="py-4">Batas Akhir Unggah Bukti</th>
+                <th className="py-4">Versi Instrumen</th>
+                <th className="py-4">Status</th>
                 <th className="py-4">Target IPS</th>
                 <th className="py-4">Actual IPS</th>
                 <th className="py-4">Aksi</th>
@@ -142,7 +184,7 @@ function PengaturanPeriode() {
             <tbody className="font-medium">
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-16 text-grey-200">
+                  <td colSpan={7} className="py-16 text-grey-200">
                     Tidak ada periode yang cocok dengan pencarian.
                   </td>
                 </tr>
@@ -153,8 +195,16 @@ function PengaturanPeriode() {
                     {p.tahun1}/{p.tahun2}
                   </td>
                   <td className="px-4 py-3.5">{p.nama}</td>
-                  <td className="py-3.5">{formatTanggal(p.batas)}</td>
-                  <td className="py-3.5">{p.target.toFixed(2)}</td>
+                  <td className="py-3.5">{p.versi_instrumen_nama ?? versiInstrumen.daftar.find((versi) => versi.id === p.versi_instrumen_id)?.nama ?? '-'}</td>
+                  <td className="py-3.5">
+                    <Badge
+                      tone={p.status === 'AKTIF' ? 'green' : p.status === 'TERKUNCI' ? 'red' : 'yellow'}
+                      className="text-small"
+                    >
+                      {p.status === 'AKTIF' ? 'Aktif' : p.status === 'TERKUNCI' ? 'Terkunci' : 'Draft'}
+                    </Badge>
+                  </td>                  
+                  <td className="py-3.5">{p.target?.toFixed(2) ?? '-'}</td>
                   <td className="py-3.5">{p.actual?.toFixed(2) ?? '-'}</td>
                   <td className="py-3.5">
                     <span className="flex justify-center gap-2">
@@ -185,8 +235,9 @@ function PengaturanPeriode() {
       {tambah && (
         <TambahPeriode
           periode={periode}
-          onSave={(data) => {
-            tambahPeriode(data)
+          versiInstrumen={versiInstrumen}
+          onSave={async (data) => {
+            await tambahPeriode(data)
             setTambah(false)
           }}
           onClose={() => setTambah(false)}

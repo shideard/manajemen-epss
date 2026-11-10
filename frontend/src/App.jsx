@@ -3,11 +3,13 @@ import AppLayout from './components/layout/AppLayout'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Login from './pages/Login'
+import GantiPassword from './pages/GantiPassword'
 import PilihPeriode from './pages/PilihPeriode'
 import Notifikasi from './pages/Notifikasi'
 import PedomanIndikator from './pages/PedomanIndikator'
 import ExportLke from './pages/ExportLke'
 import RencanaKegiatan from './pages/rencana-kegiatan/RencanaKegiatan'
+import RencanaKegiatanDetail from './pages/rencana-kegiatan/RencanaKegiatanDetail'
 import PetaRelasiKegiatan from './pages/rencana-kegiatan/PetaRelasiKegiatan'
 import PengaturanPeriode from './pages/periode/PengaturanPeriode'
 import KonfigurasiPeriode from './pages/periode/KonfigurasiPeriode'
@@ -22,6 +24,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/ganti-password" element={<GantiPassword />} />
       <Route element={<AppLayout bare />}>
         <Route path="/pilih-periode" element={<PilihPeriode />} />
       </Route>
@@ -31,6 +34,7 @@ function App() {
         <Route path="/pedoman-indikator" element={<PedomanIndikator />} />
         <Route path="/rencana-kegiatan" element={<RencanaKegiatan />} />
         <Route path="/rencana-kegiatan/peta-relasi" element={<PetaRelasiKegiatan />} />
+        <Route path="/rencana-kegiatan/:kegiatanId" element={<RencanaKegiatanDetail />} />
         <Route path="/pelaporan-metadata" element={<PelaporanMetadata />} />
         <Route path="/repositori-bukti-dukung" element={<RepositoriBukti />} />
         <Route path="/repositori-bukti-dukung/arsip" element={<ArsipBukti />} />

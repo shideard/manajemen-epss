@@ -2,20 +2,21 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { bolehUbah } from '../../config/menu'
 import DomainBukti from './DomainBukti'
-import { useBukti, useKegiatan, usePeriode, useSkor } from '../../lib/store'
+import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../../lib/store'
 import { includesText, indikatorById, paginate } from '../../lib/epss'
-import { Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
+import { Dropdown, Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 
 const PAGE_SIZE = 5
 
-function VerifikasiBukti() {
+function  VerifikasiBukti() {
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const muat = [useKegiatan(), useBukti(), useSkor()]
+  const muat = [useSemuaKegiatan(aktif?.id), useBukti(), useSkor()]
   const [{ kegiatan }, { bukti }, { tetapkanLevel }] = muat
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [filterIndikator, setFilterIndikator] = useState('semua')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
@@ -37,7 +38,7 @@ function VerifikasiBukti() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Memuat dari={muat} />
+      <Memuat dari={muat} bentuk="daftar" />
       <PageHeader title="Ajuan Terbaru">
         <SearchBox
           value={query}
@@ -75,7 +76,7 @@ function VerifikasiBukti() {
                     </span>
                   </span>
                 </span>
-                <StatusBukti status="menunggu" />
+                <StatusBukti status="menunggu" className="text-small"/>
               </Link>
             </li>
           )
@@ -84,9 +85,26 @@ function VerifikasiBukti() {
 
       {ajuan.length > 0 && <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />}
 
-      <PageHeader as="h2" title="Status per Indikator" />
+      <PageHeader as="h2" title="Status per Indikator">
+        <Dropdown
+          label="Filter indikator"
+          value={filterIndikator}
+          onChange={setFilterIndikator}
+          options={[
+            { value: 'semua', label: 'Semua indikator' },
+            { value: 'terverifikasi', label: 'Sudah diverifikasi' },
+            { value: 'siap', label: 'Siap diverifikasi' },
+            { value: 'belum-lengkap', label: 'Belum lengkap' },
+          ]}
+          className="w-[260px]"
+        />
+      </PageHeader>
       <div className="flex flex-col gap-6">
-        <DomainBukti onVerifikasi={verifikasiIndikator} bolehVerifikasi={bolehUbah(user, 'verifikasiBukti', aktif)} />
+        <DomainBukti
+          filterIndikator={filterIndikator}
+          onVerifikasi={verifikasiIndikator}
+          bolehVerifikasi={bolehUbah(user, 'verifikasiBukti', aktif)}
+        />
       </div>
       {dialogKonfirmasi}
     </div>
