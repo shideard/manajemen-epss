@@ -1,8 +1,16 @@
 import { useMemo } from 'react'
 import SaranPill from '../components/SaranPill'
 import PanelRekomendasi from '../components/PanelRekomendasi'
+import IstilahTooltip from '../components/IstilahTooltip'
 import { getSaranUntukOpsi } from '../lib/saranHelper'
 import { cariRekomendasi, rekomendasiUntukBlok } from '../lib/rekomendasiHelper'
+
+// Label wizard -> id entri `kamusIstilah.js` (lihat alasan di Blok V).
+const ID_PEMERIKSAAN_KUALITAS = {
+  'Kunjungan Kembali': 'kunjungan-kembali',
+  Supervisi: 'supervisi',
+  'Task Force': 'task-force',
+}
 
 // Hanya field pengumpulan yang masuk cakupan rekomendasi (bukan jumlah
 // petugas, pendidikan, atau pelatihan petugas).
@@ -72,6 +80,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
         <div>
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             6.1. Apakah Melakukan Uji Coba (Pilot Survey)?
+            <IstilahTooltip id="pilot-study" className="ml-1.5" />
           </label>
           <div className="flex gap-6">
             {['Ya', 'Tidak'].map((opt) => (
@@ -105,6 +114,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
                   className="size-4 rounded text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <IstilahTooltip id={ID_PEMERIKSAAN_KUALITAS[opt]} />
                 <SaranPill saran={saranUntuk('metodePemeriksaanKualitas', opt)} />
               </label>
             ))}
@@ -115,6 +125,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             6.3. Apakah Melakukan Penyesuaian Nonrespon?
+            <IstilahTooltip id="nonrespon" className="ml-1.5" />
           </label>
           <div className="flex gap-6">
             {['Ya', 'Tidak'].map((opt) => (
@@ -164,6 +175,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             6.5. Persyaratan Pendidikan Terendah Petugas Pengumpulan Data:
+            <IstilahTooltip id="pendidikan-terendah" className="ml-1.5" />
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {[
@@ -192,6 +204,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
           <div>
             <label className="block text-[13px] font-bold text-grey-300 mb-1">
               6.6. Jumlah Petugas: Supervisor / Penyelia / Pengawas
+              <IstilahTooltip id="supervisor" className="ml-1.5" />
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -208,6 +221,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
           <div>
             <label className="block text-[13px] font-bold text-grey-300 mb-1">
               6.6. Jumlah Petugas: Pengumpul Data / Enumerator
+              <IstilahTooltip id="enumerator" className="ml-1.5" />
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -227,6 +241,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             6.7. Apakah Melakukan Pelatihan Petugas?
+            <IstilahTooltip id="pelatihan-petugas" className="ml-1.5" />
           </label>
           <div className="flex gap-6">
             {['Ya', 'Tidak'].map((opt) => (

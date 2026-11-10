@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import IstilahTooltip from '../components/IstilahTooltip'
 
 const OPSI_RANCANGAN = ['Single Stage Atau Phase', 'Multi Stage Atau Phase']
 
@@ -22,6 +23,22 @@ const OPSI_METODE_NONPROBABILITAS = [
 ]
 
 const OPSI_KERANGKA_SAMPEL = ['List Frame', 'Area Frame']
+
+// Label wizard -> id entri `kamusIstilah.js`. Nama label sengaja tidak sama
+// persis dengan PDF (mis. "Systematic Random Sampling" vs "Systematic
+// sampling"), jadi pemetaan ini yang menjadi jembatannya.
+const ID_METODE_SAMPEL = {
+  'Simple Random Sampling': 'simple-random-sampling',
+  'Systematic Random Sampling': 'systematic-random-sampling',
+  'Stratified Random Sampling': 'stratified-random-sampling',
+  'Cluster Sampling': 'cluster-sampling',
+  'Multistage Sampling': 'multistage-sampling',
+  'Quota Sampling': 'quota-sampling',
+  'Accidental Sampling': 'accidental-sampling',
+  'Purposive Sampling': 'purposive-sampling',
+  'Snowball Sampling': 'snowball-sampling',
+  'Saturation Sampling': 'saturation-sampling',
+}
 
 function StepBlok5DesainSampel({ formData, updateBlok5 }) {
   const data = formData.blok5 || {}
@@ -69,6 +86,8 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
         <div>
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             5.1. Jenis Rancangan Sampel:
+            <IstilahTooltip id="single-stage" className="ml-1.5" />
+            <IstilahTooltip id="multi-stage" className="ml-1" />
           </label>
           <div className="flex flex-wrap gap-6">
             {OPSI_RANCANGAN.map((opt) => (
@@ -82,6 +101,7 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <IstilahTooltip id={opt === 'Single Stage Atau Phase' ? 'single-stage' : 'multi-stage'} />
               </label>
             ))}
           </div>
@@ -91,6 +111,8 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             5.2. Metode Pemilihan Sampel Tahap Terakhir:
+            <IstilahTooltip id="sampel-probabilitas" className="ml-1.5" />
+            <IstilahTooltip id="sampel-nonprobabilitas" className="ml-1" />
           </label>
           <div className="flex flex-wrap gap-6">
             {OPSI_METODE_PEMILIHAN.map((opt) => (
@@ -104,6 +126,9 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <IstilahTooltip
+                  id={opt === 'Sampel Probabilitas' ? 'sampel-probabilitas' : 'sampel-nonprobabilitas'}
+                />
               </label>
             ))}
           </div>
@@ -131,6 +156,7 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
                     className="size-4 text-grey-300 focus:ring-lime-300"
                   />
                   <span>{opt}</span>
+                  <IstilahTooltip id={ID_METODE_SAMPEL[opt]} />
                 </label>
               ))}
             </div>
@@ -143,6 +169,7 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
             <div className="border-t border-grey-50 pt-5">
               <label className="block text-[14px] font-bold text-grey-300 mb-2">
                 5.4. Kerangka Sampel Tahap Terakhir:
+                <IstilahTooltip id="kerangka-sampel" className="ml-1.5" />
               </label>
               <div className="flex flex-wrap gap-6">
                 {OPSI_KERANGKA_SAMPEL.map((opt) => (
@@ -156,6 +183,7 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
                       className="size-4 text-grey-300 focus:ring-lime-300"
                     />
                     <span>{opt}</span>
+                    <IstilahTooltip id={opt === 'List Frame' ? 'list-frame' : 'area-frame'} />
                   </label>
                 ))}
               </div>
@@ -165,6 +193,7 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
               <div>
                 <label className="block text-[13px] font-bold text-grey-300 mb-1">
                   5.5. Fraksi Sampel Keseluruhan
+                  <IstilahTooltip id="fraksi-sampel" className="ml-1.5" />
                 </label>
                 <input
                   type="text"
@@ -177,6 +206,7 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
               <div>
                 <label className="block text-[13px] font-bold text-grey-300 mb-1">
                   5.6. Nilai Perkiraan Sampling Error Variabel Utama
+                  <IstilahTooltip id="sampling-error" className="ml-1.5" />
                 </label>
                 <input
                   type="text"
@@ -195,6 +225,7 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
           <div>
             <label className="block text-[13px] font-bold text-grey-300 mb-1">
               5.7. Unit Sampel
+              <IstilahTooltip id="unit-sampel" className="ml-1.5" />
             </label>
             <input
               type="text"
@@ -207,6 +238,7 @@ function StepBlok5DesainSampel({ formData, updateBlok5 }) {
           <div>
             <label className="block text-[13px] font-bold text-grey-300 mb-1">
               5.8. Unit Observasi
+              <IstilahTooltip id="unit-observasi" className="ml-1.5" />
             </label>
             <input
               type="text"

@@ -1,8 +1,24 @@
 import { useMemo } from 'react'
 import SaranPill from '../components/SaranPill'
 import PanelRekomendasi from '../components/PanelRekomendasi'
+import IstilahTooltip from '../components/IstilahTooltip'
 import { getSaranUntukOpsi } from '../lib/saranHelper'
 import { cariRekomendasi, rekomendasiUntukBlok } from '../lib/rekomendasiHelper'
+
+// Nama tahapan (7.1) -> id entri `kamusIstilah.js` (lihat alasan di Blok V).
+const ID_TAHAPAN = {
+  editing: 'editing',
+  coding: 'coding',
+  dataEntry: 'data-entry',
+  validasi: 'validasi',
+}
+
+// Label wizard -> id entri kamus untuk 7.2.
+const ID_METODE_ANALISIS = {
+  Deskriptif: 'analisis-deskriptif',
+  Inferensia: 'analisis-inferensia',
+  'Deskriptif Dan Inferensia': 'analisis-deskriptif',
+}
 
 const LABEL_REKOMENDASI = {
   tahapanPengolahan: '7.1. Tahapan Pengolahan Data',
@@ -96,7 +112,10 @@ function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan, onTerapka
               { key: 'validasi', label: 'Penyahihan (Validasi)' },
             ].map(({ key, label }) => (
               <div key={key} className="flex items-center justify-between gap-4 py-1 border-b border-grey-50/70 last:border-0">
-                <span className="text-[14px] text-grey-300">{label}</span>
+                <span className="text-[14px] text-grey-300">
+                  {label}
+                  <IstilahTooltip id={ID_TAHAPAN[key]} className="ml-1.5" />
+                </span>
                 <div className="flex gap-4">
                   {['Ya', 'Tidak'].map((val) => (
                     <label key={val} className="flex items-center gap-1.5 cursor-pointer text-[13px] font-medium text-grey-200">
@@ -122,6 +141,8 @@ function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan, onTerapka
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             7.2. Metode Analisis:
+            <IstilahTooltip id="analisis-deskriptif" className="ml-1.5" />
+            <IstilahTooltip id="analisis-inferensia" className="ml-1" />
           </label>
           <div className="flex flex-wrap gap-6">
             {['Deskriptif', 'Inferensia', 'Deskriptif Dan Inferensia'].map((opt) => (
@@ -135,6 +156,7 @@ function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan, onTerapka
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <IstilahTooltip id={ID_METODE_ANALISIS[opt]} />
                 <SaranPill saran={saranUntuk('metodeAnalisis', opt)} />
               </label>
             ))}
@@ -145,6 +167,7 @@ function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan, onTerapka
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             7.3. Unit Analisis:
+            <IstilahTooltip id="unit-analisis" className="ml-1.5" />
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {['Individu', 'Rumah Tangga', 'Usaha/Perusahaan', 'Lainnya'].map((opt) => (
@@ -165,6 +188,7 @@ function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan, onTerapka
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             7.4. Tingkat Penyajian Hasil Analisis:
+            <IstilahTooltip id="tingkat-penyajian" className="ml-1.5" />
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {['Nasional', 'Provinsi', 'Kabupaten/Kota', 'Lainnya'].map((opt) => (

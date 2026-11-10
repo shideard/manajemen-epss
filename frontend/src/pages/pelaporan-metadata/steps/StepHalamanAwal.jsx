@@ -1,10 +1,20 @@
 import { useMemo } from 'react'
 import PanelRekomendasi from '../components/PanelRekomendasi'
+import IstilahTooltip from '../components/IstilahTooltip'
 import { cariRekomendasi, judulSiap } from '../lib/rekomendasiHelper'
 
 const LABEL_REKOMENDASI = {
   caraPengumpulan: 'Cara Pengumpulan Data',
   sektorKegiatan: 'Sektor Kegiatan',
+}
+
+// Label di <option> -> id entri `kamusIstilah.js`. PDF menyebut "Sensus"
+// sebagai "Pencacahan Lengkap"; selisih nama itu disimpan di sini saja.
+const ID_CARA_PENGUMPULAN = {
+  Survei: 'cara-survei',
+  Sensus: 'cara-sensus',
+  'Kompilasi Produk Administrasi': 'cara-kompilasi',
+  'Cara Lain Sesuai Perkembangan TI': 'cara-lain-ti',
 }
 
 function StepHalamanAwal({ formData, updateHalamanAwal, terapkanRekomendasi }) {
@@ -108,11 +118,33 @@ function StepHalamanAwal({ formData, updateHalamanAwal, terapkanRekomendasi }) {
             className="w-full rounded-xl border border-grey-75/60 px-4 py-2.5 text-[14px] text-grey-300 bg-white focus:border-grey-300 focus:ring-1 focus:ring-grey-300 outline-none transition"
           >
             <option value="">Pilih Cara Pengumpulan Data</option>
-            <option value="Survei">Survei</option>
-            <option value="Sensus">Sensus</option>
-            <option value="Kompilasi Produk Administrasi">Kompilasi Produk Administrasi</option>
-            <option value="Cara Lain Sesuai Perkembangan TI">Cara Lain Sesuai Perkembangan TI</option>
+            {Object.keys(ID_CARA_PENGUMPULAN).map((label) => (
+              <option key={label} value={label}>
+                {label}
+              </option>
+            ))}
           </select>
+
+          {/* <option> tidak bisa memuat ikon, jadi penjelasan tiap pilihan
+              diletakkan tepat di bawah dropdown: nama istilah + ikon ⓘ. */}
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-grey-100">
+            <span>Penjelasan:</span>
+            {Object.entries(ID_CARA_PENGUMPULAN).map(([label, idIstilah]) => (
+              <span key={idIstilah} className="flex items-center gap-1">
+                <span
+                  className={
+                    data.caraPengumpulan === label ? 'font-semibold text-grey-300' : undefined
+                  }
+                >
+                  {label}
+                </span>
+                <IstilahTooltip
+                  id={idIstilah}
+                  align={idIstilah === 'cara-kompilasi' || idIstilah === 'cara-lain-ti' ? 'right' : 'left'}
+                />
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Sektor Kegiatan */}

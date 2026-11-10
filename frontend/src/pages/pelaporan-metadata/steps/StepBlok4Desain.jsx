@@ -1,8 +1,24 @@
 import { useMemo } from 'react'
 import SaranPill from '../components/SaranPill'
 import PanelRekomendasi from '../components/PanelRekomendasi'
+import IstilahTooltip from '../components/IstilahTooltip'
 import { getSaranUntukOpsi } from '../lib/saranHelper'
 import { cariRekomendasi, rekomendasiUntukBlok } from '../lib/rekomendasiHelper'
+
+// Label wizard -> id entri `kamusIstilah.js` (lihat alasan di Blok V).
+const ID_TIPE_PENGUMPULAN = {
+  'Longitudinal Panel': 'tipe-longitudinal-panel',
+  'Longitudinal Cross Sectional': 'tipe-longitudinal-cross-sectional',
+  'Cross Sectional': 'tipe-cross-sectional',
+}
+
+const ID_SARANA_PENGUMPULAN = {
+  'Paper-assisted Personal Interviewing (PAPI)': 'papi',
+  'Computer-assisted Personal Interviewing (CAPI)': 'capi',
+  'Computer-assisted Telephones Interviewing (CATI)': 'cati',
+  'Computer Aided Web Interviewing (CAWI)': 'cawi',
+  Mail: 'mail',
+}
 
 // Hanya field yang memang ada di form Blok IV dan masuk cakupan rekomendasi.
 const LABEL_REKOMENDASI = {
@@ -130,6 +146,9 @@ function StepBlok4Desain({ formData, updateBlok4, caraPengumpulan, onTerapkanRek
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             4.3. Tipe Pengumpulan Data:
+            <IstilahTooltip id="tipe-longitudinal-panel" className="ml-1.5" />
+            <IstilahTooltip id="tipe-longitudinal-cross-sectional" className="ml-1" />
+            <IstilahTooltip id="tipe-cross-sectional" className="ml-1" />
           </label>
           <div className="flex flex-wrap gap-6">
             {['Longitudinal Panel', 'Longitudinal Cross Sectional', 'Cross Sectional'].map((opt) => (
@@ -143,6 +162,7 @@ function StepBlok4Desain({ formData, updateBlok4, caraPengumpulan, onTerapkanRek
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <IstilahTooltip id={ID_TIPE_PENGUMPULAN[opt]} />
                 <SaranPill saran={saranUntuk('tipePengumpulan', opt)} />
               </label>
             ))}
@@ -226,6 +246,8 @@ function StepBlok4Desain({ formData, updateBlok4, caraPengumpulan, onTerapkanRek
                   className="size-4 rounded text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                {/* "Lainnya" tidak punya definisi di PDF, jadi tidak diberi ikon. */}
+                <IstilahTooltip id={ID_SARANA_PENGUMPULAN[opt]} />
               </label>
             ))}
           </div>
@@ -235,6 +257,7 @@ function StepBlok4Desain({ formData, updateBlok4, caraPengumpulan, onTerapkanRek
         <div className="border-t border-grey-50 pt-5">
           <label className="block text-[14px] font-bold text-grey-300 mb-2">
             4.8. Unit Pengumpulan Data:
+            <IstilahTooltip id="unit-pengumpulan" className="ml-1.5" />
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {['Individu', 'Rumah Tangga', 'Usaha/Perusahaan', 'Lainnya'].map((opt) => (
