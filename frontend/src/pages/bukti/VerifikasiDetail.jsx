@@ -20,7 +20,7 @@ function VerifikasiDetail() {
   const detail = useDetailKegiatan(kegiatanId)
   const dokumen = useDokumenBukti(kegiatanId)
   const muat = [detail, useBukti(), dokumen]
-  const [{ kegiatan: k }, { bukti: semuaBukti, ubah: ubahBukti }] = muat
+  const [{ kegiatan: k }, { bukti: semuaBukti, verifikasi }] = muat
   const [dipilih, setDipilih] = useState(0)
   const [pratinjau, setPratinjau] = useState({ id: null })
   const [level, setLevel] = useState(null)
@@ -68,7 +68,10 @@ function VerifikasiDetail() {
   const levelAktif = level ?? Math.min(terpenuhi + 1, LEVELS.length)
   const checked = semuaChecked[levelAktif] ?? []
 
-  const simpan = (perubahan) => ubahBukti(key, { ...perubahan, checked: semuaChecked })
+  const simpan = async (perubahan) => {
+    await verifikasi(bukti, { ...perubahan, checked: semuaChecked })
+    navigate('/verifikasi-bukti-dukung')
+  }
 
   function centang(index, value) {
     const baris = indikator.levels[levelAktif - 1].syarat.map((_, i) => (i === index ? value : Boolean(checked[i])))
@@ -81,10 +84,7 @@ function VerifikasiDetail() {
       title: 'Kirim Revisi',
       message: `Kembalikan ajuan "${k.nama}" ke operator dengan status Perlu Perbaikan?`,
       confirmLabel: 'Kirim Revisi',
-      onConfirm: () => {
-        simpan({ status: 'perbaikan', catatan: catatan.trim() })
-        navigate('/verifikasi-bukti-dukung')
-      },
+      onConfirm: () => simpan({ keputusan: 'perbaikan', catatan: catatan.trim() }),
     })
   }
 
@@ -94,10 +94,7 @@ function VerifikasiDetail() {
       title: 'Setujui & Tetapkan Level',
       message: `Tetapkan "${k.nama}" untuk Indikator ${indikator.nomor} pada Level ${terpenuhi} (${LEVELS[terpenuhi - 1]})? Ajuan akan berstatus Terverifikasi.`,
       confirmLabel: 'Setujui',
-      onConfirm: () => {
-        simpan({ status: 'terverifikasi', level: terpenuhi, catatan: '' })
-        navigate('/verifikasi-bukti-dukung')
-      },
+      onConfirm: () => simpan({ keputusan: 'terverifikasi', level: terpenuhi }),
     })
   }
 

@@ -26,6 +26,9 @@ use App\Http\Controllers\PeriodeIndikatorController;
 // dokumen bukti
 use App\Http\Controllers\DokumenBuktiController;
 
+// ajuan & verifikasi bukti
+use App\Http\Controllers\AjuanBuktiController;
+
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
         return $request->user();
@@ -149,6 +152,22 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         )->whereUuid('rencanaKegiatan')
         ->whereUuid('dokumenBukti')
         ->name('rencana-kegiatan.dokumen-bukti.revision.store');
+
+        Route::get('/periode-evaluasi/{periode}/ajuan-bukti',
+        [AjuanBuktiController::class, 'index']
+        )->whereUuid('periode')
+        ->name('periode-evaluasi.ajuan-bukti.index');
+
+        Route::put('/rencana-kegiatan/{rencanaKegiatan}/ajuan-bukti/{indikator}',
+        [AjuanBuktiController::class, 'update']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('indikator')
+        ->name('rencana-kegiatan.ajuan-bukti.update');
+
+        Route::patch('/ajuan-bukti/{ajuanBukti}/verifikasi',
+        [AjuanBuktiController::class, 'verify']
+        )->whereUuid('ajuanBukti')
+        ->name('ajuan-bukti.verify');
 
     });
 });

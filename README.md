@@ -75,13 +75,10 @@ frontend/
     config/            menu dan hak akses per role
   DESIGN.md            design system: token warna, tipografi, spacing, komponen
 backend/backend-epss/  API Laravel
-docs/                  arsitektur dan konvensi kode
 ```
 
 ## Dokumentasi
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): modul dan aturan dependensi
-- [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md): konvensi kode
 - [`frontend/DESIGN.md`](frontend/DESIGN.md): design system; `node src/design.check.js` menolak warna, ukuran font,
   radius, shadow, atau spacing mentah di class
 
