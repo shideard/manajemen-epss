@@ -32,7 +32,6 @@ export const KEYS = {
   snapshot: 'epss.snapshot',
   notifDibaca: 'epss.notif-dibaca',
   pengingat: 'epss.pengingat',
-  users: 'epss.akun', // akun dari POST /api/users; key baru supaya akun lama yang hanya ada di browser tidak ikut tampil
 }
 
 export const SEED_PERIODE = [

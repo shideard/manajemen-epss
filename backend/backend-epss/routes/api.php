@@ -47,6 +47,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::post('/users', [UserController::class, 'store'])
         ->name('users.save');
 
+        Route::get('/users', [UserController::class, 'index'])
+        ->name('users.index');
+
         Route::get('/periode-evaluasi', [
             PeriodeEvaluasiController::class,
             'index',

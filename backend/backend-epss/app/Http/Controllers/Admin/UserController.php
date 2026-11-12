@@ -7,9 +7,30 @@ use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
 {
+    public function index(): JsonResponse
+    {
+        Gate::authorize('viewAny', User::class);
+
+        $users = User::query()
+            ->orderBy('name')
+            ->orderBy('username')
+            ->get(['id', 'name', 'username', 'email', 'role', 'status_aktif'])
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role' => $user->role->value,
+                'status_aktif' => $user->status_aktif,
+            ]);
+
+        return response()->json(['data' => $users]);
+    }
+
     public function store(StoreUserRequest $request): JsonResponse
     {
         $validated = $request->validated();

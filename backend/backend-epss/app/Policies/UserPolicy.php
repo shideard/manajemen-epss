@@ -7,6 +7,12 @@ use App\Enums\UserRole;
 
 class UserPolicy
 {
+    public function viewAny(User $actor): bool
+    {
+        return $actor->status_aktif
+            && $actor->role === UserRole::SUPER_ADMIN_BIDANG;
+    }
+
     public function changeStatus(User $actor, User $target): bool 
     {
         return $actor->status_aktif
