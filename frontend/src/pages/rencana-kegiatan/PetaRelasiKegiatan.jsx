@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import PetaKegiatan from './PetaKegiatan'
-import { useBukti, useKegiatan, usePeriode } from '../../lib/store'
+import { usePeriode, useRencanaKegiatan, useSemuaKegiatan } from '../../lib/store'
 import { bolehUbah } from '../../config/menu'
 import { Memuat, PageHeader } from '../../components/ui'
 
@@ -10,16 +10,19 @@ function PetaRelasiKegiatan() {
   const { user } = useOutletContext()
   const navigate = useNavigate()
   const { aktif } = usePeriode()
-  const muat = [useKegiatan(), useBukti()]
-  const [{ kegiatan, simpan }, { bukti }] = muat
+  const rencana = useRencanaKegiatan(aktif?.id)
+  const semuaKegiatan = useSemuaKegiatan(aktif?.id)
+  const muat = [rencana, semuaKegiatan]
+  const [{ simpan }, { kegiatan, muatUlang }] = muat
   // Sama dengan halaman Rencana Kegiatan: verifikator membuka form edit, operator ke repositori buktinya
   const kelola = bolehUbah(user, 'kelolaRencana', aktif)
   const [editing, setEditing] = useState(null)
 
   const buka = (k) => (kelola ? setEditing(k) : navigate(`/repositori-bukti-dukung/${k.id}`))
 
-  function save(data) {
-    simpan(editing.id, data)
+  async function save(data) {
+    await simpan(editing.id, data)
+    muatUlang()
     setEditing(null)
   }
 
@@ -27,12 +30,15 @@ function PetaRelasiKegiatan() {
     <div className="flex w-full flex-col gap-8">
       <Memuat dari={muat} bentuk="peta" />
       <PageHeader title="Peta Relasi Kegiatan" subtitle="Keterkaitan domain, aspek, dan indikator EPSS dengan rencana kegiatan." />
-      <PetaKegiatan kegiatan={kegiatan} bukti={bukti} onOpen={buka} />
+      <PetaKegiatan kegiatan={kegiatan} onOpen={buka} />
 
       {editing && (
         <KegiatanForm
           kegiatan={editing}
-          indikator={Object.values(bukti).filter((b) => b.kegiatanId === editing.id)}
+          indikator={editing.indikator}
+          opds={rencana.opds}
+          pics={rencana.pics}
+          indikatorPilihan={rencana.indikator}
           onSave={save}
           onClose={() => setEditing(null)}
         />

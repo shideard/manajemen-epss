@@ -65,12 +65,13 @@ const csv = lkeCsv({ i1: 2 }, { 'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1', 
 assert.equal(csv.length, INDIKATOR.length + 1)
 assert.equal(csv[1], '"1";"Domain 1 - Prinsip Satu Data Indonesia (SDI)";"Penerapan Standar Data Statistik";"3.5";"2";"Terkelola";"2";"Survei; SKM";"Lengkapi ""SK"""')
 
-// Peta relasi: k1 (indikator 1 & 3) di tengahnya, k2 tidak menumpuk k1, k3 tanpa indikator di bawah tanpa edge
-const peta = petaRelasi([{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }], {
-  'k1:i1': { kegiatanId: 'k1', indikatorId: 'i1' },
-  'k1:i3': { kegiatanId: 'k1', indikatorId: 'i3' },
-  'k2:i1': { kegiatanId: 'k2', indikatorId: 'i1' },
-})
+// Peta relasi memakai pemetaan kegiatan, termasuk yang belum memiliki ajuan bukti.
+// k1 (indikator 1 & 3) di tengahnya, k2 tidak menumpuk k1, k3 tanpa indikator di bawah tanpa edge.
+const peta = petaRelasi([
+  { id: 'k1', indikatorIds: ['i1', 'i3'] },
+  { id: 'k2', indikatorIds: ['i1'] },
+  { id: 'k3', indikatorIds: [] },
+])
 const y = (id) => peta.nodes.find((n) => n.id === id).position.y
 assert.equal(peta.nodes.length, DOMAINS.length + new Set(INDIKATOR.map((i) => i.domain.id + i.aspek)).size + INDIKATOR.length + 3)
 assert.equal(y('k:k1'), y('i:i2'))

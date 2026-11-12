@@ -179,7 +179,7 @@ export const bobotDomain = (domain) => domain.indikator.reduce((sum, i) => sum +
 // Indikator satu baris per indikator; aspek & domain di tengah anak-anaknya;
 // kegiatan sedekat mungkin dengan indikatornya tanpa bertumpuk
 export const PETA = { kolom: 290, baris: 76 }
-export function petaRelasi(kegiatan, bukti) {
+export function petaRelasi(kegiatan) {
   const nodes = []
   const edges = []
   const node = (id, kolom, y, jenis, label, data) => nodes.push({ id, position: { x: kolom * PETA.kolom, y }, data: { jenis, label, kolom, ...data } })
@@ -205,12 +205,13 @@ export function petaRelasi(kegiatan, bukti) {
     node(`d:${d.id}`, 0, tengah(ys), 'domain', d.nama, { chip: `Domain ${DOMAINS.indexOf(d) + 1}`, info: `${ys.length} aspek · ${d.indikator.length} indikator` })
   }
 
-  // Baris indikator tiap kegiatan; kegiatan tanpa indikator (Math.min() = Infinity) di paling bawah
+  // Baris indikator tiap kegiatan berasal dari pemetaan rencana, bukan dari ajuan bukti.
+  // Kegiatan yang belum punya ajuan tetap harus terlihat terhubung ke indikatornya.
   const baris = Object.fromEntries(INDIKATOR.map((i, n) => [i.id, n]))
-  const terkait = (k) => Object.values(bukti).filter((b) => b.kegiatanId === k.id && b.indikatorId in baris)
+  const terkait = (k) => (k.indikatorIds ?? []).map((id) => baris[id]).filter(Number.isInteger)
   let yBebas = 0
   kegiatan
-    .map((k) => ({ k, rows: terkait(k).map((b) => baris[b.indikatorId]) }))
+    .map((k) => ({ k, rows: terkait(k) }))
     .sort((a, b) => Math.min(...a.rows) - Math.min(...b.rows))
     .forEach(({ k, rows }) => {
       const y = Math.max(yBebas, rows.length ? tengah(rows) * PETA.baris : 0)

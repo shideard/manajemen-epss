@@ -392,6 +392,11 @@ export function useBerkas() {
 // Tanpa setState sinkron di effect, jadi pindah halaman langsung kembali ke loading.
 function useMuat(key, ambil) {
   const [hasil, setHasil] = useState({ key: null })
+  const [versiMuat, setVersiMuat] = useState(0)
+  const muatUlang = useCallback(() => {
+    setHasil({ key: null })
+    setVersiMuat((versi) => versi + 1)
+  }, [])
   useEffect(() => {
     if (!key) return
     let hidup = true
@@ -402,9 +407,9 @@ function useMuat(key, ambil) {
     return () => {
       hidup = false
     }
-  }, [key, ambil])
+  }, [key, ambil, versiMuat])
   const milikKey = hasil.key === key
-  return { data: milikKey ? hasil.data : undefined, loading: Boolean(key) && !milikKey, error: milikKey ? (hasil.error ?? null) : null }
+  return { data: milikKey ? hasil.data : undefined, loading: Boolean(key) && !milikKey, error: milikKey ? (hasil.error ?? null) : null, muatUlang }
 }
 
 // Satu rencana kegiatan lengkap dengan indikatornya
@@ -675,22 +680,53 @@ export function useVersiInstrumen() {
   return { daftar, ...state }
 }
 
-// Akun dibuat & diaktifkan/dinonaktifkan lewat API; error validasi (error.errors) dilempar ke pemanggil.
-// ponytail: backend belum punya GET /api/users, jadi daftar = akun yang dibuat dari browser ini (disimpan lokal); ambil dari API saat endpoint-nya ada
+// Daftar, pembuatan, dan status akun semuanya bersumber dari API Laravel.
 export function useUsers() {
-  const [users, setUsers] = useStore(KEYS.users, EMPTY_LIST)
+  const [users, setUsers] = useState(EMPTY_LIST)
+  const [state, setState] = useState({ loading: true, error: null })
+  const ambil = useCallback(async () => {
+    const response = await api('/api/users')
+    return response.data ?? []
+  }, [])
+
+  const muat = useCallback(async () => {
+    setState({ loading: true, error: null })
+    try {
+      const daftar = await ambil()
+      setUsers(daftar)
+      setState(SIAP)
+      return daftar
+    } catch (error) {
+      setState({ loading: false, error })
+      throw error
+    }
+  }, [ambil])
+
+  useEffect(() => {
+    let hidup = true
+    ambil().then(
+      (daftar) => {
+        if (!hidup) return
+        setUsers(daftar)
+        setState(SIAP)
+      },
+      (error) => hidup && setState({ loading: false, error }),
+    )
+    return () => { hidup = false }
+  }, [ambil])
+
   return {
     users,
-    ...SIAP,
+    ...state,
     // data = { name, username, email, password, password_confirmation, role }
     async tambah(data) {
-      const { data: akun } = await api('/api/users', { method: 'POST', body: data })
-      setUsers((list) => [...list, akun])
+      await api('/api/users', { method: 'POST', body: data })
+      await muat()
     },
     // Akun nonaktif tidak bisa login
     async setStatus(id, status_aktif) {
       await api(`/api/users/${id}/status`, { method: 'PATCH', body: { status_aktif } })
-      setUsers((list) => list.map((u) => (u.id === id ? { ...u, status_aktif } : u)))
+      await muat()
     },
   }
 }
