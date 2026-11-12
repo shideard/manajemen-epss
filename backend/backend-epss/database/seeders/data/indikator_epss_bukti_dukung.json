@@ -1,0 +1,2021 @@
+{
+  "source": "Indikator_EPSS_Lengkap_Bobot_Bukti.xlsx",
+  "indikators": [
+    {
+      "legacy_code": "1",
+      "domain_kode": "1",
+      "domain": "Prinsip Satu Data Indonesia",
+      "bobot_domain": 28.0,
+      "aspek_kode": "1",
+      "aspek": "Standar Data Statistik",
+      "bobot_aspek": 25.0,
+      "kode": "10101",
+      "nama": "Tingkat Kematangan Penerapan Standar Data Statistik (SDS)",
+      "bobot_indikator": 100.0,
+      "bobot_global": 7.0,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penerapan SDS belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penerapan SDS telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penerapan SDS telah dilakukan berdasarkan kaidah yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penerapan SDS telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penerapan SDS telah dilakukan pemutakhiran oleh Produsen Data bersama Walidata dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "2",
+      "domain_kode": "1",
+      "domain": "Prinsip Satu Data Indonesia",
+      "bobot_domain": 28.0,
+      "aspek_kode": "2",
+      "aspek": "Metadata Statistik",
+      "bobot_aspek": 25.0,
+      "kode": "10201",
+      "nama": "Tingkat Kematangan Penerapan Metadata Statistik",
+      "bobot_indikator": 100.0,
+      "bobot_global": 7.0,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penerapan Metadata Statistik belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penerapan Metadata Statistik telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penerapan Metadata Statistik telah dilakukan berdasarkan kaidah yang berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penerapan Metadata Statistik telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penerapan Metadata Statistik telah dilakukan pemutakhiran oleh Produsen Data bersama Walidata dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "3",
+      "domain_kode": "1",
+      "domain": "Prinsip Satu Data Indonesia",
+      "bobot_domain": 28.0,
+      "aspek_kode": "3",
+      "aspek": "Interoperabilitas Data",
+      "bobot_aspek": 25.0,
+      "kode": "10301",
+      "nama": "Tingkat Kematangan Penerapan Interoperabilitas Data",
+      "bobot_indikator": 100.0,
+      "bobot_global": 7.0,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penerapan Interoperabilitas Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penerapan Interoperabilitas Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penerapan Interoperabilitas Data antar unit kerja/perangkat daerah di Instansi Pusat/Pemerintahan Daerah telah dilakukan berdasarkan kaidah yang berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penerapan Interoperabilitas Data antar Instansi Pusat/Pemerintahan Daerah telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penerapan Interoperabilitas Data telah dilakukan pemutakhiran oleh Walidata dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "4",
+      "domain_kode": "1",
+      "domain": "Prinsip Satu Data Indonesia",
+      "bobot_domain": 28.0,
+      "aspek_kode": "4",
+      "aspek": "Kode Referensi dan/atau Data Induk",
+      "bobot_aspek": 25.0,
+      "kode": "10401",
+      "nama": "Tingkat Kematangan Penerapan Kode Referensi",
+      "bobot_indikator": 100.0,
+      "bobot_global": 7.0,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penerapan Kode Referensi belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penerapan Kode Referensi telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penerapan Kode Referensi berdasarkan kaidah yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penerapan Kode Referensi telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penerapan Kode Referensi telah dilakukan pemutakhiran berdasarkan kesepakatan Forum Satu Data Indonesia",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "5",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "1",
+      "aspek": "Relevansi",
+      "bobot_aspek": 21.0,
+      "kode": "20101",
+      "nama": "Tingkat Kematangan Relevansi Data Terhadap Pengguna",
+      "bobot_indikator": 60.0,
+      "bobot_global": 3.024,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Relevansi Data terhadap Pengguna belum diidentifikasi oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Relevansi Data terhadap Pengguna telah diidentifikasi oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Relevansi Data terhadap Pengguna telah diidentifikasi berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Relevansi Data terhadap Pengguna telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Relevansi Data terhadap Pengguna telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "6",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "1",
+      "aspek": "Relevansi",
+      "bobot_aspek": 21.0,
+      "kode": "20102",
+      "nama": "Tingkat Kematangan Proses Identifikasi Kebutuhan Data",
+      "bobot_indikator": 40.0,
+      "bobot_global": 2.016,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Proses Identifikasi Kebutuhan Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Proses Identifikasi Kebutuhan Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Proses Identifikasi Kebutuhan Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Proses Identifikasi Kebutuhan Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Proses Identifikasi Kebutuhan Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "7",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "2",
+      "aspek": "Akurasi",
+      "bobot_aspek": 16.0,
+      "kode": "20201",
+      "nama": "Tingkat Kematangan Penilaian Akurasi Data",
+      "bobot_indikator": 100.0,
+      "bobot_global": 3.84,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penilaian Akurasi Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penilaian Akurasi Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penilaian Akurasi Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penilaian Akurasi Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penilaian Akurasi Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "8",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "3",
+      "aspek": "Aktualitas & Ketepatan Waktu",
+      "bobot_aspek": 21.0,
+      "kode": "20301",
+      "nama": "Tingkat Kematangan Penjaminan Aktualitas Data",
+      "bobot_indikator": 50.0,
+      "bobot_global": 2.52,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Aktualitas Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Aktualitas Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Aktualitas Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Aktualitas Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Aktualitas Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "9",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "3",
+      "aspek": "Aktualitas & Ketepatan Waktu",
+      "bobot_aspek": 21.0,
+      "kode": "20302",
+      "nama": "Tingkat Kematangan Pemantauan Ketepatan Waktu Diseminasi",
+      "bobot_indikator": 50.0,
+      "bobot_global": 2.52,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Pemantauan Ketepatan Waktu Diseminasi belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Pemantauan Ketepatan Waktu Diseminasi telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Pemantauan Ketepatan Waktu Diseminasi telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Pemantauan Ketepatan Waktu Diseminasi telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Pemantauan Ketepatan Waktu Diseminasi telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "10",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "4",
+      "aspek": "Aksesibilitas",
+      "bobot_aspek": 21.0,
+      "kode": "20401",
+      "nama": "Tingkat Kematangan Ketersediaan Data untuk Pengguna Data",
+      "bobot_indikator": 34.0,
+      "bobot_global": 1.7136,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Ketersediaan Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Ketersediaan Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Ketersediaan Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Ketersediaan Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Ketersediaan Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "11",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "4",
+      "aspek": "Aksesibilitas",
+      "bobot_aspek": 21.0,
+      "kode": "20402",
+      "nama": "Tingkat Kematangan Akses Media Penyebarluasan Data",
+      "bobot_indikator": 33.0,
+      "bobot_global": 1.6632,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Akses Media Penyebarluasan Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Akses Media Penyebarluasan Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Akses Media Penyebarluasan Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Akses Media Penyebarluasan Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Akses Media Penyebarluasan Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "12",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "4",
+      "aspek": "Aksesibilitas",
+      "bobot_aspek": 21.0,
+      "kode": "20403",
+      "nama": "Tingkat Kematangan Penyediaan Format Data",
+      "bobot_indikator": 33.0,
+      "bobot_global": 1.6632,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Penyediaan Format Data yang beragam belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Penyediaan Format Data yang beragam telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Penyediaan Format Data yang beragam telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Penyediaan Format Data yang beragam telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Penyediaan Format Data yang beragam telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "13",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "5",
+      "aspek": "Keterbandingan & Konsistensi",
+      "bobot_aspek": 21.0,
+      "kode": "20501",
+      "nama": "Tingkat Kematangan Keterbandingan Data",
+      "bobot_indikator": 50.0,
+      "bobot_global": 2.52,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Keterbandingan Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Keterbandingan Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Keterbandingan Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Keterbandingan Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Keterbandingan Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "14",
+      "domain_kode": "2",
+      "domain": "Kualitas Data",
+      "bobot_domain": 24.0,
+      "aspek_kode": "5",
+      "aspek": "Keterbandingan & Konsistensi",
+      "bobot_aspek": 21.0,
+      "kode": "20502",
+      "nama": "Tingkat Kematangan Konsistensi Statistik",
+      "bobot_indikator": 50.0,
+      "bobot_global": 2.52,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Konsistensi Statistik belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Konsistensi Statistik telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Konsistensi Statistik telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Konsistensi Statistik telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Konsistensi Statistik telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "15",
+      "domain_kode": "3",
+      "domain": "Proses Bisnis Statistik",
+      "bobot_domain": 19.0,
+      "aspek_kode": "1",
+      "aspek": "Perencanaan Data",
+      "bobot_aspek": 32.0,
+      "kode": "30101",
+      "nama": "Tingkat Kematangan Pendefinisian Kebutuhan Statistik",
+      "bobot_indikator": 33.0,
+      "bobot_global": 2.0064,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Pendefinisian Kebutuhan Statistik belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Pendefinisian Kebutuhan Statistik telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Pendefinisian Kebutuhan Statistik telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Pendefinisian Kebutuhan Statistik telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Pendefinisian Kebutuhan Statistik telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "16",
+      "domain_kode": "3",
+      "domain": "Proses Bisnis Statistik",
+      "bobot_domain": 19.0,
+      "aspek_kode": "1",
+      "aspek": "Perencanaan Data",
+      "bobot_aspek": 32.0,
+      "kode": "30102",
+      "nama": "Tingkat Kematangan Desain Statistik",
+      "bobot_indikator": 33.0,
+      "bobot_global": 2.0064,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penerapan Desain Statistik belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penerapan Desain Statistik telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penerapan Desain Statistik telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penerapan Desain Statistik telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penerapan Desain Statistik telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "17",
+      "domain_kode": "3",
+      "domain": "Proses Bisnis Statistik",
+      "bobot_domain": 19.0,
+      "aspek_kode": "1",
+      "aspek": "Perencanaan Data",
+      "bobot_aspek": 32.0,
+      "kode": "30103",
+      "nama": "Tingkat Kematangan Penyiapan Instrumen",
+      "bobot_indikator": 34.0,
+      "bobot_global": 2.0672,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penyiapan Instrumen belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penyiapan Instrumen telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penyiapan Instrumen telah dilakukan berdasarkan prosedur baku yang telah ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penyiapan Instrumen telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penyiapan Instrumen telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "18",
+      "domain_kode": "3",
+      "domain": "Proses Bisnis Statistik",
+      "bobot_domain": 19.0,
+      "aspek_kode": "2",
+      "aspek": "Pengumpulan Data",
+      "bobot_aspek": 26.0,
+      "kode": "30201",
+      "nama": "Tingkat Kematangan Proses Pengumpulan Data/Akuisisi Data",
+      "bobot_indikator": 100.0,
+      "bobot_global": 4.94,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Pengumpulan Data/Akuisisi Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Pengumpulan Data/Akuisisi Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Pengumpulan Data/Akuisisi Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Pengumpulan Data/Akuisisi Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Pengumpulan Data/Akuisisi Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "19",
+      "domain_kode": "3",
+      "domain": "Proses Bisnis Statistik",
+      "bobot_domain": 19.0,
+      "aspek_kode": "3",
+      "aspek": "Pemeriksaan Data",
+      "bobot_aspek": 21.0,
+      "kode": "30301",
+      "nama": "Tingkat Kematangan Pengolahan Data",
+      "bobot_indikator": 50.0,
+      "bobot_global": 1.995,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Pengolahan Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Pengolahan Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Pengolahan Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Pengolahan Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Pengolahan Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "20",
+      "domain_kode": "3",
+      "domain": "Proses Bisnis Statistik",
+      "bobot_domain": 19.0,
+      "aspek_kode": "3",
+      "aspek": "Pemeriksaan Data",
+      "bobot_aspek": 21.0,
+      "kode": "30302",
+      "nama": "Tingkat Kematangan Analisis Data",
+      "bobot_indikator": 50.0,
+      "bobot_global": 1.995,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Proses Analisis Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Proses Analisis Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Proses Analisis Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Proses Analisis Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Proses Analisis Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "21",
+      "domain_kode": "3",
+      "domain": "Proses Bisnis Statistik",
+      "bobot_domain": 19.0,
+      "aspek_kode": "4",
+      "aspek": "Penyebarluasan Data",
+      "bobot_aspek": 21.0,
+      "kode": "30401",
+      "nama": "Tingkat Kematangan Diseminasi Data",
+      "bobot_indikator": 100.0,
+      "bobot_global": 3.99,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Proses Diseminasi Data belum dilakukan oleh Walidata",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Proses Diseminasi Data telah dilakukan oleh Walidata sesuai standar masing-masing Produsen Data",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Proses Diseminasi Data telah dilakukan oleh Walidata berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Proses Diseminasi Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Proses Diseminasi Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "22",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "1",
+      "aspek": "Profesionalitas",
+      "bobot_aspek": 35.0,
+      "kode": "40101",
+      "nama": "Tingkat Kematangan Penjaminan Transparansi Informasi Statistik",
+      "bobot_indikator": 25.0,
+      "bobot_global": 1.4875,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Transparansi Informasi Statistik bagi Pengguna Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Transparansi Informasi Statistik bagi Pengguna Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Transparansi Informasi Statistik bagi Pengguna Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Transparansi Informasi Statistik bagi Pengguna Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Transparansi Informasi Statistik bagi Pengguna Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "23",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "1",
+      "aspek": "Profesionalitas",
+      "bobot_aspek": 35.0,
+      "kode": "40102",
+      "nama": "Tingkat Kematangan Penjaminan Netralitas dan Objektivitas terhadap Penggunaan Sumber Data dan Metodologi",
+      "bobot_indikator": 25.0,
+      "bobot_global": 1.4875,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Netralitas dan Objektivitas terhadap Penggunaan Sumber Data dan Metodologi belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Bukti administrasi/pelaksanaan tidak relevan\nBukti administrasi/pelaksanaan tidak ada"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Netralitas dan Objektivitas terhadap Penggunaan Sumber Data dan Metodologi telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen yang menunjukkan sumber data dan metodologi dipilih secara objektif serta merujuk pada standar nasional atau internasional\nDokumen yang menunjukkan output statistik yang dihasilkan diakui (dan tidak diperdebatkan) oleh pengamat netral dan juga masyarakat/pengguna data, seperti: diskusi pra-rilis.\nScreenshot waktu rencana rilis data statistik pada web\nDokumen yang menunjukkan rilis dan penjelasan data statistik kepada publik dan media secara objektif didukung informasi relevan serta sesuai aturan rilis yang mencakup penggunaan logo, desain, atau format produk statistik yang netral."
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Netralitas dan Objektivitas terhadap Penggunaan Sumber Data dan Metodologi telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2.",
+            "Dokumen kebijakan Penjaminan Netralitas & Objektivitas terhadap Penggunaan Sumber Data & Metodologi di K/L, seperti: Peraturan Satu Data KL, Pedoman Pelaksanaan Kegiatan, Petunjuk Teknis, atau SOP.",
+            "Screenshot halaman dokumen Butir 2 yang menjelaskan terkait Penjaminan Netralitas & Objektivitas terhadap Penggunaan Sumber Data & Metodologi."
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Netralitas dan Objektivitas terhadap Penggunaan Sumber Data dan Metodologi telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3.",
+            "Bukti pelaksanaan reviu/evaluasi pertama tentang indikator yang dinilaikan, seperti: notula rapat.",
+            "Bukti pelaksanaan reviu/evaluasi ke-2 tentang indikator yang dinilaikan, seperti: notula rapat. Jika review/evaluasi suatu kegiatan hanya dilakukan 1 kali, maka review/evaluasi ke-2 dapat berasal dari kegiatan periode sebelumnya."
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Netralitas dan Objektivitas terhadap Penggunaan Sumber Data dan Metodologi telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4.",
+            "Dokumen Penjelasan yang berisi Screenshot atau berkas sebelum dan setelah perbaikan/penyempurnaan Penjaminan Netralitas & Objektivitas terhadap Penggunaan Sumber Data & Metodologi berdasarkan tindak lanjut reviu/evaluasi."
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "24",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "1",
+      "aspek": "Profesionalitas",
+      "bobot_aspek": 35.0,
+      "kode": "40103",
+      "nama": "Tingkat Kematangan Penjaminan Kualitas Data",
+      "bobot_indikator": 25.0,
+      "bobot_global": 1.4875,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Kualitas Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Kualitas Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Kualitas Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Kualitas Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Kualitas Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "25",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "1",
+      "aspek": "Profesionalitas",
+      "bobot_aspek": 35.0,
+      "kode": "40104",
+      "nama": "Tingkat Kematangan Penjaminan Konfidensialitas Data",
+      "bobot_indikator": 25.0,
+      "bobot_global": 1.4875,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penjaminan Konfidensialitas Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penjaminan Konfidensialitas Data telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penjaminan Konfidensialitas Data telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penjaminan Konfidensialitas Data telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penjaminan Konfidensialitas Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "26",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "2",
+      "aspek": "SDM yang Memadai dan Kapabel",
+      "bobot_aspek": 30.0,
+      "kode": "40201",
+      "nama": "Tingkat Kematangan Penerapan Kompetensi Sumber Daya Manusia Bidang Statistik",
+      "bobot_indikator": 50.0,
+      "bobot_global": 2.55,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Statistik belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Statistik telah dilakukan oleh setiap Produsen Data sesuai dengan perencanaan",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Statistik telah dilakukan seluruhnya yaitu kompetensi di bidang proses bisnis penyelenggaraan Statistik Sektoral",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Statistik telah dilakukan peningkatan, penilaian, reviu, dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Statistik telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "27",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "2",
+      "aspek": "SDM yang Memadai dan Kapabel",
+      "bobot_aspek": 30.0,
+      "kode": "40202",
+      "nama": "Tingkat Kematangan Penerapan Kompetensi Sumber Daya Manusia Bidang Manajemen Data",
+      "bobot_indikator": 50.0,
+      "bobot_global": 2.55,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Manajemen Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Manajemen Data telah dilakukan oleh setiap Produsen Data sesuai dengan perencanaan",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Manajemen Data telah dilakukan seluruhnya yaitu kompetensi di bidang proses bisnis penyelenggaraan Statistik Sektoral",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Manajemen Data telah dilakukan peningkatan, penilaian, reviu, dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Pemenuhan Kompetensi Sumber Daya Manusia Bidang Manajemen Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "28",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "3",
+      "aspek": "Pengorganisasian Statistik",
+      "bobot_aspek": 35.0,
+      "kode": "40301",
+      "nama": "Tingkat Kematangan Kolaborasi Penyelenggaraan Kegiatan Statistik",
+      "bobot_indikator": 25.0,
+      "bobot_global": 1.4875,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Kolaborasi antar unit kerja/perangkat daerah di Instansi Pusat/Pemerintahan Daerah dalam penyelenggaraan kegiatan statistik belum dilaksanakan",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Kolaborasi antar unit kerja/perangkat daerah di Instansi Pusat/Pemerintahan Daerah dalam penyelenggaraan kegiatan statistik telah dilaksanakan",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Kolaborasi antar unit kerja/perangkat daerah di Instansi Pusat/Pemerintahan Daerah dalam penyelenggaraan kegiatan statistik telah dilaksanakan oleh tim yang dibentuk secara formal",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Kolaborasi antar unit kerja/perangkat daerah di Instansi Pusat/Pemerintahan Daerah dalam penyelenggaraan kegiatan statistik telah dikoordinasikan oleh menteri/kepala lembaga/kepala daerah serta dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Kolaborasi antar unit kerja/perangkat daerah di Instansi Pusat/Pemerintahan Daerah dalam penyelenggaraan kegiatan statistik telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "29",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "3",
+      "aspek": "Pengorganisasian Statistik",
+      "bobot_aspek": 35.0,
+      "kode": "40302",
+      "nama": "Tingkat Kematangan Penyelenggaraan Forum Satu Data Indonesia",
+      "bobot_indikator": 25.0,
+      "bobot_global": 1.4875,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Walidata/Walidata pendukung belum terlibat dalam Forum Satu Data Indonesia",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Walidata/Walidata pendukung telah terlibat dalam Forum Satu Data Indonesia sesuai dengan rencana aksi Forum Satu Data Indonesia",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Walidata/Walidata pendukung telah melaksanakan rencana aksi yang ditetapkan/disepakati dalam Forum Satu Data Indonesia",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Walidata/Walidata pendukung telah melaksanakan rencana aksi yang ditetapkan/disepakati dalam Forum Satu Data Indonesia dan berkolaborasi dengan Walidata lain atau Pembina Data Statistik",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Walidata/Walidata pendukung telah menindaklanjuti hasil reviu dan evaluasi",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "30",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "3",
+      "aspek": "Pengorganisasian Statistik",
+      "bobot_aspek": 35.0,
+      "kode": "40303",
+      "nama": "Tingkat Kematangan Kolaborasi dengan Pembina Data Statistik",
+      "bobot_indikator": 25.0,
+      "bobot_global": 1.4875,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Kolaborasi pembangunan/pengembangan data dengan Pembina Data Statistik belum dilakukan",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Kolaborasi pembangunan/pengembangan data dengan Pembina Data Statisik telah dilakukan secara informal",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Kolaborasi pembangunan/pengembangan data dengan Pembina Data Statistik telah dilakukan secara formal",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Kolaborasi pembangunan/pengembangan data dengan Pembina Data Statistik telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Kolaborasi pembangunan/pengembangan data dengan Pembina Data Statistik telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "31",
+      "domain_kode": "4",
+      "domain": "Kelembagaan",
+      "bobot_domain": 17.0,
+      "aspek_kode": "3",
+      "aspek": "Pengorganisasian Statistik",
+      "bobot_aspek": 35.0,
+      "kode": "40304",
+      "nama": "Tingkat Kematangan Pelaksanaan Tugas sebagai Walidata",
+      "bobot_indikator": 25.0,
+      "bobot_global": 1.4875,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Walidata belum ditetapkan",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Tugas/program kerja Walidata belum dilakukan seluruhnya",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Tugas/program kerja Walidata telah dilakukan seluruhnya",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Tugas/program kerja Walidata telah dilakukan secara terpadu dengan seluruh Produsen Data yang dikoordinasikan dalam Forum SDI tingkat pusat/daerah, serta telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Tugas/program kerja Walidata telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "32",
+      "domain_kode": "5",
+      "domain": "Statistik Nasional",
+      "bobot_domain": 12.0,
+      "aspek_kode": "1",
+      "aspek": "Pemanfaatan Data Statistik",
+      "bobot_aspek": 34.0,
+      "kode": "50101",
+      "nama": "Tingkat Kematangan Penggunaan Data Statistik Dasar untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan",
+      "bobot_indikator": 34.0,
+      "bobot_global": 1.3872,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penggunaan Data Statistik Dasar untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penggunaan Data Statistik Dasar untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan telah dilakukan oleh setiap Produsen Data sesuai kepentingannya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penggunaan Data Statistik Dasar untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan telah dilakukan oleh Produsen Data bersama Walidata sesuai kepentingan Instansi Pusat/Pemerintahan Daerah",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penggunaan Data Statistik Dasar untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan telah dilakukan oleh Produsen Data bersama Walidata untuk kepentingan Instansi Pusat/Pemerintahan Daerah/Nasional, telah dilakukan koordinasi/konsultasi dengan Pembina Data Statistik, serta telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penggunaan Data Statistik Dasar untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "33",
+      "domain_kode": "5",
+      "domain": "Statistik Nasional",
+      "bobot_domain": 12.0,
+      "aspek_kode": "1",
+      "aspek": "Pemanfaatan Data Statistik",
+      "bobot_aspek": 34.0,
+      "kode": "50102",
+      "nama": "Tingkat Kematangan Penggunaan Data Statistik Sektoral untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan",
+      "bobot_indikator": 33.0,
+      "bobot_global": 1.3464,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penggunaan Data Statistik Sektoral untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penggunaan Data Statistik Sektoral untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan telah dilakukan oleh setiap Produsen Data sesuai kepentingannya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penggunaan Data Statistik Sektoral untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan telah dilakukan oleh Produsen Data bersama Walidata sesuai kepentingan Instansi Pusat/Pemerintahan Daerah",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penggunaan Data Statistik Sektoral untuk Perencanaan, Monitoring, dan Evaluasi, dan/atau Penyusunan Kebijakan telah dilakukan oleh Produsen Data bersama Walidata untuk kepentingan Instansi Pusat/Pemerintahan Daerah/Nasional, telah dilakukan koordinasi/konsultasi/rekomendasi dari Pembina Data Statistik, serta telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penggunaan Data Statistik Sektoral untuk Perencanaan, Monitoring, Evaluasi, dan/atau Penyusunan Kebijakan telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "34",
+      "domain_kode": "5",
+      "domain": "Statistik Nasional",
+      "bobot_domain": 12.0,
+      "aspek_kode": "1",
+      "aspek": "Pemanfaatan Data Statistik",
+      "bobot_aspek": 34.0,
+      "kode": "50103",
+      "nama": "Tingkat Kematangan Sosialisasi dan Literasi Data Statistik",
+      "bobot_indikator": 33.0,
+      "bobot_global": 1.3464,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Sosialisasi Data Statistik kepada publik belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Sosialisasi Data Statistik kepada publik telah dilakukan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Sosialisasi Data Statistik kepada publik yang telah dilakukan berdasarkan prosedur baku yang ditetapkan dan berlaku untuk seluruh Produsen Data",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Sosialisasi Data Statistik kepada publik telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Sosialisasi Data Statistik kepada publik telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "35",
+      "domain_kode": "5",
+      "domain": "Statistik Nasional",
+      "bobot_domain": 12.0,
+      "aspek_kode": "2",
+      "aspek": "Pengelolaan Kegiatan Statistik",
+      "bobot_aspek": 33.0,
+      "kode": "50201",
+      "nama": "Tingkat Kematangan Pelaksanaan Rekomendasi Kegiatan Statistik",
+      "bobot_indikator": 100.0,
+      "bobot_global": 3.96,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Pemberitahuan rancangan kegiatan statistik ke BPS belum dilaksanakan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Pemberitahuan rancangan kegiatan statistik ke BPS telah dilaksanakan oleh setiap Produsen Data sesuai standarnya masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Pemberitahuan rancangan kegiatan statistik ke BPS telah dilaksanakan berdasarkan prosedur baku yang ditetapkan, berlaku untuk seluruh Produsen Data, telah dikoordinasikan oleh Walidata, serta telah menerima rekomendasi dari BPS",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Pelaksanaan Rekomendasi Kegiatan Statistik telah dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Pelaksanaan Rekomendasi Kegiatan Statistik telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "36",
+      "domain_kode": "5",
+      "domain": "Statistik Nasional",
+      "bobot_domain": 12.0,
+      "aspek_kode": "3",
+      "aspek": "Penguatan SSN Berkelanjutan",
+      "bobot_aspek": 33.0,
+      "kode": "50301",
+      "nama": "Tingkat Kematangan Perencanaan Pembangunan Statistik",
+      "bobot_indikator": 34.0,
+      "bobot_global": 1.3464,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Perencanaan Pembangunan Statistik di Instansi Pusat/Pemerintahan Daerah belum disusun",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Perencanaan Pembangunan Statistik di Instansi Pusat/Pemerintahan Daerah telah disusun dan ditetapkan",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Perencanaan Pembangunan Statistik di Instansi Pusat/Pemerintahan Daerah telah dilaksanakan",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Perencanaan Pembangunan Statistik di Instansi Pusat/Pemerintahan Daerah telah dilakukan reviu serta evaluasi bersama Pembina Data Statistik",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Perencanaan Pembangunan Statistik di Instansi Pusat/Pemerintahan Daerah telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "37",
+      "domain_kode": "5",
+      "domain": "Statistik Nasional",
+      "bobot_domain": 12.0,
+      "aspek_kode": "3",
+      "aspek": "Penguatan SSN Berkelanjutan",
+      "bobot_aspek": 33.0,
+      "kode": "50302",
+      "nama": "Tingkat Kematangan Penyebarluasan Data",
+      "bobot_indikator": 33.0,
+      "bobot_global": 1.3068,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Penyebarluasan Data belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Penyebarluasan Data dilakukan oleh setiap Produsen Data untuk kepentingan masing-masing",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Penyebarluasan Data telah dilakukan oleh Walidata untuk kepentingan Instansi Pusat/Pemerintahan Daerah",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Penyebarluasan Data telah dilakukan oleh Walidata melalui pusat rujukan informasi statistik, portal Satu Data Indonesia, Jaringan Informasi Geospasial Nasional dan/atau Sistem Big Data Pemerintah serta dilakukan reviu dan evaluasi secara berkala",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Penyebarluasan Data telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    },
+    {
+      "legacy_code": "38",
+      "domain_kode": "5",
+      "domain": "Statistik Nasional",
+      "bobot_domain": 12.0,
+      "aspek_kode": "3",
+      "aspek": "Penguatan SSN Berkelanjutan",
+      "bobot_aspek": 33.0,
+      "kode": "50303",
+      "nama": "Tingkat Kematangan Pemanfaatan Big Data",
+      "bobot_indikator": 33.0,
+      "bobot_global": 1.3068,
+      "levels": [
+        {
+          "level": 1,
+          "kriteria": "Pemanfaatan Big Data dalam kegiatan Statistik belum dilakukan oleh seluruh Produsen Data",
+          "checklist": [
+            "Tidak ada bukti dukung, ATAU\nBukti dukung administrasi/pelaksanaan tidak relevan"
+          ]
+        },
+        {
+          "level": 2,
+          "kriteria": "Pemanfaatan Big Data dalam kegiatan Statistik telah dilakukan oleh setiap Produsen Data atau Walidata dalam bentuk kajian dan eksperimen",
+          "checklist": [
+            "Dokumen administrasi/pelaksanaan kegiatan yang sesuai dengan kriteria tingkat kematangan pada indikator ini"
+          ]
+        },
+        {
+          "level": 3,
+          "kriteria": "Pemanfaatan Big Data dalam kegiatan Statistik telah dilakukan oleh Produsen Data atau Walidata untuk menghasilkan data statistik pendukung",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 2",
+            "Dokumen kebijakan (Peraturan/Keputusan/SE/SOP) yang mengatur internal instansi pemerintah sesuai kriteria tingkat kematangan indikator ini"
+          ]
+        },
+        {
+          "level": 4,
+          "kriteria": "Pemanfaatan Big Data dalam kegiatan Statistik telah dilakukan reviu dan evaluasi secara berkala bersama Pembina Data Statistik",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 3",
+            "Dokumen bukti pelaksanaan reviu dan evaluasi (misal: Laporan, Notula Rapat) terkait indikator yang dinilai"
+          ]
+        },
+        {
+          "level": 5,
+          "kriteria": "Pemanfaatan Big Data dalam kegiatan Statistik telah dilakukan pemutakhiran dalam rangka peningkatan kualitas",
+          "checklist": [
+            "Terpenuhinya bukti dukung Level 4",
+            "Dokumen bukti tindak lanjut perbaikan/pemutakhiran berdasarkan hasil reviu/evaluasi sebelumnya"
+          ]
+        }
+      ]
+    }
+  ]
+}
