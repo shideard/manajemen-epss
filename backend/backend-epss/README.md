@@ -136,6 +136,17 @@ Request POST juga memerlukan token CSRF yang sesuai.
 Konfigurasi lintas origin untuk frontend React belum disiapkan.
 Akun awal pengembangan belum dibuat melalui seeder.
 
+Untuk memulihkan kredensial super admin yang sudah ada, jalankan dari
+direktori backend:
+
+```bash
+php artisan epss:recover-super-admin
+```
+
+Perintah menampilkan username saat ini, lalu meminta username dan password
+baru. Tekan Enter pada prompt username untuk mempertahankan username saat ini.
+Perintah ini merotasi token "remember me" dan mengakhiri sesi database akun itu.
+
 ## Konfigurasi lokal
 
 .env dan .env.testing berisi konfigurasi lokal dan tidak masuk Git.
