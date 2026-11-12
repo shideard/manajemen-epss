@@ -11,7 +11,7 @@ import arrowLong from '../../assets/icons/arrow-long-lime.svg'
 // Panah ke bawah = tertutup, ke atas = terbuka (seperti di desain)
 function Toggle({ open, onClick, label, icon, className = '' }) {
   return (
-    <button type="button" onClick={onClick} aria-expanded={open} aria-label={label} className={`shrink-0 rounded-xs ${className}`}>
+    <button type="button" onClick={(event) => { event.stopPropagation(); onClick() }} aria-expanded={open} aria-label={label} className={`shrink-0 rounded-xs ${className}`}>
       <img src={icon} alt="" width={24} height={24} className={`transition-transform duration-300 ease-out-quint ${open ? 'rotate-180' : ''}`} />
     </button>
   )
@@ -62,22 +62,15 @@ function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bole
         return (
           <DomainPanel
             key={domain.id}
-            title={
-              <button
-                type="button"
-                onClick={() => setDomainTerbuka((s) => toggleSet(s, domain.id))}
-                aria-expanded={open}
-                className="cursor-pointer text-left"
-              >
-                Domain {d + 1} - {domain.nama}
-              </button>
-            }
+            title={`Domain ${d + 1} - ${domain.nama}`}
             aside={
               <p className="flex items-center gap-2.5 font-light text-lime-300">
                 Indikator Terverifikasi : {indikator.filter((i) => levels[i.id]).length} Indikator
                 <Toggle open={open} onClick={() => setDomainTerbuka((s) => toggleSet(s, domain.id))} label={`Domain ${d + 1}`} icon={arrowLime} className="bg-grey-300" />
               </p>
             }
+            onHeaderClick={() => setDomainTerbuka((s) => toggleSet(s, domain.id))}
+            expanded={open}
           >
             <div className="min-h-[25px] rounded-lg bg-white">
               <Collapse open={open}>
@@ -89,8 +82,20 @@ function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bole
                     const levelBaru = semuaValid ? Math.min(...valid.map((b) => b.level)) : null
                     const terbuka = indikatorTerbuka.has(i.id)
                     return (
-                      <li key={i.id} className="border-b border-grey-75/50 py-4 last:border-0">
-                        <div className="flex items-center justify-between gap-4 px-7">
+                      <li key={i.id} className="border-b border-grey-75/50 py-2 last:border-0">
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setIndikatorTerbuka((s) => toggleSet(s, i.id))}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              setIndikatorTerbuka((s) => toggleSet(s, i.id))
+                            }
+                          }}
+                          aria-expanded={terbuka}
+                          className="flex cursor-pointer items-center justify-between gap-4 px-7 py-4 transition-colors hover:bg-grey2-75 focus-visible:outline-2 focus-visible:outline-grey-300"
+                        >
                           <div className="flex flex-col gap-2">
                             <p className="font-semibold">
                               Indikator {i.nomor}: {i.nama}

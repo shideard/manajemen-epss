@@ -535,10 +535,23 @@ export function Collapse({ open, children }) {
 }
 
 // Kartu domain: header gelap + isi putih (Pedoman, Verifikasi, Repositori)
-export function DomainPanel({ title, aside, children }) {
+export function DomainPanel({ title, aside, children, onHeaderClick, expanded }) {
   return (
     <section className="overflow-hidden rounded-lg bg-grey-500">
-      <header className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-4">
+      <header
+        onClick={onHeaderClick}
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget) return
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            onHeaderClick?.()
+          }
+        }}
+        role={onHeaderClick ? 'button' : undefined}
+        tabIndex={onHeaderClick ? 0 : undefined}
+        aria-expanded={onHeaderClick ? expanded : undefined}
+        className={`flex flex-wrap items-center justify-between gap-3 px-6 pt-5 pb-4 ${onHeaderClick ? 'cursor-pointer' : ''}`}
+      >
         <h2 className="flex flex-wrap items-center gap-4 text-h3 text-lime-300">{title}</h2>
         {aside}
       </header>
