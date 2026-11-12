@@ -1536,4 +1536,128 @@ class StoreRencanaKegiatanTest extends TestCase
             Storage::disk('local')->allFiles("bukti/{$activityBId}")
         );
     }
+
+    public function test_locked_period_rejects_new_evidence_and_revisions(): void
+    {
+        Storage::fake('local');
+
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web');
+
+        $activityAResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityAId = $activityAResponse->json('data.id');
+
+        $activityBResponse = $this->postJson(
+            '/api/rencana-kegiatan',
+            $scenario['payload']
+        )->assertCreated();
+
+        $activityBId = $activityBResponse->json('data.id');
+
+        $this->app['auth']->forgetGuards();
+
+        $documentResponse = $this->actingAs($scenario['pic'], 'web')
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(
+                "/api/rencana-kegiatan/{$activityAId}/dokumen-bukti",
+                [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        'bukti-versi-1.pdf',
+                        1,
+                        'application/pdf'
+                    ),
+                ]
+            )
+            ->assertCreated();
+
+        $documentId = $documentResponse->json('data.id');
+
+        $scenario['periode']->status = StatusPeriode::TERKUNCI;
+        $scenario['periode']->save();
+
+        $requests = [
+            "/api/rencana-kegiatan/{$activityBId}/dokumen-bukti"
+                => 'bukti-baru.pdf',
+            "/api/rencana-kegiatan/{$activityAId}/dokumen-bukti/{$documentId}/versi"
+                => 'revisi.pdf',
+        ];
+
+        foreach ($requests as $uri => $filename) {
+            $this->app['auth']->forgetGuards();
+
+            $this->actingAs($scenario['pic'], 'web')
+                ->withHeaders(['Accept' => 'application/json'])
+                ->post($uri, [
+                    'evidence_date' => today()->toDateString(),
+                    'file' => UploadedFile::fake()->create(
+                        $filename,
+                        1,
+                        'application/pdf'
+                    ),
+                ])
+                ->assertForbidden();
+        }
+
+        $this->assertDatabaseCount('dokumen_bukti', 1);
+
+        $this->assertCount(
+            1,
+            Storage::disk('local')->allFiles("bukti/{$activityAId}")
+        );
+
+        $this->assertSame(
+            [],
+            Storage::disk('local')->allFiles("bukti/{$activityBId}")
+        );
+    }
+
+    public function test_operator_cannot_list_activities_in_draft_period(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $scenario['periode']->status = StatusPeriode::DRAFT;
+        $scenario['periode']->save();
+
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($scenario['pic'], 'web')
+            ->getJson(
+                '/api/rencana-kegiatan?periode_id=' . $scenario['periode']->id
+            )
+            ->assertForbidden();
+    }
+
+    public function test_operator_cannot_view_activity_detail_in_draft_period(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $scenario['periode']->status = StatusPeriode::DRAFT;
+        $scenario['periode']->save();
+
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($scenario['pic'], 'web')
+            ->getJson('/api/rencana-kegiatan/' . $activityId)
+            ->assertForbidden();
+    }
+
 }

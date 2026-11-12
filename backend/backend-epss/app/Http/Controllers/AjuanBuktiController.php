@@ -21,6 +21,7 @@ class AjuanBuktiController extends Controller
     public function index(PeriodeEvaluasi $periode): AnonymousResourceCollection
     {
         Gate::authorize('viewAny', AjuanBukti::class);
+        Gate::authorize('view', $periode);
 
         $ajuan = AjuanBukti::query()
             ->with([

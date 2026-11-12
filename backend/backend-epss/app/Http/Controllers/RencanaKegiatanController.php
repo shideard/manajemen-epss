@@ -7,6 +7,7 @@ use App\Http\Resources\RencanaKegiatanResource;
 use App\Models\RencanaKegiatan;
 use Illuminate\Http\JsonResponse;
 use App\Enums\UserRole;
+use App\Models\PeriodeEvaluasi;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
@@ -32,6 +33,7 @@ class RencanaKegiatanController extends Controller
     public function show(RencanaKegiatan $rencanaKegiatan): JsonResponse
     {
         Gate::authorize('view', $rencanaKegiatan);
+        Gate::authorize('view', $rencanaKegiatan->periode);
 
         $rencanaKegiatan->load([
             'opd:id,nama',
@@ -39,8 +41,12 @@ class RencanaKegiatanController extends Controller
             'indikatorMappings.indikator:id,kode,nama',
         ]);
 
-        return (new RencanaKegiatanResource($rencanaKegiatan))
-            ->response();
+        return new RencanaKegiatanResource(
+        $rencanaKegiatan->load([
+            'opd',
+            'pic',
+            'indikatorMappings.indikator',
+        ]));
     }
 
     public function update(UpdateRencanaKegiatanRequest $request, RencanaKegiatan $rencanaKegiatan): JsonResponse 
@@ -156,6 +162,9 @@ class RencanaKegiatanController extends Controller
                 'in:BELUM_MULAI,BERJALAN,SELESAI',
             ],
         ]);
+
+        $periode = PeriodeEvaluasi::findOrFail($validated['periode_id']);
+        Gate::authorize('view', $periode);
 
         $query = RencanaKegiatan::query()
             ->with([

@@ -351,4 +351,22 @@ class AjuanBuktiTest extends TestCase
             ->getJson('/api/periode-evaluasi/' . $s['periode']->id . '/ajuan-bukti')
             ->assertForbidden();
     }
+
+    public function test_operator_cannot_list_submissions_for_draft_period(): void
+    {
+        $scenario = $this->createScenario(StatusPeriode::DRAFT);
+
+        AjuanBukti::forceCreate([
+            'kegiatan_id' => $scenario['kegiatan']->id,
+            'indikator_id' => $scenario['indikator']->id,
+            'status' => StatusAjuanBukti::DRAFT->value,
+            'checklist' => [],
+        ]);
+
+        $this->sebagai($scenario['pic'], 'web')
+            ->getJson(
+                '/api/periode-evaluasi/' . $scenario['periode']->id . '/ajuan-bukti'
+            )
+            ->assertForbidden();
+    }
 }
