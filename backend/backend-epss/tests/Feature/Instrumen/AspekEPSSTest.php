@@ -5,6 +5,7 @@ namespace Tests\Feature\Instrumen;
 use App\Models\DomainEPSS;
 use App\Enums\StatusVersiInstrumen;
 use App\Models\VersiInstrumenEPSS;
+use App\Models\AspekEPSS;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Illuminate\Database\QueryException;
