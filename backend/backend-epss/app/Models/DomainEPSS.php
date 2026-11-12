@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DomainEPSS extends Model
 {
@@ -31,5 +32,13 @@ class DomainEPSS extends Model
         return $this->belongsTo(
             VersiInstrumenEPSS::class, 
             'versi_instrumen_id');
+    }
+
+    public function aspek(): HasMany
+    {
+        return $this->hasMany(
+            AspekEPSS::class,
+            'domain_id'
+        );
     }
 }

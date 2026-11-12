@@ -10,9 +10,6 @@ class OpdPolicy
     public function viewOptions(User $user): bool
     {
         return $user->status_aktif
-            && in_array($user->role, [
-                UserRole::VERIFIKATOR,
-                UserRole::OPERATOR,
-            ], true);
+            && $user->role === UserRole::VERIFIKATOR;
     }
 }
