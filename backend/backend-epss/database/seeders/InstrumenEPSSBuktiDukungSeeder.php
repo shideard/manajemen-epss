@@ -16,6 +16,7 @@ use RuntimeException;
 class InstrumenEPSSBuktiDukungSeeder extends Seeder
 {
     private const SOURCE_FILE = __DIR__ . '/data/indikator_epss_bukti_dukung.json';
+    private const VERSI = 'EPSS-LENGKAP-2026';
 
     private const LEVEL_NAMES = [
         1 => 'Rintisan',
@@ -36,18 +37,17 @@ class InstrumenEPSSBuktiDukungSeeder extends Seeder
         $indikatorData = $data['indikators'] ?? [];
         $this->validasiData($indikatorData);
 
-        $versiAktif = VersiInstrumenEPSS::query()
-            ->where('status', StatusVersiInstrumen::ACTIVE->value)
-            ->get();
+        $versi = VersiInstrumenEPSS::query()->firstOrCreate(
+            ['versi' => self::VERSI],
+            [
+                'nama' => 'Instrumen EPSS Lengkap (Bobot & Bukti Dukung)',
+                'berlaku_mulai' => '2026-01-01',
+                'berlaku_sampai' => null,
+                'status' => StatusVersiInstrumen::ARCHIVED,
+            ]
+        );
 
-        if ($versiAktif->isEmpty()) {
-            throw new RuntimeException(
-                'Tidak ada versi instrumen aktif untuk menerima data indikator EPSS.'
-            );
-        }
-
-        foreach ($versiAktif as $versi) {
-            DB::transaction(function () use ($versi, $indikatorData): void {
+        DB::transaction(function () use ($versi, $indikatorData): void {
                 $indikatorDemoLama = $this->merupakanDemoLama($versi);
                 $domainData = collect($indikatorData)->groupBy('domain_kode');
 
@@ -140,11 +140,10 @@ class InstrumenEPSSBuktiDukungSeeder extends Seeder
 
                     }
                 }
-            });
-        }
+        });
 
         $this->command?->info(
-            'Data 38 indikator, kriteria level, dan checklist bukti dukung berhasil disiapkan untuk versi instrumen aktif.'
+            'Versi ' . self::VERSI . ' beserta 38 indikator, bobot, kriteria level, dan checklist bukti dukung berhasil disiapkan.'
         );
     }
 
