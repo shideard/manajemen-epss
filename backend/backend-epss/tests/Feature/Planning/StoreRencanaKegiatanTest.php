@@ -1660,4 +1660,59 @@ class StoreRencanaKegiatanTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_verifikator_can_sync_expected_outputs_even_when_period_is_locked(): void
+    {
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+
+        $createResponse = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->assertCreated();
+
+        $activityId = $createResponse->json('data.id');
+
+        $scenario['periode']->status = StatusPeriode::TERKUNCI;
+        $scenario['periode']->closed_by = $verifikator->id;
+        $scenario['periode']->closed_at = now();
+        $scenario['periode']->save();
+
+        $this->actingAs($verifikator, 'web')
+            ->putJson(
+                "/api/rencana-kegiatan/{$activityId}/output-diharapkan",
+                [
+                    'output' => [
+                        [
+                            'judul' => 'Laporan statistik sektoral',
+                            'jenis' => 'PDF',
+                            'contoh' => [
+                                'nama' => 'Contoh laporan statistik.pdf',
+                            ],
+                        ],
+                        [
+                            'judul' => 'Dataset statistik',
+                            'jenis' => 'XLSX',
+                            'contoh' => null,
+                        ],
+                    ],
+                ]
+            )
+            ->assertNoContent();
+
+        $this->actingAs($verifikator, 'web')
+            ->getJson("/api/rencana-kegiatan/{$activityId}")
+            ->assertOk()
+            ->assertJsonCount(2, 'data.output')
+            ->assertJsonPath(
+                'data.output.0.judul',
+                'Laporan statistik sektoral'
+            )
+            ->assertJsonPath('data.output.0.jenis', 'PDF')
+            ->assertJsonPath(
+                'data.output.0.contoh.nama',
+                'Contoh laporan statistik.pdf'
+            )
+            ->assertJsonPath('data.output.1.judul', 'Dataset statistik')
+            ->assertJsonPath('data.output.1.contoh', null);
+    }
+
 }

@@ -37,6 +37,19 @@ class RencanaKegiatanResource extends JsonResource
                     ])
                     ->values()
             ),
+            'output' => $this->whenLoaded(
+                'outputDiharapkan',
+                fn () => $this->outputDiharapkan
+                    ->map(fn ($output) => [
+                        'id' => $output->id,
+                        'judul' => $output->judul,
+                        'jenis' => $output->jenis,
+                        'contoh' => $output->contoh_nama === null
+                            ? null
+                            : ['nama' => $output->contoh_nama],
+                    ])
+                    ->values()
+            ),
         ];
     }
 }

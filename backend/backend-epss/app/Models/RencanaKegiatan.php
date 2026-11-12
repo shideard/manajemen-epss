@@ -102,4 +102,12 @@ class RencanaKegiatan extends Model
         return $this->hasMany(DokumenBukti::class, 'kegiatan_id');
     }
 
+    public function outputDiharapkan(): HasMany
+    {
+        return $this->hasMany(
+            RencanaKegiatanOutput::class,
+            'kegiatan_id'
+        )->orderBy('urutan');
+    }
+
 }

@@ -55,4 +55,12 @@ class RencanaKegiatanPolicy
             ->where('status', StatusPeriode::AKTIF->value)
             ->exists();
     }
+
+    public function manageOutputs(
+    User $user,
+    RencanaKegiatan $rencanaKegiatan
+    ): bool {
+        return $user->status_aktif
+            && $user->role === UserRole::VERIFIKATOR;
+    }
 }

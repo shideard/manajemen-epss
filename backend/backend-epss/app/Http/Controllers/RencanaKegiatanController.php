@@ -30,7 +30,7 @@ class RencanaKegiatanController extends Controller
             ->setStatusCode(201);
     }
 
-    public function show(RencanaKegiatan $rencanaKegiatan): JsonResponse
+    public function show(RencanaKegiatan $rencanaKegiatan): RencanaKegiatanResource
     {
         Gate::authorize('view', $rencanaKegiatan);
         Gate::authorize('view', $rencanaKegiatan->periode);
@@ -39,6 +39,7 @@ class RencanaKegiatanController extends Controller
             'opd:id,nama',
             'pic:id,name',
             'indikatorMappings.indikator:id,kode,nama',
+            'outputDiharapkan',
         ]);
 
         return new RencanaKegiatanResource(

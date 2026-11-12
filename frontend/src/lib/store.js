@@ -241,8 +241,35 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
         method: 'PUT',
         body: { indikator_ids: data.indikator_ids ?? [] },
       })
+      // Output memakai endpoint dan izin terpisah dari perubahan detail kegiatan.
+      // Kirim hanya jika form memang menyediakan daftar output.
+      if (data.output !== undefined) {
+        await api(`/api/rencana-kegiatan/${saved.id}/output-diharapkan`, {
+          method: 'PUT',
+          body: {
+            output: data.output.map(({ judul, jenis, contoh }) => ({
+              judul,
+              jenis: jenis || null,
+              contoh: contoh ? { nama: contoh } : null,
+            })),
+          },
+        })
+      }
       await muat()
       return await detail(saved.id)
+    },
+    async simpanOutput(id, output) {
+      await api(`/api/rencana-kegiatan/${id}/output-diharapkan`, {
+        method: 'PUT',
+        body: {
+          output: output.map(({ judul, jenis, contoh }) => ({
+            judul,
+            jenis: jenis || null,
+            contoh: contoh ? { nama: contoh } : null,
+          })),
+        },
+      })
+      return await detail(id)
     },
   }
 }

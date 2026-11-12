@@ -169,6 +169,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         )->whereUuid('ajuanBukti')
         ->name('ajuan-bukti.verify');
 
+        Route::put('/rencana-kegiatan/{rencanaKegiatan}/output-diharapkan',
+        \App\Http\Controllers\SyncRencanaKegiatanOutputController::class
+        )->whereUuid('rencanaKegiatan')
+        ->name('rencana-kegiatan.output.sync');
+
     });
 });
 

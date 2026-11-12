@@ -39,10 +39,15 @@ function DaftarIndikator({ onClose }) {
   )
 }
 
-function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikatorPilihan = [], onSave, onClose }) {
+function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikatorPilihan = [], onSave, onClose, outputOnly = false }) {
   const dialogRef = useRef(null)
   const [error, setError] = useState('')
   const [dipetakan, setDipetakan] = useState(() => indikator.map((item) => item.id ?? item.indikatorId))
+  const [output, setOutput] = useState(() => (kegiatan.output ?? []).map((item) => ({
+    judul: item.judul ?? '',
+    jenis: item.jenis ?? '',
+    contoh: item.contoh?.nama ?? '',
+  })))
   const [daftarIndikator, setDaftarIndikator] = useState(false)
 
   useEffect(() => {
@@ -58,7 +63,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
     }
     // Tahun pelaksanaan selalu mengikuti tanggal mulai, jadi tidak bisa berbeda
     try {
-      await onSave({ ...data, indikator_ids: dipetakan })
+      await onSave(outputOnly ? { output } : { ...data, indikator_ids: dipetakan, output })
     } catch (err) {
       setError(err.message || 'Gagal menyimpan rencana kegiatan.')
     }
@@ -80,9 +85,10 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
           daftarIndikator ? 'xl:w-[min(833px,calc(100vw-2rem-519px))]' : ''
         }`}
       >
-        <DialogHeader title={`${kegiatan.id ? 'Edit' : 'Tambah'} Rencana Kegiatan`} onClose={close} className="sticky top-0 z-10" />
+        <DialogHeader title={outputOnly ? 'Edit Output Kegiatan' : `${kegiatan.id ? 'Edit' : 'Tambah'} Rencana Kegiatan`} onClose={close} className="sticky top-0 z-10" />
 
         <div className="flex flex-col gap-6 px-8.5 pt-7 pb-8">
+          {outputOnly ? <p className="text-small text-grey-200">Periode terkunci. Hanya output bukti dukung yang dapat diubah.</p> : <>
           <Field label="Nama Kegiatan">
             <Input name="nama" required defaultValue={kegiatan.nama} placeholder="Contoh: Survei Kepuasan Masyarakat 2026" />
           </Field>
@@ -111,8 +117,41 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
           <Field label="Deskripsi Kegiatan">
             <textarea name="deskripsi" defaultValue={kegiatan.deskripsi} placeholder="Isi deskripsi..." className={`${fieldClass} h-[177px] resize-none py-4`} />
           </Field>
+          </>}
 
-          <div className="flex flex-col gap-2">
+          <section className="flex flex-col gap-3 rounded-md bg-grey2-75 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="font-semibold">Output Bukti Dukung yang Ditargetkan</h3>
+                <p className="text-small text-grey-200">Opsional. Output dapat ditambahkan atau diubah kapan saja.</p>
+              </div>
+              <button type="button" className={buttonClass('outline', 'sm')} onClick={() => setOutput((items) => [...items, { judul: '', jenis: '', contoh: '' }])}>
+                Tambah Output
+              </button>
+            </div>
+            {output.length === 0 ? <p className="text-small text-grey-200">Belum ada output.</p> : output.map((item, index) => (
+              <div key={index} className="flex flex-col gap-3 rounded-md bg-white p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-small font-semibold">Output {index + 1}</span>
+                  <button type="button" className={buttonClass('danger', 'sm')} aria-label={`Hapus output ${index + 1}`} onClick={() => setOutput((items) => items.filter((_, i) => i !== index))}>Hapus</button>
+                </div>
+                <Field label="Nama output">
+                  <Input required value={item.judul} placeholder="Contoh: Laporan statistik sektoral" onChange={(event) => setOutput((items) => items.map((row, i) => i === index ? { ...row, judul: event.target.value } : row))} />
+                </Field>
+                <Field label="Jenis (opsional)">
+                  <Select value={item.jenis} onChange={(event) => setOutput((items) => items.map((row, i) => i === index ? { ...row, jenis: event.target.value } : row))}>
+                    <option value="">Pilih jenis berkas</option>
+                    {['PDF', 'Word', 'Excel', 'JPG', 'PNG'].map((jenis) => <option key={jenis} value={jenis}>{jenis}</option>)}
+                  </Select>
+                </Field>
+                <Field label="Contoh nama berkas (opsional)">
+                  <Input value={item.contoh} placeholder="Contoh: laporan-statistik.pdf" onChange={(event) => setOutput((items) => items.map((row, i) => i === index ? { ...row, contoh: event.target.value } : row))} />
+                </Field>
+              </div>
+            ))}
+          </section>
+
+          {!outputOnly && <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <label htmlFor="pilih-indikator" className="font-semibold">
                 Pemetaan Indikator EPSS (Indikator Tertaut)
@@ -143,10 +182,10 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                 </button>
               </p>
             ))}
-          </div>
+          </div>}
 
           <FormError>{error}</FormError>
-          <ModalActions onCancel={close} />
+          <ModalActions onCancel={close} submitLabel={outputOnly ? 'Simpan Output' : 'Simpan'} />
         </div>
       </form>
       {daftarIndikator && <DaftarIndikator onClose={() => setDaftarIndikator(false)} />}
