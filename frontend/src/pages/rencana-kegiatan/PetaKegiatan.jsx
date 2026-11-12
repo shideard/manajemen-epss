@@ -83,11 +83,11 @@ const JUDUL = ['Domain', 'Aspek', 'Indikator', 'Rencana Kegiatan'].map((label, k
 
 // Peta Domain → Aspek → Indikator → Rencana Kegiatan. Filter (atau klik kotak) menandai jalur, hover menyorot
 // jalur sementara, node bisa digeser lalu memantul kembali ke tempatnya, klik kegiatan untuk membukanya (sama seperti di kalender).
-function PetaKegiatan({ kegiatan, onOpen }) {
+function PetaKegiatan({ kegiatan, indikator = [], domains = [], onOpen }) {
   const awal = useMemo(() => {
-    const peta = petaRelasi(kegiatan)
+    const peta = petaRelasi(kegiatan, indikator, domains)
     return { ...peta, nodes: [...JUDUL, ...peta.nodes.map((n) => ({ ...n, type: 'peta' }))] }
-  }, [kegiatan])
+  }, [kegiatan, indikator, domains])
   const [nodes, setNodes, onNodesChange] = useNodesState(awal.nodes)
   const [sumber, setSumber] = useState(awal)
   const [hover, setHover] = useState(null)

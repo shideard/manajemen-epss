@@ -81,8 +81,6 @@ class AjuanBuktiController extends Controller
             $ajuan->checklist = $validated['checklist'];
 
             if ($validated['ajukan']) {
-                // ponytail: kelengkapan persyaratan level 1 masih diperiksa di frontend;
-                // pindahkan ke sini saat persyaratan_bukti dipakai frontend
                 abort_unless(
                     $rencanaKegiatan->dokumenBukti()
                         ->where('is_current', true)

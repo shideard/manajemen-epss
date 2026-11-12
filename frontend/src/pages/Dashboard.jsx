@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
 import { ROLES } from '../config/menu'
-import { agendaTerdekat, DOMAINS, formatTanggal, hitungIps, INDIKATOR, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusOf, toISODate } from '../lib/epss'
+import { agendaTerdekat, formatTanggal, hitungIps, levelLabel, LEVELS, predikat, PREDIKAT_BATAS, PREDIKAT_TONE, selisihHari, statusOf, toISODate } from '../lib/epss'
 import { ArrowLink, Badge, Collapse, CountUp, Dropdown, Memuat, PageHeader } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import arrowDark from '../assets/icons/arrow-long-dark.svg'
@@ -71,8 +71,15 @@ function Dashboard() {
   const { user } = useOutletContext()
   const verifikator = user.role === ROLES.VERIFIKATOR
   const { periode, aktif } = usePeriode()
-  const muat = [useSkor(), useBukti(), useSemuaKegiatan(aktif?.id)]
-  const [{ levels }, { bukti }, { kegiatan }] = muat
+  const buktiData = useBukti()
+  const kegiatanData = useSemuaKegiatan(aktif?.id)
+  const instrumenData = useInstrumen(aktif?.id)
+  const skorData = useSkor(instrumenData.indikator, kegiatanData.kegiatan, buktiData.bukti)
+  const muat = [buktiData, kegiatanData, instrumenData, skorData]
+  const { levels } = skorData
+  const { bukti } = buktiData
+  const { kegiatan } = kegiatanData
+  const { domains, indikator: indikatorList } = instrumenData
   const [simulasi, setSimulasi] = useState([{ indikatorId: '', level: 1 }])
   const [infoSimulasi, setInfoSimulasi] = useState(false)
   const today = toISODate(new Date())
@@ -88,9 +95,9 @@ function Dashboard() {
     )
   } 
 
-  const ips = hitungIps(INDIKATOR, levels)
+  const ips = hitungIps(indikatorList, levels)
   const sebelumnya = periode.filter((p) => p.actual != null && p.tahun2 < aktif.tahun1).sort((a, b) => b.tahun2.localeCompare(a.tahun2))[0]
-  const terverifikasi = INDIKATOR.filter((i) => levels[i.id]).length
+  const terverifikasi = indikatorList.filter((i) => levels[i.id]).length
   const daftarBukti = Object.values(bukti)
   const ajuan = new Set(daftarBukti.filter((b) => b.status === 'menunggu').map((b) => b.indikatorId)).size
 
@@ -101,7 +108,7 @@ function Dashboard() {
   const buktiLink = verifikator ? '/verifikasi-bukti-dukung' : '/repositori-bukti-dukung'
   const levelSimulasi = { ...levels }
   for (const s of simulasi) if (s.indikatorId) levelSimulasi[s.indikatorId] = s.level
-  const hasilSimulasi = hitungIps(INDIKATOR, levelSimulasi)
+  const hasilSimulasi = hitungIps(indikatorList, levelSimulasi)
 
   function ubahSimulasi(index, perubahan) {
     setSimulasi((rows) => rows.map((row, i) => (i === index ? { ...row, ...perubahan } : row)))
@@ -121,7 +128,7 @@ function Dashboard() {
             <div className="flex shrink-0 flex-col gap-2">
               <h2 className="text-h3">Indeks Pembangunan Statistik (IPS) Bayangan</h2>
               <p className="max-w-[360px] text-small font-light text-grey-75">
-                Skor dihitung otomatis berdasarkan {INDIKATOR.length} indikator dan bobot resmi Peraturan BPS No 3/2022.
+                Skor dihitung otomatis berdasarkan {indikatorList.length} indikator dan bobot pada versi instrumen aktif.
               </p>
               <div className="mt-3 flex items-center gap-5">
                 <p className="text-display-1 font-bold text-lime-300">
@@ -187,7 +194,7 @@ function Dashboard() {
                 <span className={`text-display-2 ${GRADIENT}`}>
                   <CountUp value={terverifikasi} format={bulat} />
                 </span>
-                <span className="text-display-3 font-light text-grey-500">/ {INDIKATOR.length}</span>
+                <span className="text-display-3 font-light text-grey-500">/ {indikatorList.length}</span>
               </>
             }
             unit="indikator"
@@ -196,10 +203,10 @@ function Dashboard() {
                 <span className="h-2 flex-1 overflow-hidden rounded-full bg-white">
                   <span
                     className="block h-full rounded-full bg-grey-500 transition-[width] duration-700 ease-out-quint motion-safe:animate-reveal-x"
-                    style={{ width: `${(terverifikasi / INDIKATOR.length) * 100}%` }}
+                    style={{ width: `${indikatorList.length ? (terverifikasi / indikatorList.length) * 100 : 0}%` }}
                   />
                 </span>
-                <span className="text-small font-semibold text-grey-500">{Math.round((terverifikasi / INDIKATOR.length) * 100)}%</span>
+                <span className="text-small font-semibold text-grey-500">{Math.round(indikatorList.length ? (terverifikasi / indikatorList.length) * 100 : 0)}%</span>
               </span>
             }
           />
@@ -279,7 +286,7 @@ function Dashboard() {
             <ArrowLink to="/pedoman-indikator">Lihat Pedoman</ArrowLink>
           </PageHeader>
           <div className="flex flex-col gap-4">
-            {DOMAINS.map((domain, i) => {
+            {domains.map((domain, i) => {
               const skor = hitungIps(domain.indikator, levels)
               return (
                 <div key={domain.id} className="flex flex-col gap-2.5">
@@ -387,7 +394,7 @@ function Dashboard() {
             <ul className="flex flex-col gap-3">
               {simulasi.map((row, index) => {
                 const levelSaatIni = levels[row.indikatorId] ?? 1
-                const dampak = row.indikatorId ? hitungIps(INDIKATOR, { ...levels, [row.indikatorId]: row.level }) - ips : 0
+                const dampak = row.indikatorId ? hitungIps(indikatorList, { ...levels, [row.indikatorId]: row.level }) - ips : 0
                 // Indikator yang sudah dipakai baris lain tidak muncul lagi
                 const dipakai = new Set(simulasi.filter((_, i) => i !== index).map((r) => r.indikatorId))
                 return (
@@ -400,7 +407,7 @@ function Dashboard() {
                         onChange={(id) => ubahSimulasi(index, { indikatorId: id, level: id ? Math.min((levels[id] ?? 1) + 1, 5) : 1 })}
                         options={[
                           { value: '', label: 'Pilih indikator' },
-                          ...INDIKATOR.filter((i) => !dipakai.has(i.id)).map((i) => ({ value: i.id, label: `Indikator ${i.nomor} – ${i.nama}` })),
+                          ...indikatorList.filter((i) => !dipakai.has(i.id)).map((i) => ({ value: i.id, label: `Indikator ${i.kode} – ${i.nama}` })),
                         ]}
                         className="min-w-0 flex-1"
                       />

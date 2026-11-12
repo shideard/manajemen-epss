@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { bolehUbah } from '../../config/menu'
 import DomainBukti from './DomainBukti'
-import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../../lib/store'
-import { includesText, indikatorById, paginate } from '../../lib/epss'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan, useSkor } from '../../lib/store'
+import { includesText, paginate } from '../../lib/epss'
 import { Dropdown, Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 import { useConfirm } from '../../components/useConfirm'
 
@@ -12,8 +12,15 @@ const PAGE_SIZE = 5
 function  VerifikasiBukti() {
   const { user } = useOutletContext()
   const { aktif } = usePeriode()
-  const muat = [useSemuaKegiatan(aktif?.id), useBukti(), useSkor()]
-  const [{ kegiatan }, { bukti }, { tetapkanLevel }] = muat
+  const kegiatanData = useSemuaKegiatan(aktif?.id)
+  const buktiData = useBukti()
+  const instrumenData = useInstrumen(aktif?.id)
+  const skorData = useSkor(instrumenData.indikator, kegiatanData.kegiatan, buktiData.bukti)
+  const muat = [kegiatanData, buktiData, instrumenData, skorData]
+  const { kegiatan } = kegiatanData
+  const { bukti } = buktiData
+  const { tetapkanLevel } = skorData
+  const { byId: indikatorById } = instrumenData
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [filterIndikator, setFilterIndikator] = useState('semua')
@@ -22,7 +29,7 @@ function  VerifikasiBukti() {
   const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
   const ajuan = Object.values(bukti)
     .filter((b) => b.status === 'menunggu' && namaKegiatan[b.kegiatanId])
-    .filter((b) => includesText([indikatorById[b.indikatorId].nama, namaKegiatan[b.kegiatanId], b.pengaju], query))
+    .filter((b) => includesText([indikatorById[b.indikatorId]?.nama, namaKegiatan[b.kegiatanId], b.pengaju], query))
     .sort((a, b) => b.diajukan.localeCompare(a.diajukan))
   const { rows, page: currentPage, pageCount } = paginate(ajuan, page, PAGE_SIZE)
 
@@ -54,6 +61,7 @@ function  VerifikasiBukti() {
         {rows.length === 0 && <li className="rounded-lg bg-white py-10 text-center text-grey-200">Tidak ada ajuan yang menunggu verifikasi.</li>}
         {rows.map((b) => {
           const indikator = indikatorById[b.indikatorId]
+          if (!indikator) return null
           return (
             <li key={`${b.kegiatanId}:${b.indikatorId}`}>
               <Link

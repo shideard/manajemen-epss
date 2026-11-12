@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../../lib/store'
-import { buktiKey, DOMAINS, includesText, INDIKATOR, levelLabel } from '../../lib/epss'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan, useSkor } from '../../lib/store'
+import { buktiKey, includesText, levelLabel } from '../../lib/epss'
 import { Badge, Collapse, DomainPanel, Memuat, StatusBukti } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import arrowLime from '../../assets/icons/arrow-down-s-line-lime.svg'
@@ -28,10 +28,19 @@ const toggleSet = (set, id) => {
 // onVerifikasi ada = tampilan verifikator (tombol Verifikasi Indikator + link ke detail verifikasi)
 function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bolehVerifikasi = false }) {
   const { aktif } = usePeriode()
-  const muat = [useSemuaKegiatan(aktif?.id), useBukti(), useSkor()]
-  const [{ kegiatan }, { bukti }, { levels }] = muat
-  const [domainTerbuka, setDomainTerbuka] = useState(() => new Set([DOMAINS[0].id]))
+  const kegiatanData = useSemuaKegiatan(aktif?.id)
+  const buktiData = useBukti()
+  const instrumenData = useInstrumen(aktif?.id)
+  const skorData = useSkor(instrumenData.indikator, kegiatanData.kegiatan, buktiData.bukti)
+  const muat = [kegiatanData, buktiData, instrumenData, skorData]
+  const { kegiatan } = kegiatanData
+  const { bukti } = buktiData
+  const { levels } = skorData
+  const { domains, indikator: indikatorList } = instrumenData
+  const [domainTerbuka, setDomainTerbuka] = useState(null)
   const [indikatorTerbuka, setIndikatorTerbuka] = useState(() => new Set())
+  const domainAwal = domains.slice(0, 1).map((domain) => domain.id)
+  const domainTerbukaSet = domainTerbuka ?? new Set(domainAwal)
   const verifikator = Boolean(onVerifikasi)
   const namaKegiatan = Object.fromEntries(kegiatan.map((k) => [k.id, k.nama]))
   // Pemetaan dari API; status per pasangan masih dari browser (belum ada record = draft)
@@ -49,23 +58,23 @@ function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bole
     if (filterIndikator === 'siap') return semuaValid && !levels[i.id]
     return !semuaValid
   }
-  const adaHasil = INDIKATOR.some(cocokFilter)
+  const adaHasil = indikatorList.some(cocokFilter)
 
   return (
     <>
       <Memuat dari={muat} bentuk="daftar" />
       {!adaHasil && <p className="rounded-lg bg-white py-10 text-center text-grey-200">Tidak ada indikator pada kategori ini.</p>}
-      {DOMAINS.map((domain, d) => {
-        const indikator = INDIKATOR.filter((i) => i.domain === domain && includesText([i.nama, `indikator ${i.nomor}`], query) && cocokFilter(i))
+      {domains.map((domain, d) => {
+        const indikator = indikatorList.filter((i) => i.domain === domain && includesText([i.nama, `indikator ${i.kode}`], query) && cocokFilter(i))
         if ((query || filterIndikator !== 'semua') && indikator.length === 0) return null
-        const open = domainTerbuka.has(domain.id) || Boolean(query)
+        const open = domainTerbukaSet.has(domain.id) || Boolean(query)
         return (
           <DomainPanel
             key={domain.id}
             title={
               <button
                 type="button"
-                onClick={() => setDomainTerbuka((s) => toggleSet(s, domain.id))}
+                onClick={() => setDomainTerbuka((s) => toggleSet(s ?? new Set(domainAwal), domain.id))}
                 aria-expanded={open}
                 className="cursor-pointer text-left"
               >
@@ -75,7 +84,7 @@ function DomainBukti({ query = '', filterIndikator = 'semua', onVerifikasi, bole
             aside={
               <p className="flex items-center gap-2.5 font-light text-lime-300">
                 Indikator Terverifikasi : {indikator.filter((i) => levels[i.id]).length} Indikator
-                <Toggle open={open} onClick={() => setDomainTerbuka((s) => toggleSet(s, domain.id))} label={`Domain ${d + 1}`} icon={arrowLime} className="bg-grey-300" />
+                <Toggle open={open} onClick={() => setDomainTerbuka((s) => toggleSet(s ?? new Set(domainAwal), domain.id))} label={`Domain ${d + 1}`} icon={arrowLime} className="bg-grey-300" />
               </p>
             }
           >

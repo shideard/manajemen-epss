@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import PetaKegiatan from './PetaKegiatan'
-import { usePeriode, useRencanaKegiatan, useSemuaKegiatan } from '../../lib/store'
+import { useInstrumen, usePeriode, useRencanaKegiatan, useSemuaKegiatan } from '../../lib/store'
 import { bolehUbah } from '../../config/menu'
 import { Memuat, PageHeader } from '../../components/ui'
 
@@ -12,7 +12,8 @@ function PetaRelasiKegiatan() {
   const { aktif } = usePeriode()
   const rencana = useRencanaKegiatan(aktif?.id)
   const semuaKegiatan = useSemuaKegiatan(aktif?.id)
-  const muat = [rencana, semuaKegiatan]
+  const instrumen = useInstrumen(aktif?.id)
+  const muat = [rencana, semuaKegiatan, instrumen]
   const [{ simpan }, { kegiatan, muatUlang }] = muat
   // Sama dengan halaman Rencana Kegiatan: verifikator membuka form edit, operator ke repositori buktinya
   const kelola = bolehUbah(user, 'kelolaRencana', aktif)
@@ -30,7 +31,7 @@ function PetaRelasiKegiatan() {
     <div className="flex w-full flex-col gap-8">
       <Memuat dari={muat} bentuk="peta" />
       <PageHeader title="Peta Relasi Kegiatan" subtitle="Keterkaitan domain, aspek, dan indikator EPSS dengan rencana kegiatan." />
-      <PetaKegiatan kegiatan={kegiatan} onOpen={buka} />
+      <PetaKegiatan kegiatan={kegiatan} indikator={instrumen.indikator} domains={instrumen.domains} onOpen={buka} />
 
       {editing && (
         <KegiatanForm

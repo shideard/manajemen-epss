@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { KOLOM_KANBAN, kartuKanban } from './kegiatan'
-import { formatTanggal, INDIKATOR, toISODate } from '../../lib/epss'
+import { formatTanggal, toISODate } from '../../lib/epss'
 import { useBukti, useSemuaKegiatan } from '../../lib/store'
 import { Memuat } from '../../components/ui'
 import focusIcon from '../../assets/kanban/focus-3-line.svg'
@@ -20,7 +20,6 @@ const KOLOM = {
 // Kolom panjang dipotong dulu; sisanya dibuka lewat "Lihat semua"
 const BATAS_KARTU = 4
 
-const NOMOR = Object.fromEntries(INDIKATOR.map((i) => [i.id, i.nomor]))
 const inisial = (nama = '') =>
   nama
     .split(' ')
@@ -42,7 +41,7 @@ function KartuKegiatan({ kartu, warna, href }) {
         {jumlah > 0 && (
           <span className="flex items-center gap-1 rounded-sm border border-grey-300 bg-lime-300 py-0.5 pr-2 pl-1.5 text-caption">
             <img src={focusIcon} alt="" width={12} height={12} />
-            Indikator {NOMOR[indikatorIds[0]] ?? '-'}
+            Indikator {indikatorIds[0] ?? '-'}
             {jumlah > 1 && ` +${jumlah - 1}`}
           </span>
         )}

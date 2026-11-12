@@ -15,6 +15,25 @@ class IndikatorEPSSResource extends JsonResource
             'nama' => $this->nama,
             'deskripsi' => $this->deskripsi,
             'bobot' => $this->bobot,
+            'levels' => $this->whenLoaded(
+                'kriteriaLevels',
+                fn () => $this->kriteriaLevels->map(fn ($level) => [
+                    'level' => $level->level,
+                    'nama' => $level->nama_level,
+                    'kriteria' => $level->deskripsi,
+                    'pemenuhan' => $level->kriteriaPemenuhan
+                        ->sortBy('urutan')
+                        ->pluck('deskripsi')
+                        ->values(),
+                    'persyaratan_bukti' => $level->persyaratanBukti
+                        ->map(fn ($requirement) => [
+                            'id' => $requirement->id,
+                            'urutan' => $requirement->urutan,
+                            'deskripsi' => $requirement->deskripsi,
+                        ])
+                        ->values(),
+                ])->values()
+            ),
             'aspek' => [
                 'id' => $this->aspek->id,
                 'kode' => $this->aspek->kode,

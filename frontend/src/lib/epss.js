@@ -176,7 +176,7 @@ export const bobotDomain = (domain) => domain.indikator.reduce((sum, i) => sum +
 // Indikator satu baris per indikator; aspek & domain di tengah anak-anaknya;
 // kegiatan sedekat mungkin dengan indikatornya tanpa bertumpuk
 export const PETA = { kolom: 290, baris: 76 }
-export function petaRelasi(kegiatan) {
+export function petaRelasi(kegiatan, indikatorList = INDIKATOR, domains = DOMAINS) {
   const nodes = []
   const edges = []
   const node = (id, kolom, y, jenis, label, data) => nodes.push({ id, position: { x: kolom * PETA.kolom, y }, data: { jenis, label, kolom, ...data } })
@@ -184,7 +184,7 @@ export function petaRelasi(kegiatan) {
   const tengah = (ys) => (Math.min(...ys) + Math.max(...ys)) / 2
 
   const aspek = new Map() // id node → { domain, nama, ys }
-  INDIKATOR.forEach((i, n) => {
+  indikatorList.forEach((i, n) => {
     const id = `a:${i.domain.id}:${i.aspek}`
     if (!aspek.has(id)) aspek.set(id, { domain: i.domain, nama: i.aspek, ys: [] })
     aspek.get(id).ys.push(n * PETA.baris)
@@ -199,12 +199,12 @@ export function petaRelasi(kegiatan) {
     domain.set(a.domain, [...(domain.get(a.domain) ?? []), y])
   }
   for (const [d, ys] of domain) {
-    node(`d:${d.id}`, 0, tengah(ys), 'domain', d.nama, { chip: `Domain ${DOMAINS.indexOf(d) + 1}`, info: `${ys.length} aspek · ${d.indikator.length} indikator` })
+    node(`d:${d.id}`, 0, tengah(ys), 'domain', d.nama, { chip: `Domain ${d.kode ?? domains.indexOf(d) + 1}`, info: `${ys.length} aspek · ${d.indikator.length} indikator` })
   }
 
   // Baris indikator tiap kegiatan berasal dari pemetaan rencana, bukan dari ajuan bukti.
   // Kegiatan yang belum punya ajuan tetap harus terlihat terhubung ke indikatornya.
-  const baris = Object.fromEntries(INDIKATOR.map((i, n) => [i.id, n]))
+  const baris = Object.fromEntries(indikatorList.map((i, n) => [i.id, n]))
   const terkait = (k) => (k.indikatorIds ?? []).map((id) => baris[id]).filter(Number.isInteger)
   let yBebas = 0
   kegiatan
@@ -214,7 +214,7 @@ export function petaRelasi(kegiatan) {
       const y = Math.max(yBebas, rows.length ? tengah(rows) * PETA.baris : 0)
       yBebas = y + PETA.baris
       node(`k:${k.id}`, 3, y, 'kegiatan', k.nama, { chip: statusOf(k), info: k.opd, kegiatan: k })
-      for (const row of rows) edge(`i:${INDIKATOR[row].id}`, `k:${k.id}`)
+      for (const row of rows) edge(`i:${indikatorList[row].id}`, `k:${k.id}`)
     })
   return { nodes, edges }
 }
@@ -420,10 +420,10 @@ export const formatUkuran = (byte) => `${(byte / 1024 / 1024).toFixed(1)} MB`
 export const metaBerkas = (f) => `Ukuran: ${formatUkuran(f.ukuran)}  •  Diunggah: ${formatTanggal(f.tanggal)} oleh ${f.oleh}`
 
 // Rekap LKE per indikator sebagai CSV (pemisah ";" agar langsung terbaca Excel berbahasa Indonesia)
-export function lkeCsv(levels, bukti, berkas, namaKegiatan) {
+export function lkeCsv(levels, bukti, berkas, namaKegiatan, indikatorList = INDIKATOR) {
   const sel = (value) => `"${String(value ?? '').replaceAll('"', '""')}"`
   const header = ['No', 'Domain', 'Indikator', 'Bobot (%)', 'Level Terverifikasi', 'Tingkat Kematangan', 'Jumlah Bukti Dukung', 'Kegiatan Tertaut', 'Catatan Verifikator']
-  const rows = INDIKATOR.map((i) => {
+  const rows = indikatorList.map((i) => {
     const daftar = Object.values(bukti).filter((b) => b.indikatorId === i.id)
     return [
       i.nomor,

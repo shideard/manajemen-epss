@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { useBukti, useDetailKegiatan, useDokumenBukti, usePeriode, useRencanaKegiatan, useSkor } from '../../lib/store'
-import { buktiKey, formatTanggal, INDIKATOR, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
+import { useBukti, useDetailKegiatan, useDokumenBukti, useInstrumen, usePeriode, useRencanaKegiatan, useSemuaKegiatan, useSkor } from '../../lib/store'
+import { buktiKey, formatTanggal, LEVELS, levelTerpenuhi, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { ChecklistItem, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -136,17 +136,22 @@ function RepositoriDetail() {
   const detailKegiatanPath = daftarKegiatanPath
   const { aktif } = usePeriode()
   const { kegiatan } = useRencanaKegiatan(aktif?.id)
+  const semuaKegiatan = useSemuaKegiatan(aktif?.id)
   const detail = useDetailKegiatan(kegiatanId)
   const dokumen = useDokumenBukti(kegiatanId)
-  const muat = [useBukti(), useSkor(), dokumen]
-  const [{ bukti: semuaBukti, simpan: simpanAjuan }, { levels }] = muat
+  const buktiData = useBukti()
+  const instrumenData = useInstrumen(aktif?.id)
+  const skorData = useSkor(instrumenData.indikator, semuaKegiatan.kegiatan, buktiData.bukti)
+  const muat = [buktiData, skorData, dokumen, instrumenData, semuaKegiatan]
+  const { bukti: semuaBukti, simpan: simpanAjuan } = buktiData
+  const { levels } = skorData
   const [cari, setCari] = useState('')
   const [mengunggah, setMengunggah] = useState(false)
   const [errorBerkas, setErrorBerkas] = useState('')
   const fileInput = useRef(null)
 
   if (detail.error?.status === 404) return <Navigate to={daftarKegiatanPath} replace />
-  if (!detail.kegiatan) return <Memuat dari={[detail]} bentuk="detail" />
+  if (!detail.kegiatan || instrumenData.loading) return <Memuat dari={[detail, instrumenData]} bentuk="detail" />
   const k = detail.kegiatan
 
   // Berkas hanya bisa diunggah PIC kegiatan, jadi pengunggahnya = PIC
@@ -329,7 +334,7 @@ function RepositoriDetail() {
         <IndikatorBukti
           key={`${b.indikatorId}:${b.status}`}
           bukti={b}
-          indikator={INDIKATOR.find((i) => i.id === b.indikatorId)}
+          indikator={instrumenData.byId[b.indikatorId]}
           levelTerverifikasi={levels[b.indikatorId]}
           jumlahBerkas={files.length}
           readOnly={!bolehEdit}

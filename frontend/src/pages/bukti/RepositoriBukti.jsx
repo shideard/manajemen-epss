@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import DomainBukti from './DomainBukti'
-import { useBukti, usePeriode, useSemuaKegiatan } from '../../lib/store'
-import { buktiKey, includesText, indikatorById, paginate } from '../../lib/epss'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan } from '../../lib/store'
+import { buktiKey, includesText, paginate } from '../../lib/epss'
 import { Memuat, PageHeader, Pagination, SearchBox, StatusBukti } from '../../components/ui'
 
 const PAGE_SIZE = 5
@@ -22,8 +22,13 @@ function RepositoriBukti() {
   const [query, setQuery] = useState('')
   const [queryIndikator, setQueryIndikator] = useState('')
   const [page, setPage] = useState(1)
-  const muat = [useSemuaKegiatan(aktif?.id), useBukti()]
-  const [{ kegiatan }, { bukti }] = muat
+  const kegiatanData = useSemuaKegiatan(aktif?.id)
+  const buktiData = useBukti()
+  const instrumenData = useInstrumen(aktif?.id)
+  const muat = [kegiatanData, buktiData, instrumenData]
+  const { kegiatan } = kegiatanData
+  const { bukti } = buktiData
+  const { byId: indikatorById } = instrumenData
 
   // Satu baris per pasangan kegiatan–indikator; kegiatan yang belum dipetakan tetap tampil. Statusnya masih dari browser
   const baris = kegiatan

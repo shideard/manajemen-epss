@@ -6,7 +6,6 @@ import {
   EMPTY_OBJECT,
   hitungIps,
   INDIKATOR,
-  indikatorById,
   KEYS,
   notifikasi,
   SEED_PENGINGAT,
@@ -76,8 +75,8 @@ const mapRencanaKegiatan = (item) => ({
   // API tidak menyimpan warna: diturunkan dari id supaya tetap sama di kalender, agenda, dan peta
   warna: [...String(item.id)].reduce((n, c) => n + c.charCodeAt(0), 0) % WARNA.length,
   indikator: item.indikator ?? [],
-  // Indikator API → id instrumen lokal (kode = nomor indikator); checklist & status bukti masih memakai id lokal
-  indikatorIds: (item.indikator ?? []).map((i) => INDIKATOR.find((l) => String(l.nomor) === String(i.kode))?.id).filter(Boolean),
+  // Kode indikator menjadi id UI, sehingga relasi tidak bergantung pada daftar indikator frontend.
+  indikatorIds: (item.indikator ?? []).map((i) => String(i.kode)),
 })
 
 async function apiAll(path) {
@@ -120,7 +119,9 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
       if (!hidup) return
       if (opd.status === 'fulfilled') setOpds(opd.value)
       if (pic.status === 'fulfilled') setPics(pic.value)
-      if (periodeId && ind.status === 'fulfilled') setIndikator(ind.value.data ?? [])
+      if (periodeId && ind.status === 'fulfilled') {
+        setIndikator((ind.value.data ?? []).map((item, index) => ({ ...item, nomor: index + 1 })))
+      }
       setErrorPilihan([opd, pic, ind].find((r) => r.status === 'rejected')?.reason ?? null)
     })
     return () => {
@@ -242,13 +243,12 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
   }
 }
 
-// Ajuan bukti dari API → bentuk yang dipakai halaman. Indikator API dicocokkan ke id lokal lewat kode = nomor
+// Ajuan bukti dari API → bentuk yang dipakai halaman. Kode indikator menjadi id UI yang stabil.
 const STATUS_AJUAN = { DRAFT: 'draft', MENUNGGU: 'menunggu', PERBAIKAN: 'perbaikan', TERVERIFIKASI: 'terverifikasi' }
-const indikatorLokalByKode = Object.fromEntries(INDIKATOR.map((i) => [String(i.nomor), i.id]))
 const mapAjuan = (a) => ({
   id: a.id,
   kegiatanId: a.kegiatan_id,
-  indikatorId: indikatorLokalByKode[String(a.indikator.kode)],
+  indikatorId: String(a.indikator.kode),
   status: STATUS_AJUAN[a.status],
   checked: a.checklist ?? {},
   level: a.level,
@@ -285,8 +285,7 @@ export function useBukti() {
     // kegiatan = hasil API (punya daftar indikator beserta id API-nya)
     async simpan(kegiatan, indikatorId, { checked, ajukan = false }) {
       const key = buktiKey(kegiatan.id, indikatorId)
-      const nomor = String(indikatorById[indikatorId].nomor)
-      const indikatorApi = kegiatan.indikator.find((i) => String(i.kode) === nomor)
+      const indikatorApi = kegiatan.indikator.find((i) => String(i.kode) === String(indikatorId))
       if (!indikatorApi) throw new Error('Indikator ini belum dipetakan ke kegiatan.')
       const sebelum = bukti[key]
       // Centang langsung tampil; dikembalikan jika server menolak
@@ -341,6 +340,63 @@ function useMuat(key, ambil) {
   return { data: milikKey ? hasil.data : undefined, loading: Boolean(key) && !milikKey, error: milikKey ? (hasil.error ?? null) : null, muatUlang }
 }
 
+function mapInstrumen(data) {
+  const domainById = new Map()
+  const indikator = (data ?? []).map((item, index) => {
+    const domainData = item.domain
+    if (!domainById.has(domainData.id)) {
+      domainById.set(domainData.id, {
+        id: domainData.id,
+        kode: domainData.kode,
+        nama: domainData.nama,
+        indikator: [],
+      })
+    }
+    const domain = domainById.get(domainData.id)
+    const mapped = {
+      id: String(item.kode),
+      apiId: item.id,
+      kode: String(item.kode),
+      nomor: index + 1,
+      nama: item.nama,
+      bobot: Number(item.bobot),
+      aspek: item.aspek.nama,
+      domain,
+      domainNomor: Number(domain.kode),
+      levels: (item.levels ?? []).map((level) => ({
+        level: level.level,
+        nama: level.nama,
+        kriteria: level.kriteria,
+        pemenuhan: level.pemenuhan ?? [],
+        syarat: (level.persyaratan_bukti ?? []).map((requirement) => requirement.deskripsi),
+      })),
+    }
+    domain.indikator.push(mapped)
+    return mapped
+  })
+
+  return {
+    domains: [...domainById.values()],
+    indikator,
+    byId: Object.fromEntries(indikator.map((item) => [item.id, item])),
+  }
+}
+
+export function useInstrumen(periodeId) {
+  const ambil = useCallback(
+    () => api(`/api/periode-evaluasi/${periodeId}/indikator`).then((response) => mapInstrumen(response.data)),
+    [periodeId],
+  )
+  const { data, ...state } = useMuat(periodeId, ambil)
+
+  return {
+    domains: data?.domains ?? EMPTY_LIST,
+    indikator: data?.indikator ?? EMPTY_LIST,
+    byId: data?.byId ?? EMPTY_OBJECT,
+    ...state,
+  }
+}
+
 // Satu rencana kegiatan lengkap dengan indikatornya
 export function useDetailKegiatan(id) {
   const ambil = useCallback(() => api(`/api/rencana-kegiatan/${id}`).then((res) => mapRencanaKegiatan(res.data)), [id])
@@ -386,7 +442,11 @@ export function useSemuaDokumen(periodeIds) {
           api(`/api/rencana-kegiatan/${id}/dokumen-bukti`),
         ])
         const kegiatan = mapRencanaKegiatan(detail.data)
-        const indikator = kegiatan.indikatorIds.map((indikatorId) => indikatorById[indikatorId]).filter(Boolean)
+        const indikator = kegiatan.indikator.map((item) => ({
+          ...item,
+          id: String(item.kode),
+          nomor: Number(item.kode),
+        }))
         return (response.data ?? [])
           .filter((document) => document.is_current)
           .map((document) => ({
@@ -459,9 +519,17 @@ export function useDokumenBukti(kegiatanId) {
 
 // Level terverifikasi per indikator + riwayat snapshot skor IPS tiap kali level ditetapkan
 // ponytail: level belum dipisah per periode; tambahkan periodeId saat pindah ke API
-export function useSkor() {
-  const [levels, setLevels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
+export function useSkor(indikatorData = INDIKATOR, kegiatan = EMPTY_LIST, bukti = EMPTY_OBJECT) {
+  const [levelLokal, setLevels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
   const [snapshot, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
+  const levels = indikatorData === INDIKATOR
+    ? levelLokal
+    : Object.fromEntries(indikatorData.flatMap((indikator) => {
+        const tertaut = kegiatan.filter((item) => item.indikatorIds.includes(indikator.id))
+        const hasil = tertaut.map((item) => bukti[buktiKey(item.id, indikator.id)])
+        if (!hasil.length || hasil.some((ajuan) => ajuan?.status !== 'terverifikasi')) return []
+        return [[indikator.id, Math.min(...hasil.map((ajuan) => ajuan.level))]]
+      }))
   return {
     levels,
     snapshot,
@@ -474,7 +542,7 @@ export function useSkor() {
           id: crypto.randomUUID(),
           periodeId,
           waktu: new Date().toISOString(),
-          nilai: hitungIps(INDIKATOR, baru),
+          nilai: hitungIps(indikatorData, baru),
           perubahan: `Verifikasi Indikator ${indikator.nomor} (Level ${level})`,
         },
         ...list,

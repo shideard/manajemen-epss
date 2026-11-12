@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useBukti, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
-import { bobotDomain, DOMAINS, hitungIps, includesText, INDIKATOR, jumlahBukti, levelLabel } from '../lib/epss'
+import { useBukti, useInstrumen, usePeriode, useSemuaKegiatan, useSkor } from '../lib/store'
+import { bobotDomain, hitungIps, includesText, jumlahBukti, levelLabel } from '../lib/epss'
 import { DomainPanel, Memuat, PageHeader, SearchBox } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import PedomanModal from '../components/PedomanModal'
@@ -9,8 +9,14 @@ import bookIcon from '../assets/icons/book-mark-fill-sm.svg'
 function PedomanIndikator() {
   const { aktif } = usePeriode()
   const kegiatanData = useSemuaKegiatan(aktif?.id)
-  const muat = [useSkor(), useBukti(), kegiatanData]
-  const [{ levels }, { bukti }, { kegiatan }] = muat
+  const buktiData = useBukti()
+  const instrumenData = useInstrumen(aktif?.id)
+  const skorData = useSkor(instrumenData.indikator, kegiatanData.kegiatan, buktiData.bukti)
+  const muat = [skorData, buktiData, kegiatanData, instrumenData]
+  const { levels } = skorData
+  const { bukti } = buktiData
+  const { kegiatan } = kegiatanData
+  const { domains, indikator: indikatorList } = instrumenData
   const berkas = Object.fromEntries(kegiatan.map((k) => [k.id, k.dokumenBukti ?? []]))
   const [query, setQuery] = useState('')
   const [dibuka, setDibuka] = useState(null)
@@ -22,8 +28,8 @@ function PedomanIndikator() {
         <SearchBox value={query} onChange={setQuery} placeholder="Cari domain atau indikator..." />
       </PageHeader>
 
-      {DOMAINS.map((domain, d) => {
-        const indikator = INDIKATOR.filter(
+      {domains.map((domain, d) => {
+        const indikator = indikatorList.filter(
           (i) =>
             i.domain === domain &&
             includesText([i.nama, `indikator ${i.nomor}`, domain.nama, `domain ${d + 1}`], query),

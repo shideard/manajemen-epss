@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { bobotDomain, DOMAINS, INDIKATOR } from '../../lib/epss'
 import { DialogHeader, Field, FormError, Input, ModalActions, Select } from '../../components/ui'
 import { buttonClass, fieldClass } from '../../components/classes'
 import bookIcon from '../../assets/icons/book-mark-fill.svg'
@@ -8,27 +7,34 @@ import removeIcon from '../../assets/icons/close-circle-line.svg'
 // Modal pakai <dialog> bawaan browser: Esc, fokus, dan backdrop sudah ditangani
 // indikator = record bukti kegiatan ini; yang sudah diajukan/diverifikasi tidak bisa dilepas
 // Panel samping "Daftar Indikator": semua indikator per domain beserta bobotnya
-function DaftarIndikator({ onClose }) {
+function DaftarIndikator({ indikatorPilihan = [], onClose }) {
+  const domains = new Map()
+  for (const item of indikatorPilihan) {
+    const source = item.domain
+    if (!domains.has(source.id)) domains.set(source.id, { ...source, indikator: [] })
+    domains.get(source.id).indikator.push(item)
+  }
+
   return (
     <aside className="flex w-[min(476px,calc(100vw-2rem))] shrink-0 flex-col overflow-hidden rounded-lg bg-white shadow-lg xl:max-h-[calc(100vh-2rem)]">
       <DialogHeader title="Daftar Indikator" onClose={onClose} closeLabel="Tutup daftar indikator" />
       <div className="flex flex-col gap-6 overflow-y-auto px-5 py-6">
-        {DOMAINS.map((domain, d) => (
+        {[...domains.values()].map((domain) => (
           <section key={domain.id} className="flex flex-col gap-3">
             <p className="flex flex-wrap items-center gap-3 text-small font-semibold">
-              Domain {d + 1} - {domain.nama}
-              <span className="flex h-6 items-center rounded-full border border-grey-500 bg-lime-75 px-3 text-caption font-normal">Bobot domain: {bobotDomain(domain)}%</span>
+              Domain {domain.kode} - {domain.nama}
+              <span className="flex h-6 items-center rounded-full border border-grey-500 bg-lime-75 px-3 text-caption font-normal">Bobot domain: {domain.indikator.reduce((sum, item) => sum + Number(item.bobot), 0)}%</span>
             </p>
             <ul className="rounded-md bg-lime-50 py-2.5">
-              {INDIKATOR.filter((i) => i.domain === domain).map((i) => (
+              {domain.indikator.map((i) => (
                 <li key={i.id} className="flex flex-col gap-1 border-b border-grey-75/50 px-5 py-2 last:border-0">
                   <p className="flex items-center justify-between gap-5.5 text-small font-medium">
                     <span className="min-w-0">
-                      Indikator {i.nomor}: {i.nama}
+                      Indikator {i.nomor ?? i.kode}: {i.nama}
                     </span>
                     <span className="flex h-6 shrink-0 items-center rounded-full border border-grey-500 bg-green-50 px-3 text-caption font-normal">Bobot: {i.bobot}%</span>
                   </p>
-                  <p className="text-caption font-light">Aspek: {i.aspek}</p>
+                  <p className="text-caption font-light">Aspek: {i.aspek.nama}</p>
                 </li>
               ))}
             </ul>
@@ -170,13 +176,13 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
               <option value="">Pilih indikator yang akan ditambahkan...</option>
               {indikatorPilihan.filter((i) => !dipetakan.includes(i.id)).map((i) => (
                 <option key={i.id} value={i.id}>
-                  Indikator {i.kode}: {i.nama}
+                  Indikator {i.nomor ?? i.kode}: {i.nama}
                 </option>
               ))}
             </Select>
             {dipetakan.map((id) => (
               <p key={id} className="flex items-center justify-between gap-3 rounded-sm bg-lime-300 px-2.5 py-1.5 text-small">
-                Indikator {indikatorPilihan.find((i) => i.id === id)?.kode ?? indikator.find((i) => i.id === id)?.kode}: {indikatorPilihan.find((i) => i.id === id)?.nama ?? indikator.find((i) => i.id === id)?.nama}
+                Indikator {indikatorPilihan.find((i) => i.id === id)?.nomor ?? indikator.find((i) => i.id === id)?.nomor ?? id}: {indikatorPilihan.find((i) => i.id === id)?.nama ?? indikator.find((i) => i.id === id)?.nama}
                 <button type="button" onClick={() => setDipetakan((ids) => ids.filter((x) => x !== id))} aria-label={`Lepas indikator ${indikatorPilihan.find((i) => i.id === id)?.kode ?? id}`}>
                   <img src={removeIcon} alt="" width={15} height={15} className="grayscale" />
                 </button>
@@ -188,7 +194,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
           <ModalActions onCancel={close} submitLabel={outputOnly ? 'Simpan Output' : 'Simpan'} />
         </div>
       </form>
-      {daftarIndikator && <DaftarIndikator onClose={() => setDaftarIndikator(false)} />}
+      {daftarIndikator && <DaftarIndikator indikatorPilihan={indikatorPilihan} onClose={() => setDaftarIndikator(false)} />}
       </div>
     </dialog>
   )
