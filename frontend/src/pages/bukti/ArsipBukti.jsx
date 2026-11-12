@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { berkasUrl, useBerkas, useBukti, useKegiatan, usePeriode } from '../../lib/store'
-import { arsipBerkas, formatTanggal, formatUkuran, includesText, isPic, paginate } from '../../lib/epss'
+import { useDokumenBukti, usePeriode, useSemuaDokumen, useSemuaKegiatan } from '../../lib/store'
+import { formatTanggal, formatUkuran, includesText, isPic, paginate } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { Badge, DialogHeader, Dropdown, Memuat, Notice, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -38,7 +38,8 @@ function Ikon({ src, besar = false }) {
 // Panel detail di kanan tabel (referensi: panel detail berkas ala Google Drive)
 function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
   const [target, setTarget] = useState('')
-  const url = berkasUrl.get(f.id)
+  const [error, setError] = useState('')
+  const dokumen = useDokumenBukti(f.kegiatan[0].id)
   const [, ekstensi] = pecahNama(f.nama)
   // Tautan baru masuk periode berjalan, jadi hanya kegiatan yang user ini PIC-nya dan periodenya belum dikunci
   const boleh = bolehUbah(user, 'unggahBukti', aktif)
@@ -50,14 +51,15 @@ function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
       <div className="flex flex-col gap-6 p-6">
         <div className="flex h-40 flex-col items-center justify-center gap-4 rounded-md bg-grey2-75">
           <Ikon src={fileText} besar />
-          {url ? (
-            <a href={url} target="_blank" rel="noreferrer" className={buttonClass('outline', 'sm')}>
+          {f.id ? (
+            <button type="button" onClick={() => dokumen.buka(f).catch((err) => setError(err.message))} className={buttonClass('outline', 'sm')}>
               <img src={eyeIcon} alt="" width={15} height={15} />
               Lihat Berkas
-            </a>
+            </button>
           ) : (
-            <p className="px-6 text-center text-small text-grey-200">Pratinjau hanya tersedia pada sesi saat berkas diunggah.</p>
+            <p className="px-6 text-center text-small text-grey-200">Berkas tidak tersedia.</p>
           )}
+          {error && <Notice tone="red" role="alert">{error}</Notice>}
         </div>
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
@@ -141,15 +143,20 @@ function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
 
 function ArsipBukti() {
   const { user } = useOutletContext()
-  const muat = [useKegiatan(), useBukti(), useBerkas(), usePeriode()]
-  const [{ kegiatan }, { bukti }, { berkas, kaitkan }, { periode, aktif }] = muat
+  const periodeData = usePeriode()
+  const { periode, aktif } = periodeData
+  const daftarKegiatan = useSemuaKegiatan(aktif?.id)
+  const dataArsip = useSemuaDokumen(periode.map((p) => p.id))
+  const muat = [periodeData, daftarKegiatan, dataArsip]
+  const { kegiatan } = daftarKegiatan
+  const { dokumen: arsip, kaitkan } = dataArsip
   const [periodeId, setPeriodeId] = useState(null)
   const [dipilihId, setDipilihId] = useState(null)
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [pesan, setPesan] = useState('')
+  const [pesanTone, setPesanTone] = useState('green')
 
-  const arsip = arsipBerkas(berkas, kegiatan, bukti, periode)
   const folder = periode.find((p) => p.id === periodeId) ?? aktif
   const isiFolder = arsip.filter((f) => f.periode.includes(folder?.id))
   const cocok = isiFolder.filter((f) =>
@@ -215,7 +222,7 @@ function ArsipBukti() {
         })}
       </ul>
 
-      {pesan && <Notice tone="green">{pesan}</Notice>}
+      {pesan && <Notice tone={pesanTone} role={pesanTone === 'red' ? 'alert' : 'status'}>{pesan}</Notice>}
 
       <div className="flex flex-wrap items-start gap-6">
         <section className="flex min-w-0 flex-1 flex-col gap-3 rounded-lg bg-grey-500 px-2 pt-6 pb-2">
@@ -306,9 +313,15 @@ function ArsipBukti() {
             aktif={aktif}
             kegiatan={kegiatan}
             onClose={() => setDipilihId(null)}
-            onKaitkan={(kegiatanId) => {
-              kaitkan(kegiatanId, dipilih, aktif.id)
-              setPesan(`"${dipilih.nama}" ditautkan ke ${kegiatan.find((k) => k.id === kegiatanId).nama}.`)
+            onKaitkan={async (kegiatanId) => {
+              try {
+                await kaitkan(kegiatanId, dipilih.id)
+                setPesanTone('green')
+                setPesan(`"${dipilih.nama}" ditautkan ke ${kegiatan.find((k) => k.id === kegiatanId).nama}.`)
+              } catch (error) {
+                setPesanTone('red')
+                setPesan(error.message || 'Gagal mengaitkan berkas.')
+              }
             }}
           />
         )}

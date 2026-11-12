@@ -144,6 +144,12 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         )->whereUuid('rencanaKegiatan')
         ->name('rencana-kegiatan.dokumen-bukti.index');
 
+        Route::post('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti/{dokumenBukti}/tautan',
+        [DokumenBuktiController::class, 'link']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('dokumenBukti')
+        ->name('rencana-kegiatan.dokumen-bukti.link');
+
         Route::get('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti/{dokumenBukti}/download',
         [DokumenBuktiController::class, 'download']
         )->whereUuid('rencanaKegiatan')

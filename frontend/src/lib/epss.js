@@ -23,11 +23,8 @@ export function agendaTerdekat(list, today, limit = 4) {
 // Key localStorage untuk useStore
 // ponytail: data disimpan di localStorage browser; pindahkan ke API Laravel saat endpoint-nya siap
 export const KEYS = {
-  kegiatan: 'epss.rencana-kegiatan',
   periode: 'epss.periode',
   periodeAktif: 'epss.periode-aktif',
-  bukti: 'epss.bukti', // { 'kegiatanId:indikatorId': { checked, status, level, catatan } }
-  berkas: 'epss.berkas', // { kegiatanId: [{ id, nama, ukuran, tanggal, oleh }] }
   levelIndikator: 'epss.level-indikator', // { indikatorId: level terverifikasi }
   snapshot: 'epss.snapshot',
   notifDibaca: 'epss.notif-dibaca',

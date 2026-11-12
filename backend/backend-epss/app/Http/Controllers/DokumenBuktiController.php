@@ -47,6 +47,85 @@ class DokumenBuktiController extends Controller
         ]);
     }
 
+    public function link(
+        Request $request,
+        RencanaKegiatan $rencanaKegiatan,
+        DokumenBukti $dokumenBukti
+    ): JsonResponse {
+        $document = DB::transaction(function () use (
+            $request,
+            $rencanaKegiatan,
+            $dokumenBukti
+        ): DokumenBukti {
+            $target = RencanaKegiatan::query()
+                ->lockForUpdate()
+                ->findOrFail($rencanaKegiatan->id);
+            Gate::forUser($request->user())
+                ->authorize('uploadEvidence', $target);
+
+            $source = DokumenBukti::query()
+                ->lockForUpdate()
+                ->findOrFail($dokumenBukti->id);
+            Gate::forUser($request->user())
+                ->authorize('view', $source->kegiatan);
+
+            abort_if(
+                $source->kegiatan_id === $target->id,
+                422,
+                'Berkas sudah terhubung ke kegiatan ini.'
+            );
+            abort_unless(
+                $source->is_current,
+                409,
+                'Hanya berkas versi terbaru yang dapat dikaitkan.'
+            );
+            abort_unless(
+                Storage::disk()->exists($source->storage_key),
+                404,
+                'Berkas sumber tidak ditemukan.'
+            );
+            abort_if(
+                $target->dokumenBukti()
+                    ->where('is_current', true)
+                    ->where('sha256_hash', $source->sha256_hash)
+                    ->exists(),
+                409,
+                'Berkas yang sama sudah ada pada kegiatan ini.'
+            );
+
+            $linked = new DokumenBukti();
+            $linked->forceFill([
+                'uploaded_by' => $request->user()->id,
+                'parent_document_id' => null,
+                'version_number' => 1,
+                'is_current' => true,
+                'evidence_date' => $source->evidence_date,
+                'nama_file' => $source->nama_file,
+                'storage_key' => $source->storage_key,
+                'mime_type' => $source->mime_type,
+                'size_bytes' => $source->size_bytes,
+                'sha256_hash' => $source->sha256_hash,
+            ]);
+            $target->dokumenBukti()->save($linked);
+
+            return $linked->refresh();
+        });
+
+        return response()->json([
+            'data' => [
+                'id' => $document->id,
+                'kegiatan_id' => $document->kegiatan_id,
+                'uploaded_by' => $document->uploaded_by,
+                'evidence_date' => $document->evidence_date->toDateString(),
+                'nama_file' => $document->nama_file,
+                'mime_type' => $document->mime_type,
+                'size_bytes' => $document->size_bytes,
+                'version_number' => $document->version_number,
+                'is_current' => $document->is_current,
+            ],
+        ], 201);
+    }
+
     public function store(
         StoreDokumenBuktiRequest $request,
         RencanaKegiatan $rencanaKegiatan

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { api, unduh } from './api'
 import {
   buktiKey,
-  contohKegiatan,
   EMPTY_LIST,
   EMPTY_OBJECT,
   hitungIps,
@@ -12,21 +11,13 @@ import {
   notifikasi,
   SEED_PENGINGAT,
   SEED_PERIODE,
-  sinkronPemetaan,
   toISODate,
   WARNA,
 } from './epss'
 
-// State yang disimpan di localStorage dan tersinkron antar komponen yang memakai key yang sama
-// (mis. notifikasi dibaca di halaman Notifikasi → titik merah di topbar ikut hilang).
-// ponytail: data hanya ada di browser ini; ganti dengan API Laravel saat endpoint-nya siap
+// Preferensi lokal disimpan di localStorage dan tersinkron antar komponen yang memakai key yang sama.
 const cache = new Map()
 const listeners = new Map()
-
-// Data contoh untuk key yang belum pernah disimpan di browser ini; menang atas seed dari pemanggil
-// supaya semua halaman yang membaca kegiatan/bukti melihat data yang sama. Daftar yang sengaja dikosongkan ([]) tetap kosong.
-const contoh = contohKegiatan(toISODate(new Date()))
-const DATA_CONTOH = { [KEYS.kegiatan]: contoh.kegiatan, [KEYS.bukti]: contoh.bukti }
 
 function read(key, seed) {
   if (!cache.has(key)) {
@@ -36,7 +27,7 @@ function read(key, seed) {
     } catch {
       value = null
     }
-    cache.set(key, value ?? DATA_CONTOH[key] ?? seed)
+    cache.set(key, value ?? seed)
   }
   return cache.get(key)
 }
@@ -73,30 +64,6 @@ function useStore(key, seed) {
 // ponytail: localStorage sinkron, jadi loading selalu false dan error selalu null; aksi akan mengembalikan Promise saat pindah ke API
 const SIAP = { loading: false, error: null }
 
-export function useKegiatan() {
-  const [kegiatan, setKegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
-  const [, setBukti] = useStore(KEYS.bukti, EMPTY_OBJECT)
-  const [, setBerkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
-  return {
-    kegiatan,
-    ...SIAP,
-    // id kosong = kegiatan baru; indikator = id indikator yang didukung, pemetaannya disinkronkan ke bukti
-    simpan(id, { indikator, ...data }) {
-      const kegiatanId = id ?? crypto.randomUUID()
-      setKegiatan((list) =>
-        id ? list.map((k) => (k.id === id ? { ...k, ...data } : k)) : [...list, { ...data, id: kegiatanId, warna: list.length % WARNA.length }],
-      )
-      setBukti((all) => sinkronPemetaan(all, kegiatanId, indikator))
-      return kegiatanId
-    },
-    hapus(id) {
-      setKegiatan((list) => list.filter((k) => k.id !== id))
-      setBukti((all) => Object.fromEntries(Object.entries(all).filter(([, b]) => b.kegiatanId !== id)))
-      setBerkas((all) => Object.fromEntries(Object.entries(all).filter(([kegiatanId]) => kegiatanId !== id)))
-    },
-  }
-}
-
 // Data rencana kegiatan pada periode terpilih dari API Laravel.
 const mapRencanaKegiatan = (item) => ({
   ...item,
@@ -117,9 +84,10 @@ async function apiAll(path) {
   const first = await api(path)
   const items = [...(first.data ?? [])]
   const lastPage = first.meta?.last_page ?? 1
-  const base = path.split('?')[0]
   for (let page = 2; page <= lastPage; page += 1) {
-    const result = await api(`${base}?page=${page}`)
+    const url = new URL(path, window.location.origin)
+    url.searchParams.set('page', page)
+    const result = await api(`${url.pathname}${url.search}`)
     items.push(...(result.data ?? []))
   }
   return items
@@ -349,45 +317,6 @@ export function useBukti() {
   }
 }
 
-// Isi berkas yang diunggah di sesi ini (id berkas → object URL) untuk pratinjau.
-// ponytail: isi berkas tidak tersimpan setelah reload; simpan ke storage backend saat API unggah siap
-export const berkasUrl = new Map()
-
-// berkas = { kegiatanId: [{ id, nama, ukuran, tanggal, oleh, periodeId }] }
-// Berkas yang sama (id sama) boleh ada di beberapa kegiatan: ditautkan dari Repositori, bukan diunggah ulang.
-// periodeId = periode saat berkas diunggah/ditautkan ke kegiatan itu (folder di Repositori)
-export function useBerkas() {
-  const [berkas, setBerkas] = useStore(KEYS.berkas, EMPTY_OBJECT)
-  return {
-    berkas,
-    ...SIAP,
-    unggah(kegiatanId, files, oleh, periodeId) {
-      const baru = [...files].map((file) => {
-        const id = crypto.randomUUID()
-        berkasUrl.set(id, URL.createObjectURL(file))
-        return { id, nama: file.name, ukuran: file.size, tanggal: toISODate(new Date()), oleh, periodeId }
-      })
-      setBerkas((all) => ({ ...all, [kegiatanId]: [...(all[kegiatanId] ?? []), ...baru] }))
-    },
-    kaitkan(kegiatanId, { id, nama, ukuran, tanggal, oleh }, periodeId) {
-      setBerkas((all) =>
-        (all[kegiatanId] ?? []).some((f) => f.id === id)
-          ? all
-          : { ...all, [kegiatanId]: [...(all[kegiatanId] ?? []), { id, nama, ukuran, tanggal, oleh, periodeId }] },
-      )
-    },
-    hapus(kegiatanId, berkasId) {
-      // Masih ditautkan ke kegiatan lain → pratinjaunya tetap dipakai di sana
-      const dipakaiLagi = Object.entries(berkas).some(([id, list]) => id !== kegiatanId && list.some((f) => f.id === berkasId))
-      if (!dipakaiLagi) {
-        URL.revokeObjectURL(berkasUrl.get(berkasId))
-        berkasUrl.delete(berkasId)
-      }
-      setBerkas((all) => ({ ...all, [kegiatanId]: (all[kegiatanId] ?? []).filter((f) => f.id !== berkasId) }))
-    },
-  }
-}
-
 // Hasil GET yang ditandai dengan key permintaannya: loading = hasil yang ada belum milik key ini.
 // Tanpa setState sinkron di effect, jadi pindah halaman langsung kembali ke loading.
 function useMuat(key, ambil) {
@@ -433,7 +362,8 @@ export function useSemuaKegiatan(periodeId) {
     return Promise.all(
       ids.map(async (id) => {
         const [detail, dokumen] = await Promise.all([api(`/api/rencana-kegiatan/${id}`), api(`/api/rencana-kegiatan/${id}/dokumen-bukti`)])
-        return { ...mapRencanaKegiatan(detail.data), jumlahBerkas: dokumen.data?.length ?? 0 }
+        const dokumenBukti = (dokumen.data ?? []).map(mapDokumen)
+        return { ...mapRencanaKegiatan(detail.data), dokumenBukti, jumlahBerkas: dokumenBukti.length }
       }),
     )
   }, [periodeId])
@@ -442,7 +372,45 @@ export function useSemuaKegiatan(periodeId) {
 }
 
 // Dokumen bukti satu rencana kegiatan dari API Laravel (berkas tersimpan di server, bukan di browser)
-const mapDokumen = (d) => ({ id: d.id, nama: d.nama_file, ukuran: d.size_bytes, tanggal: d.evidence_date, mime: d.mime_type })
+const mapDokumen = (d) => ({ id: d.id, nama: d.nama_file, ukuran: d.size_bytes, tanggal: d.evidence_date, mime: d.mime_type, uploadedBy: d.uploaded_by, isCurrent: d.is_current })
+
+export function useSemuaDokumen(periodeIds) {
+  const key = Array.isArray(periodeIds) ? [...periodeIds].sort().join(',') : ''
+  const ambil = useCallback(async () => {
+    const ids = key.split(',').filter(Boolean)
+    const perPeriode = await Promise.all(ids.map(async (periodeId) => {
+      const daftar = await apiAll(`/api/rencana-kegiatan?periode_id=${encodeURIComponent(periodeId)}`)
+      return Promise.all(daftar.map(async ({ id }) => {
+        const [detail, response] = await Promise.all([
+          api(`/api/rencana-kegiatan/${id}`),
+          api(`/api/rencana-kegiatan/${id}/dokumen-bukti`),
+        ])
+        const kegiatan = mapRencanaKegiatan(detail.data)
+        const indikator = kegiatan.indikatorIds.map((indikatorId) => indikatorById[indikatorId]).filter(Boolean)
+        return (response.data ?? [])
+          .filter((document) => document.is_current)
+          .map((document) => ({
+            ...mapDokumen(document),
+            oleh: kegiatan.pic,
+            periodeId,
+            kegiatan: [kegiatan],
+            indikator,
+          }))
+      }))
+    }))
+    return perPeriode.flat(2).sort((a, b) => b.tanggal.localeCompare(a.tanggal))
+  }, [key])
+  const { data, ...state } = useMuat(key, ambil)
+
+  return {
+    dokumen: data ?? EMPTY_LIST,
+    ...state,
+    async kaitkan(kegiatanId, dokumenId) {
+      await api(`/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti/${dokumenId}/tautan`, { method: 'POST' })
+      state.muatUlang()
+    },
+  }
+}
 
 export function useDokumenBukti(kegiatanId) {
   // kegiatanId ikut disimpan: loading = data yang ada belum milik kegiatan ini
@@ -783,11 +751,23 @@ export function useAuth() {
 
 // Notifikasi pengingat diturunkan dari rencana kegiatan + pengaturan H-n
 export function useNotifikasi() {
-  const [kegiatan] = useStore(KEYS.kegiatan, EMPTY_LIST)
+  const { aktif } = usePeriode()
+  const periodeId = aktif?.id
+  const ambil = useCallback(async () => {
+    if (!periodeId) return EMPTY_LIST
+    const items = await apiAll(`/api/rencana-kegiatan?periode_id=${encodeURIComponent(periodeId)}`)
+    return items.map((item) => ({
+      id: item.id,
+      nama: item.nama_kegiatan,
+      mulai: item.tanggal_mulai_rencana,
+      selesai: item.tanggal_selesai_rencana,
+    }))
+  }, [periodeId])
+  const { data: kegiatan = EMPTY_LIST, ...state } = useMuat(periodeId, ambil)
   const [hariPengingat, setHariPengingat] = useStore(KEYS.pengingat, SEED_PENGINGAT)
   const [dibaca, setDibaca] = useStore(KEYS.notifDibaca, EMPTY_LIST)
   const list = notifikasi(kegiatan, hariPengingat, toISODate(new Date()))
   const tandaiDibaca = (id) => setDibaca((ids) => (ids.includes(id) ? ids : [...ids, id]))
   const tandaiSemuaDibaca = () => setDibaca((ids) => [...new Set([...ids, ...list.map((n) => n.id)])])
-  return { list, dibaca, tandaiDibaca, tandaiSemuaDibaca, belumDibaca: list.filter((n) => !dibaca.includes(n.id)).length, hariPengingat, setHariPengingat, ...SIAP }
+  return { list, dibaca, tandaiDibaca, tandaiSemuaDibaca, belumDibaca: list.filter((n) => !dibaca.includes(n.id)).length, hariPengingat, setHariPengingat, ...state }
 }
