@@ -32,9 +32,15 @@ function urutkanJadwal(jadwal) {
 function StepBlok3Perencanaan({ formData, updateBlok3 }) {
   const data = formData.blok3
 
-  // Baris jadwal yang sudah disentuh, supaya penanda wajib tidak muncul
-  // serentak saat form baru dibuka.
+  // Baris jadwal lama yang sudah disentuh, supaya penanda wajib tidak muncul
+  // serentak saat form baru dibuka. Wajib tetap dicek apa adanya untuk baris
+  // tambahan (yang sengaja ditambahkan pengguna) dan saat pengguna menekan
+  // tombol validasi di bawah tabel.
   const [jadwalTouched, setJadwalTouched] = useState({})
+  // Karenanya peringatan tidak hilang saat pindah step lalu kembali.
+  // Sama seperti `variabelTouched`, state ini mengikuti komponen: hilang saat
+  // wizard dibuka ulang atau berganti draft.
+  const [jadwalDivalidasi, setJadwalDivalidasi] = useState(false)
   // Field variabel yang sudah disentuh, kuncinya `${id}.${field}`.
   const [variabelTouched, setVariabelTouched] = useState({})
 
@@ -64,6 +70,56 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
     const idx = jadwalUrut.findIndex((j) => j.id === id)
     return idx > 0 ? jadwalUrut[idx - 1] : null
   }
+
+  // Peta tahapan yang urutannya bertabrakan. Pasangan yang salah bukan hanya
+  // baris yang lebih awal: baris yang "dinobatkan" sebelum dirinya juga ikut
+  // salah (relasinya bertentangan), dan rentang yang terlanda ikut ditandai.
+  // Contoh 1=Jun, 2=Mar (salah), 3=Jan, 4=Feb (Feb > Mar, jadi lolos cek
+  // tetangga) -> keempat tahapan ditandai supaya tidak ada yang terlewat.
+  const bentrokUrut = useMemo(() => {
+    const info = jadwalUrut.map((item) => ({
+      item,
+      mulai: kunciBulan(item.mulaiBulan, item.mulaiTahun),
+      selesai: kunciBulan(item.selesaiBulan, item.selesaiTahun),
+    }))
+    const peta = {}
+    const kunci = (a, i) => {
+      if (info[i].mulai && !peta[a.item.id]) peta[a.item.id] = { dengan: info[i].item.tahapan }
+      if (info[i].mulai && !peta[info[i].item.id]) peta[info[i].item.id] = { dengan: a.item.tahapan }
+    }
+    for (let i = 0; i < info.length; i += 1) {
+      const a = info[i]
+      if (!a.mulai) continue
+      for (let j = 0; j < i; j += 1) {
+        const b = info[j]
+        if (!b.mulai) continue
+        if (a.mulai < b.mulai) kunci(a, i)
+        if (b.mulai > a.mulai) kunci(b, i)
+        if (b.selesai && a.mulai < b.selesai) kunci(a, i)
+      }
+    }
+    return peta
+  }, [jadwalUrut])
+
+  // Ringkasan 3.3: hitung tahapan yang belum lengkap atau urutannya salah.
+  // Dipakai untuk pesan di atas tabel dan untuk menandai saat dicek.
+  const jumlahJadwalBermasalah = useMemo(
+    () =>
+      jadwalUrut.filter((item, idx) => {
+        const sebelum = idx > 0 ? jadwalUrut[idx - 1] : null
+        const kunciMulai = kunciBulan(item.mulaiBulan, item.mulaiTahun)
+        const kunciSelesai = kunciBulan(item.selesaiBulan, item.selesaiTahun)
+        const kunciSebelum = sebelum ? kunciBulan(sebelum.mulaiBulan, sebelum.mulaiTahun) : ''
+        return (
+          !kunciMulai ||
+          !kunciSelesai ||
+          Boolean(kunciSebelum && kunciMulai < kunciSebelum) ||
+          kunciSelesai < kunciMulai ||
+          Boolean(bentrokUrut[item.id])
+        )
+      }).length,
+    [jadwalUrut, bentrokUrut]
+  )
 
   const handleJadwalChange = (id, field, value) => {
     setJadwalTouched((prev) => (prev[id] ? prev : { ...prev, [id]: true }))
@@ -178,6 +234,26 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
             tiap tahapan tidak boleh lebih awal dari tahapan sebelumnya.
           </p>
 
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setJadwalDivalidasi(true)}
+              className="rounded-lg border border-grey-75 bg-white px-3 py-1.5 text-[12px] font-semibold text-grey-300 hover:bg-grey2-75 transition"
+            >
+              Periksa kelengkapan jadwal
+            </button>
+            {jadwalDivalidasi && jumlahJadwalBermasalah > 0 && (
+              <span className="text-[12px] font-semibold text-red-500">
+                {jumlahJadwalBermasalah} tahapan perlu dilengkapi/diperbaiki.
+              </span>
+            )}
+            {jadwalDivalidasi && jumlahJadwalBermasalah === 0 && (
+              <span className="text-[12px] font-semibold text-emerald-600">
+                Semua tahapan sudah lengkap dan berurutan.
+              </span>
+            )}
+          </div>
+
           <div className="flex flex-col gap-4">
             {JADWAL_GRUP.map((grup) => {
               const barisUtama = jadwalUrut.filter((j) => !j.indukId && j.grup === grup.kode)
@@ -218,9 +294,12 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                         const salahRentang =
                           kunciMulai && kunciSelesai && kunciSelesai < kunciMulai
                         const wajibMulai =
-                          Boolean(jadwalTouched[item.id]) && (!item.mulaiBulan || !item.mulaiTahun)
+                          (Boolean(jadwalTouched[item.id]) || jadwalDivalidasi || isTambahan) &&
+                          (!item.mulaiBulan || !item.mulaiTahun)
                         const wajibSelesai =
-                          Boolean(jadwalTouched[item.id]) && (!item.selesaiBulan || !item.selesaiTahun)
+                          (Boolean(jadwalTouched[item.id]) || jadwalDivalidasi || isTambahan) &&
+                          (!item.selesaiBulan || !item.selesaiTahun)
+                        const urutBermasalah = Boolean(bentrokUrut[item.id])
 
                         return (
                           <tr key={item.id} className="hover:bg-grey2-75/40 align-top">
@@ -246,7 +325,7 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                                   value={item.mulaiBulan}
                                   onChange={(e) => handleJadwalChange(item.id, 'mulaiBulan', e.target.value)}
                                   className={`flex-1 min-w-0 rounded-lg border px-2 py-1.5 text-[13px] text-grey-300 outline-none ${
-                                    wajibMulai ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
+                                    urutBermasalah ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
                                   }`}
                                 >
                                   <option value="">Bulan</option>
@@ -265,7 +344,7 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                                   value={item.mulaiTahun}
                                   onChange={(e) => handleJadwalChange(item.id, 'mulaiTahun', e.target.value)}
                                   className={`w-[74px] rounded-lg border px-2 py-1.5 text-[13px] text-grey-300 outline-none ${
-                                    wajibMulai ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
+                                    urutBermasalah ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
                                   }`}
                                 />
                               </div>
@@ -274,9 +353,7 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                                 title="Tanggal (opsional)"
                                 value={item.mulai}
                                 onChange={(e) => handleJadwalTanggalChange(item, 'mulai', e.target.value)}
-                                className={`mt-1 w-full rounded-lg border px-2 py-1 text-[12px] text-grey-100 outline-none ${
-                                  salahUrut ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
-                                }`}
+                                className="mt-1 w-full rounded-lg border border-grey-75/50 px-2 py-1 text-[12px] text-grey-100 outline-none focus:border-grey-300"
                               />
                               <p className="text-[10px] text-grey-75 mt-0.5">Tanggal opsional</p>
                             </td>
@@ -286,7 +363,7 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                                   value={item.selesaiBulan}
                                   onChange={(e) => handleJadwalChange(item.id, 'selesaiBulan', e.target.value)}
                                   className={`flex-1 min-w-0 rounded-lg border px-2 py-1.5 text-[13px] text-grey-300 outline-none ${
-                                    wajibSelesai ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
+                                    wajibSelesai || salahRentang ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
                                   }`}
                                 >
                                   <option value="">Bulan</option>
@@ -305,7 +382,7 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                                   value={item.selesaiTahun}
                                   onChange={(e) => handleJadwalChange(item.id, 'selesaiTahun', e.target.value)}
                                   className={`w-[74px] rounded-lg border px-2 py-1.5 text-[13px] text-grey-300 outline-none ${
-                                    wajibSelesai ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
+                                    wajibSelesai || salahRentang ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
                                   }`}
                                 />
                               </div>
@@ -314,9 +391,7 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                                 title="Tanggal (opsional)"
                                 value={item.selesai}
                                 onChange={(e) => handleJadwalTanggalChange(item, 'selesai', e.target.value)}
-                                className={`mt-1 w-full rounded-lg border px-2 py-1 text-[12px] text-grey-100 outline-none ${
-                                  salahRentang ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
-                                }`}
+                                className="mt-1 w-full rounded-lg border border-grey-75/50 px-2 py-1 text-[12px] text-grey-100 outline-none focus:border-grey-300"
                               />
                               <p className="text-[10px] text-grey-75 mt-0.5">Tanggal opsional</p>
                               {(wajibMulai || wajibSelesai) && (
@@ -330,6 +405,11 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                               {salahUrut && (
                                 <p className="text-[11px] text-red-500 mt-1">
                                   Tidak boleh lebih awal dari tahapan sebelumnya ({sebelum.tahapan}).
+                                </p>
+                              )}
+                              {urutBermasalah && !salahUrut && (
+                                <p className="text-[11px] text-red-500 mt-1">
+                                  Urutan bulan bertabrakan dengan {urutBermasalah.dengan}.
                                 </p>
                               )}
                             </td>
