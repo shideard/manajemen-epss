@@ -3,6 +3,10 @@ import { DialogHeader, Field, FormError, Input, ModalActions, Select } from '../
 import { buttonClass, fieldClass } from '../../components/classes'
 import bookIcon from '../../assets/icons/book-mark-fill.svg'
 import removeIcon from '../../assets/icons/close-circle-line.svg'
+import uploadIcon from '../../assets/icons/upload-cloud-2-fill.svg'
+
+// Jenis file output bukti dukung → atribut accept untuk pilihan file contoh
+const JENIS_FILE = { PDF: '.pdf', 'Gambar (JPG/PNG)': 'image/*', Word: '.doc,.docx', Excel: '.xls,.xlsx', Lainnya: '' }
 
 // Modal pakai <dialog> bawaan browser: Esc, fokus, dan backdrop sudah ditangani
 // indikator = record bukti kegiatan ini; yang sudah diajukan/diverifikasi tidak bisa dilepas
@@ -54,7 +58,19 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
     jenis: item.jenis ?? '',
     contoh: item.contoh?.nama ?? '',
   })))
+  const [judulOutput, setJudulOutput] = useState('')
+  const [jenisOutput, setJenisOutput] = useState('')
+  const fileContoh = useRef(null)
   const [daftarIndikator, setDaftarIndikator] = useState(false)
+
+  // Tambah satu target output; file contoh opsional (judul kosong → pakai nama file)
+  // API hanya menyimpan nama file contoh, isinya tidak diunggah
+  function tambahOutput(file) {
+    const judul = judulOutput.trim() || file?.name
+    if (!judul) return
+    setOutput((list) => [...list, { judul, jenis: jenisOutput, contoh: file?.name ?? '' }])
+    setJudulOutput('')
+  }
 
   useEffect(() => {
     dialogRef.current.showModal()
@@ -125,37 +141,75 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
           </Field>
           </>}
 
-          <section className="flex flex-col gap-3 rounded-md bg-grey2-75 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="font-semibold">Output Bukti Dukung yang Ditargetkan</h3>
-                <p className="text-small text-grey-200">Opsional. Output dapat ditambahkan atau diubah kapan saja.</p>
+          <div className="flex flex-col gap-4">
+            <p className="font-semibold">Output Bukti Dukung yang Ditargetkan</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5 sm:flex-row">
+                <Input
+                  value={judulOutput}
+                  onChange={(e) => setJudulOutput(e.target.value)}
+                  // Enter menambah target, bukan mengirim form
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      tambahOutput()
+                    }
+                  }}
+                  aria-label="Judul bukti dukung yang ditargetkan"
+                  placeholder="Tulis Contoh Judul Bukti Dukung yang Ditargetkan"
+                  className="sm:flex-3"
+                />
+                <Select value={jenisOutput} onChange={(e) => setJenisOutput(e.target.value)} aria-label="Jenis file" className="sm:flex-1">
+                  <option value="">Pilih Jenis File</option>
+                  {Object.keys(JENIS_FILE).map((jenis) => (
+                    <option key={jenis}>{jenis}</option>
+                  ))}
+                </Select>
               </div>
-              <button type="button" className={buttonClass('outline', 'sm')} onClick={() => setOutput((items) => [...items, { judul: '', jenis: '', contoh: '' }])}>
-                Tambah Output
-              </button>
+
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (e.dataTransfer.files[0]) tambahOutput(e.dataTransfer.files[0])
+                }}
+                className="flex h-[175px] flex-col items-center justify-center gap-2.5 rounded-md border-2 border-dashed border-grey-75 px-5 text-center text-grey-200"
+              >
+                <img src={uploadIcon} alt="" width={24} height={24} />
+                <p>
+                  <span className="block font-semibold">Unggah File</span>
+                  <span className="block text-small">Unggah atau seret dan lepas ke dalam kotak ini</span>
+                </p>
+                <input
+                  ref={fileContoh}
+                  type="file"
+                  accept={JENIS_FILE[jenisOutput]}
+                  onChange={(e) => {
+                    if (e.target.files[0]) tambahOutput(e.target.files[0])
+                    e.target.value = ''
+                  }}
+                  className="hidden"
+                />
+                <button type="button" onClick={() => fileContoh.current.click()} className={buttonClass()}>
+                  Pilih File
+                </button>
+              </div>
+              <p className="text-small text-grey-200">Tekan Enter untuk menambah target tanpa file contoh.</p>
+
+              {output.map((o, index) => (
+                <p key={index} className="flex min-h-[45px] items-center justify-between gap-3 rounded-md bg-lime-300 px-5 py-2">
+                  <span className="min-w-0">
+                    {o.judul}
+                    {o.jenis && <span className="text-small"> ({o.jenis})</span>}
+                    {o.contoh && <span className="block truncate text-small text-grey-200">Contoh: {o.contoh}</span>}
+                  </span>
+                  <button type="button" onClick={() => setOutput((list) => list.filter((_, i) => i !== index))} aria-label={`Hapus output ${o.judul}`} className="shrink-0">
+                    <img src={removeIcon} alt="" width={24} height={24} className="grayscale" />
+                  </button>
+                </p>
+              ))}
             </div>
-            {output.length === 0 ? <p className="text-small text-grey-200">Belum ada output.</p> : output.map((item, index) => (
-              <div key={index} className="flex flex-col gap-3 rounded-md bg-white p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-small font-semibold">Output {index + 1}</span>
-                  <button type="button" className={buttonClass('danger', 'sm')} aria-label={`Hapus output ${index + 1}`} onClick={() => setOutput((items) => items.filter((_, i) => i !== index))}>Hapus</button>
-                </div>
-                <Field label="Nama output">
-                  <Input required value={item.judul} placeholder="Contoh: Laporan statistik sektoral" onChange={(event) => setOutput((items) => items.map((row, i) => i === index ? { ...row, judul: event.target.value } : row))} />
-                </Field>
-                <Field label="Jenis (opsional)">
-                  <Select value={item.jenis} onChange={(event) => setOutput((items) => items.map((row, i) => i === index ? { ...row, jenis: event.target.value } : row))}>
-                    <option value="">Pilih jenis berkas</option>
-                    {['PDF', 'Word', 'Excel', 'JPG', 'PNG'].map((jenis) => <option key={jenis} value={jenis}>{jenis}</option>)}
-                  </Select>
-                </Field>
-                <Field label="Contoh nama berkas (opsional)">
-                  <Input value={item.contoh} placeholder="Contoh: laporan-statistik.pdf" onChange={(event) => setOutput((items) => items.map((row, i) => i === index ? { ...row, contoh: event.target.value } : row))} />
-                </Field>
-              </div>
-            ))}
-          </section>
+          </div>
 
           {!outputOnly && <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
