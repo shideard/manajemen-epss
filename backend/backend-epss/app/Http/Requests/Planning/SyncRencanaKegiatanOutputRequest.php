@@ -22,6 +22,12 @@ class SyncRencanaKegiatanOutputRequest extends FormRequest
                 'present',
                 'array',
             ],
+            // Id output yang sudah tersimpan: barisnya dipertahankan berikut berkas contohnya
+            'output.*.id' => [
+                'sometimes',
+                'nullable',
+                'uuid',
+            ],
             'output.*.judul' => [
                 'required',
                 'string',

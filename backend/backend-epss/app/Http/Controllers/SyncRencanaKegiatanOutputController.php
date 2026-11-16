@@ -6,6 +6,7 @@ use App\Http\Requests\Planning\SyncRencanaKegiatanOutputRequest;
 use App\Models\RencanaKegiatan;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SyncRencanaKegiatanOutputController extends Controller
 {
@@ -15,23 +16,52 @@ class SyncRencanaKegiatanOutputController extends Controller
     ): Response {
         $outputs = $request->validated('output');
 
-        DB::transaction(function () use (
+        // Output yang membawa id dipertahankan (berikut berkas contohnya); sisanya dibuat baru atau dihapus
+        $berkasDihapus = DB::transaction(function () use (
             $rencanaKegiatan,
             $outputs
-        ): void {
-            $rencanaKegiatan
+        ): array {
+            $tersimpan = $rencanaKegiatan
                 ->outputDiharapkan()
-                ->delete();
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+            $dipertahankan = [];
+            $berkasDihapus = [];
 
             foreach ($outputs as $urutan => $output) {
-                $rencanaKegiatan->outputDiharapkan()->create([
+                $baris = $tersimpan->get($output['id'] ?? '')
+                    ?? $rencanaKegiatan->outputDiharapkan()->make();
+                $contohNama = $output['contoh']['nama'] ?? null;
+
+                // Contoh dilepas atau diganti nama: berkas lamanya tidak berlaku lagi
+                if ($baris->contoh_storage_key && $contohNama !== $baris->contoh_nama) {
+                    $berkasDihapus[] = $baris->contoh_storage_key;
+                    $baris->contoh_storage_key = null;
+                    $baris->contoh_mime_type = null;
+                    $baris->contoh_size_bytes = null;
+                }
+
+                $baris->fill([
                     'judul' => $output['judul'],
                     'jenis' => $output['jenis'] ?? null,
-                    'contoh_nama' => $output['contoh']['nama'] ?? null,
+                    'contoh_nama' => $contohNama,
                     'urutan' => $urutan,
-                ]);
+                ])->save();
+                $dipertahankan[] = $baris->id;
             }
+
+            foreach ($tersimpan->except($dipertahankan) as $baris) {
+                if ($baris->contoh_storage_key) {
+                    $berkasDihapus[] = $baris->contoh_storage_key;
+                }
+                $baris->delete();
+            }
+
+            return $berkasDihapus;
         });
+
+        Storage::disk()->delete($berkasDihapus);
 
         return response()->noContent();
     }

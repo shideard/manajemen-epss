@@ -8,7 +8,7 @@ import { buttonClass } from '../../components/classes'
 import editIcon from '../../assets/rencana/edit-2-fill.svg'
 import { usePeriode, useRencanaKegiatan } from '../../lib/store'
 import { formatTanggal, LEVELS, statusOf } from '../../lib/epss'
-import { Badge, Memuat, PageHeader } from '../../components/ui'
+import { Badge, ContohOutput, Memuat, PageHeader } from '../../components/ui'
 
 function RencanaKegiatanDetailVerifikator() {
   const { kegiatanId } = useParams()
@@ -94,7 +94,7 @@ function RencanaKegiatanDetailVerifikator() {
               {k.output.map((output) => (
                 <li key={output.id} className="flex min-h-11 flex-col justify-center rounded-md bg-lime-300 px-5 py-2">
                   <span>{output.judul}{output.jenis && <span className="text-small"> ({output.jenis})</span>}</span>
-                  {output.contoh && <span className="text-small text-grey-200">Contoh: {output.contoh.nama}</span>}
+                  <ContohOutput kegiatanId={k.id} output={output} />
                 </li>
               ))}
             </ul>

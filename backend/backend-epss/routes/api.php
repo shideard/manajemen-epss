@@ -195,6 +195,18 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         )->whereUuid('rencanaKegiatan')
         ->name('rencana-kegiatan.output.sync');
 
+        Route::post('/rencana-kegiatan/{rencanaKegiatan}/output-diharapkan/{output}/contoh',
+        [\App\Http\Controllers\ContohOutputController::class, 'store']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('output')
+        ->name('rencana-kegiatan.output.contoh.store');
+
+        Route::get('/rencana-kegiatan/{rencanaKegiatan}/output-diharapkan/{output}/contoh',
+        [\App\Http\Controllers\ContohOutputController::class, 'show']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('output')
+        ->name('rencana-kegiatan.output.contoh.show');
+
     });
 });
 

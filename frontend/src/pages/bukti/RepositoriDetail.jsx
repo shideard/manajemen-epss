@@ -4,7 +4,7 @@ import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams }
 import { useBukti, useDetailKegiatan, useDokumenBukti, useInstrumen, usePeriode, useRencanaKegiatan, useSemuaKegiatan, useSkor } from '../../lib/store'
 import { buktiKey, formatTanggal, LEVELS, metaBerkas } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { ChecklistItem, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
+import { ChecklistItem, ContohOutput, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import PedomanModal from '../../components/PedomanModal'
@@ -268,7 +268,7 @@ function RepositoriDetail() {
                       {o.judul}
                       {o.jenis && <span className="text-small"> ({o.jenis})</span>}
                     </span>
-                    {o.contoh && <span className="truncate text-small text-grey-200">Contoh dari verifikator: {o.contoh.nama}</span>}
+                    <ContohOutput kegiatanId={k.id} output={o} label="Contoh dari verifikator" />
                   </li>
                 ))}
               </ul>

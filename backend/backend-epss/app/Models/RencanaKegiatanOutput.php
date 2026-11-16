@@ -17,6 +17,9 @@ class RencanaKegiatanOutput extends Model
         'judul',
         'jenis',
         'contoh_nama',
+        'contoh_storage_key',
+        'contoh_mime_type',
+        'contoh_size_bytes',
         'urutan',
     ];
 

@@ -80,6 +80,31 @@ const mapRencanaKegiatan = (item) => ({
   levelTarget: Object.fromEntries((item.indikator ?? []).map((i) => [String(i.kode), i.level ?? 1])),
 })
 
+// Simpan daftar output yang ditargetkan (id dikirim supaya baris & berkas contohnya dipertahankan),
+// lalu unggah berkas contoh yang baru dipilih ke output pada urutan yang sama
+async function simpanOutputKegiatan(kegiatanId, output) {
+  const base = `/api/rencana-kegiatan/${kegiatanId}`
+  await api(`${base}/output-diharapkan`, {
+    method: 'PUT',
+    body: {
+      output: output.map(({ id, judul, jenis, contoh }) => ({
+        id: id ?? null,
+        judul,
+        jenis: jenis || null,
+        contoh: contoh ? { nama: contoh } : null,
+      })),
+    },
+  })
+  if (!output.some((o) => o.file)) return
+  const tersimpan = (await api(base)).data.output ?? []
+  for (const [i, o] of output.entries()) {
+    if (!o.file) continue
+    const body = new FormData()
+    body.append('file', o.file)
+    await api(`${base}/output-diharapkan/${tersimpan[i].id}/contoh`, { method: 'POST', body })
+  }
+}
+
 async function apiAll(path) {
   const first = await api(path)
   const items = [...(first.data ?? [])]
@@ -213,32 +238,12 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
       })
       // Output memakai endpoint dan izin terpisah dari perubahan detail kegiatan.
       // Kirim hanya jika form memang menyediakan daftar output.
-      if (data.output !== undefined) {
-        await api(`/api/rencana-kegiatan/${saved.id}/output-diharapkan`, {
-          method: 'PUT',
-          body: {
-            output: data.output.map(({ judul, jenis, contoh }) => ({
-              judul,
-              jenis: jenis || null,
-              contoh: contoh ? { nama: contoh } : null,
-            })),
-          },
-        })
-      }
+      if (data.output !== undefined) await simpanOutputKegiatan(saved.id, data.output)
       await muat()
       return await detail(saved.id)
     },
     async simpanOutput(id, output) {
-      await api(`/api/rencana-kegiatan/${id}/output-diharapkan`, {
-        method: 'PUT',
-        body: {
-          output: output.map(({ judul, jenis, contoh }) => ({
-            judul,
-            jenis: jenis || null,
-            contoh: contoh ? { nama: contoh } : null,
-          })),
-        },
-      })
+      await simpanOutputKegiatan(id, output)
       return await detail(id)
     },
   }

@@ -8,8 +8,8 @@ import bookIcon from '../../assets/icons/book-mark-fill.svg'
 import removeIcon from '../../assets/icons/close-circle-line.svg'
 import uploadIcon from '../../assets/icons/upload-cloud-2-fill.svg'
 
-// Jenis file output bukti dukung → atribut accept untuk pilihan file contoh
-const JENIS_FILE = { PDF: '.pdf', 'Gambar (JPG/PNG)': 'image/*', Word: '.doc,.docx', Excel: '.xls,.xlsx', Lainnya: '' }
+// Jenis file output bukti dukung → atribut accept untuk berkas contoh (server menerima PDF, Word, Excel, JPG, PNG)
+const JENIS_FILE = { PDF: '.pdf', 'Gambar (JPG/PNG)': '.jpg,.jpeg,.png', Word: '.doc,.docx', Excel: '.xls,.xlsx', Lainnya: '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png' }
 
 // Modal pakai <dialog> bawaan browser: Esc, fokus, dan backdrop sudah ditangani
 // indikator = record bukti kegiatan ini; yang sudah diajukan/diverifikasi tidak bisa dilepas
@@ -65,7 +65,9 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
     const i = indikatorPilihan.find((x) => x.id === id) ?? indikator.find((x) => x.id === id)
     return i ? `Indikator ${i.nomor ?? i.kode}: ${i.nama}` : id
   }
+  // id = output yang sudah tersimpan (berkas contohnya dipertahankan); file = berkas contoh baru yang diunggah saat simpan
   const [output, setOutput] = useState(() => (kegiatan.output ?? []).map((item) => ({
+    id: item.id,
     judul: item.judul ?? '',
     jenis: item.jenis ?? '',
     contoh: item.contoh?.nama ?? '',
@@ -76,11 +78,10 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
   const [daftarIndikator, setDaftarIndikator] = useState(false)
 
   // Tambah satu target output; file contoh opsional (judul kosong → pakai nama file)
-  // API hanya menyimpan nama file contoh, isinya tidak diunggah
   function tambahOutput(file) {
     const judul = judulOutput.trim() || file?.name
     if (!judul) return
-    setOutput((list) => [...list, { judul, jenis: jenisOutput, contoh: file?.name ?? '' }])
+    setOutput((list) => [...list, { judul, jenis: jenisOutput, contoh: file?.name ?? '', file }])
     setJudulOutput('')
   }
 
@@ -195,7 +196,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                 <input
                   ref={fileContoh}
                   type="file"
-                  accept={JENIS_FILE[jenisOutput]}
+                  accept={JENIS_FILE[jenisOutput] ?? JENIS_FILE.Lainnya}
                   onChange={(e) => {
                     if (e.target.files[0]) tambahOutput(e.target.files[0])
                     e.target.value = ''
@@ -206,7 +207,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                   Pilih File
                 </button>
               </div>
-              <p className="text-small text-grey-200">Tekan Enter untuk menambah target tanpa file contoh.</p>
+              <p className="text-small text-grey-200">Tekan Enter untuk menambah target tanpa file contoh. File contoh: PDF, Word, Excel, JPG, atau PNG, maksimal 10 MB.</p>
 
               {output.map((o, index) => (
                 <p key={index} className="flex min-h-[45px] items-center justify-between gap-3 rounded-md bg-lime-300 px-5 py-2">
