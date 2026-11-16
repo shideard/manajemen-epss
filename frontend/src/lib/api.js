@@ -24,6 +24,13 @@ export async function unduh(path) {
   return res.blob()
 }
 
+// Unduh lalu simpan ke perangkat dengan nama berkas tertentu
+export async function unduhBerkas(path, nama) {
+  const url = URL.createObjectURL(await unduh(path))
+  Object.assign(document.createElement('a'), { href: url, download: nama }).click()
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
+
 export async function api(path, { method = 'GET', body } = {}) {
   if (method !== 'GET' && !xsrfToken()) await fetch('/sanctum/csrf-cookie')
 

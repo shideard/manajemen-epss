@@ -4,6 +4,7 @@ namespace App\Http\Requests\Evidence;
 
 use App\Enums\StatusAjuanBukti;
 use App\Models\AjuanBukti;
+use App\Models\KegiatanIndikator;
 use App\Support\Evidence\ChecklistBuktiValidator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,13 +34,8 @@ class VerifyAjuanBuktiRequest extends FormRequest
             'checklist' => ['present', 'array'],
             'checklist.*' => ['array'],
             'checklist.*.*' => ['boolean'],
-            'level' => [
-                'required_if:keputusan,' . StatusAjuanBukti::TERVERIFIKASI->value,
-                'prohibited_if:keputusan,' . StatusAjuanBukti::PERBAIKAN->value,
-                'integer',
-                'min:1',
-                'max:5',
-            ],
+            // Level yang ditetapkan = level target pemetaan kegiatan-indikator, bukan pilihan verifikator
+            'level' => ['missing'],
             'catatan' => [
                 'required_if:keputusan,' . StatusAjuanBukti::PERBAIKAN->value,
                 'nullable',
@@ -60,14 +56,23 @@ class VerifyAjuanBuktiRequest extends FormRequest
             }
 
             $ajuan = $this->route('ajuanBukti');
-            $level = $this->integer('level');
-            if (! $ajuan instanceof AjuanBukti || $level < 1 || $level > 5) {
+            if (! $ajuan instanceof AjuanBukti) {
+                return;
+            }
+
+            // Level target pemetaan; tanpa pemetaan controller yang menolak (409)
+            $level = KegiatanIndikator::query()
+                ->where('kegiatan_id', $ajuan->kegiatan_id)
+                ->where('indikator_id', $ajuan->indikator_id)
+                ->value('level');
+            if ($level === null) {
                 return;
             }
 
             $pesan = ChecklistBuktiValidator::kekurangan(
                 $ajuan->indikator,
                 $this->input('checklist', []),
+                $level,
                 $level
             );
 

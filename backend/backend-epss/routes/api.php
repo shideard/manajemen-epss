@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserStatusController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\PreferensiNotifikasiController;
 
 // versi isntrumen + periode evaluasi
 use App\Http\Controllers\PeriodeEvaluasiController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\DokumenBuktiController;
 
 // ajuan & verifikasi bukti
 use App\Http\Controllers\AjuanBuktiController;
+use App\Http\Controllers\EksporBuktiController;
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', function(Request $request){
@@ -39,6 +41,12 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ->name('user.password.update');
 
     Route::middleware('password.current')->group(function () {
+        Route::get('/user/notifikasi', [PreferensiNotifikasiController::class, 'show'])
+            ->name('user.notifikasi.show');
+
+        Route::put('/user/notifikasi', [PreferensiNotifikasiController::class, 'update'])
+            ->name('user.notifikasi.update');
+
         Route::patch('/users/{user}/status', [
             UserStatusController::class,
             'update',
@@ -162,6 +170,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ->whereUuid('dokumenBukti')
         ->name('rencana-kegiatan.dokumen-bukti.revision.store');
 
+        Route::get('/periode-evaluasi/{periode}/ekspor-bukti', EksporBuktiController::class
+        )->whereUuid('periode')
+        ->name('periode-evaluasi.ekspor-bukti');
+
         Route::get('/periode-evaluasi/{periode}/ajuan-bukti',
         [AjuanBuktiController::class, 'index']
         )->whereUuid('periode')
@@ -182,6 +194,18 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         \App\Http\Controllers\SyncRencanaKegiatanOutputController::class
         )->whereUuid('rencanaKegiatan')
         ->name('rencana-kegiatan.output.sync');
+
+        Route::post('/rencana-kegiatan/{rencanaKegiatan}/output-diharapkan/{output}/contoh',
+        [\App\Http\Controllers\ContohOutputController::class, 'store']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('output')
+        ->name('rencana-kegiatan.output.contoh.store');
+
+        Route::get('/rencana-kegiatan/{rencanaKegiatan}/output-diharapkan/{output}/contoh',
+        [\App\Http\Controllers\ContohOutputController::class, 'show']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('output')
+        ->name('rencana-kegiatan.output.contoh.show');
 
     });
 });

@@ -7,14 +7,16 @@ use App\Models\IndikatorEPSS;
 class ChecklistBuktiValidator
 {
     /**
-     * Mengembalikan pesan bila checklist level berurutan belum lengkap.
+     * Mengembalikan pesan bila checklist level $dariLevel..$sampaiLevel belum lengkap.
+     * Ajuan terikat level target pemetaan, jadi pemanggilnya memeriksa level itu saja.
      * Nilai checklist disimpan sebagai daftar boolean yang urutannya mengikuti persyaratan_bukti. */
     public static function kekurangan(
         IndikatorEPSS $indikator,
         array $checklist,
-        int $sampaiLevel
+        int $sampaiLevel,
+        int $dariLevel = 1
     ): ?string {
-        for ($level = 1; $level <= $sampaiLevel; $level++) {
+        for ($level = $dariLevel; $level <= $sampaiLevel; $level++) {
             $kriteria = $indikator->kriteriaLevels()
                 ->with('persyaratanBukti')
                 ->where('level', $level)

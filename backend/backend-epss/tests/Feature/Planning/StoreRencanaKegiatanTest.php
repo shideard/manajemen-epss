@@ -1715,4 +1715,54 @@ class StoreRencanaKegiatanTest extends TestCase
             ->assertJsonPath('data.output.1.contoh', null);
     }
 
+    public function test_expected_output_example_file_is_uploaded_kept_on_resync_and_removed_with_its_output(): void
+    {
+        Storage::fake();
+        $verifikator = $this->createUser(UserRole::VERIFIKATOR);
+        $scenario = $this->createScenario();
+        $activityId = $this->actingAs($verifikator, 'web')
+            ->postJson('/api/rencana-kegiatan', $scenario['payload'])
+            ->json('data.id');
+        $url = "/api/rencana-kegiatan/{$activityId}";
+        $outputs = fn () => $this->getJson($url)->json('data.output');
+
+        $this->putJson("{$url}/output-diharapkan", ['output' => [
+            ['judul' => 'Laporan', 'jenis' => 'PDF', 'contoh' => ['nama' => 'contoh.pdf']],
+            ['judul' => 'Dataset', 'contoh' => null],
+        ]])->assertNoContent();
+        [$laporan, $dataset] = $outputs();
+        $this->assertFalse($laporan['contoh']['berkas']);
+
+        $contohUrl = "{$url}/output-diharapkan/{$laporan['id']}/contoh";
+        $this->post($contohUrl, ['file' => UploadedFile::fake()->create('contoh.pdf', 10, 'application/pdf')], ['Accept' => 'application/json'])
+            ->assertNoContent();
+        $this->post($contohUrl, ['file' => UploadedFile::fake()->create('skrip.exe', 10)], ['Accept' => 'application/json'])
+            ->assertJsonValidationErrors(['file']);
+
+        // Simpan ulang dengan id: baris dan berkasnya tetap, judul boleh berubah
+        $this->putJson("{$url}/output-diharapkan", ['output' => [
+            ['id' => $laporan['id'], 'judul' => 'Laporan Akhir', 'jenis' => 'PDF', 'contoh' => ['nama' => 'contoh.pdf']],
+            ['id' => $dataset['id'], 'judul' => 'Dataset', 'contoh' => null],
+        ]])->assertNoContent();
+        $this->assertSame($laporan['id'], $outputs()[0]['id']);
+        $this->assertTrue($outputs()[0]['contoh']['berkas']);
+        $this->assertCount(1, Storage::disk()->allFiles());
+
+        // Operator boleh mengunduh sebagai acuan, tidak boleh mengunggah
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($scenario['pic'], 'web')->get($contohUrl)
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename=contoh.pdf');
+        $this->post($contohUrl, ['file' => UploadedFile::fake()->create('lain.pdf', 10, 'application/pdf')], ['Accept' => 'application/json'])
+            ->assertForbidden();
+
+        // Output dihapus: berkas contohnya ikut dihapus
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($verifikator, 'web')
+            ->putJson("{$url}/output-diharapkan", ['output' => [['id' => $dataset['id'], 'judul' => 'Dataset', 'contoh' => null]]])
+            ->assertNoContent();
+        $this->assertCount(0, Storage::disk()->allFiles());
+        $this->get($contohUrl)->assertNotFound();
+    }
+
 }
