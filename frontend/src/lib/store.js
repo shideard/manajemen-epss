@@ -16,11 +16,12 @@ import {
 const cache = new Map()
 const listeners = new Map()
 
-function read(key, seed) {
+// persist = false: hanya di memori (dibagi antar komponen), sumber datanya API
+function read(key, seed, persist = true) {
   if (!cache.has(key)) {
     let value
     try {
-      value = JSON.parse(localStorage.getItem(key))
+      value = persist ? JSON.parse(localStorage.getItem(key)) : null
     } catch {
       value = null
     }
@@ -30,7 +31,7 @@ function read(key, seed) {
 }
 
 // seed harus konstanta (bukan objek baru tiap render)
-function useStore(key, seed) {
+function useStore(key, seed, persist = true) {
   const subscribe = useCallback(
     (listener) => {
       if (!listeners.has(key)) listeners.set(key, new Set())
@@ -39,16 +40,16 @@ function useStore(key, seed) {
     },
     [key],
   )
-  const value = useSyncExternalStore(subscribe, () => read(key, seed))
+  const value = useSyncExternalStore(subscribe, () => read(key, seed, persist))
 
   const set = useCallback(
     (next) => {
-      const value = typeof next === 'function' ? next(read(key, seed)) : next
+      const value = typeof next === 'function' ? next(read(key, seed, persist)) : next
       cache.set(key, value)
-      localStorage.setItem(key, JSON.stringify(value))
+      if (persist) localStorage.setItem(key, JSON.stringify(value))
       listeners.get(key)?.forEach((listener) => listener())
     },
-    [key, seed],
+    [key, seed, persist],
   )
 
   return [value, set]
@@ -789,6 +790,10 @@ export function useAuth() {
   }
 }
 
+// Pengaturan H-n dan notifikasi yang sudah dibaca disimpan per akun di server, jadi sama di semua perangkat
+const PREFERENSI_AWAL = { hariPengingat: SEED_PENGINGAT, dibaca: EMPTY_LIST }
+const mapPreferensi = (res) => ({ hariPengingat: res.data.hari_pengingat, dibaca: res.data.dibaca })
+
 // Notifikasi pengingat diturunkan dari rencana kegiatan + pengaturan H-n
 export function useNotifikasi() {
   const { aktif } = usePeriode()
@@ -804,10 +809,27 @@ export function useNotifikasi() {
     }))
   }, [periodeId])
   const { data: kegiatan = EMPTY_LIST, ...state } = useMuat(periodeId, ambil)
-  const [hariPengingat, setHariPengingat] = useStore(KEYS.pengingat, SEED_PENGINGAT)
-  const [dibaca, setDibaca] = useStore(KEYS.notifDibaca, EMPTY_LIST)
+  // Dibagi antara Topbar dan halaman Notifikasi; tiap pemakai memuat ulang dari server saat tampil
+  const [{ hariPengingat, dibaca }, setPreferensi] = useStore('epss.preferensi-notifikasi', PREFERENSI_AWAL, false)
+  useEffect(() => {
+    api('/api/user/notifikasi').then((res) => setPreferensi(mapPreferensi(res)), () => {})
+  }, [setPreferensi])
+  // Perubahan langsung tampil; dikembalikan jika server menolak
+  const simpan = (lokal, body) => {
+    const sebelum = { hariPengingat, dibaca }
+    setPreferensi({ ...sebelum, ...lokal })
+    return api('/api/user/notifikasi', { method: 'PUT', body }).then(
+      (res) => setPreferensi(mapPreferensi(res)),
+      () => setPreferensi(sebelum),
+    )
+  }
   const list = notifikasi(kegiatan, hariPengingat, toISODate(new Date()))
-  const tandaiDibaca = (id) => setDibaca((ids) => (ids.includes(id) ? ids : [...ids, id]))
-  const tandaiSemuaDibaca = () => setDibaca((ids) => [...new Set([...ids, ...list.map((n) => n.id)])])
+  const tandai = (ids) => {
+    const baru = ids.filter((id) => !dibaca.includes(id))
+    if (baru.length) simpan({ dibaca: [...dibaca, ...baru] }, { dibaca: baru })
+  }
+  const tandaiDibaca = (id) => tandai([id])
+  const tandaiSemuaDibaca = () => tandai(list.map((n) => n.id))
+  const setHariPengingat = (hari) => simpan({ hariPengingat: hari }, { hari_pengingat: hari })
   return { list, dibaca, tandaiDibaca, tandaiSemuaDibaca, belumDibaca: list.filter((n) => !dibaca.includes(n.id)).length, hariPengingat, setHariPengingat, ...state }
 }

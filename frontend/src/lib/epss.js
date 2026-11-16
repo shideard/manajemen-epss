@@ -25,8 +25,6 @@ export function agendaTerdekat(list, today, limit = 4) {
 export const KEYS = {
   periode: 'epss.periode', // salinan GET periode supaya tampil seketika saat halaman dimuat ulang
   periodeAktif: 'epss.periode-aktif',
-  notifDibaca: 'epss.notif-dibaca',
-  pengingat: 'epss.pengingat',
 }
 
 export const SEED_PERIODE = [

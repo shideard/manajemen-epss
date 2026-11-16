@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserStatusController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\PreferensiNotifikasiController;
 
 // versi isntrumen + periode evaluasi
 use App\Http\Controllers\PeriodeEvaluasiController;
@@ -39,6 +40,12 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ->name('user.password.update');
 
     Route::middleware('password.current')->group(function () {
+        Route::get('/user/notifikasi', [PreferensiNotifikasiController::class, 'show'])
+            ->name('user.notifikasi.show');
+
+        Route::put('/user/notifikasi', [PreferensiNotifikasiController::class, 'update'])
+            ->name('user.notifikasi.update');
+
         Route::patch('/users/{user}/status', [
             UserStatusController::class,
             'update',
