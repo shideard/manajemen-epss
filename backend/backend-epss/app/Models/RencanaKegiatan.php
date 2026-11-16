@@ -110,4 +110,9 @@ class RencanaKegiatan extends Model
         )->orderBy('urutan');
     }
 
+    public function ajuanBukti(): HasMany
+    {
+        return $this->hasMany(AjuanBukti::class, 'kegiatan_id');
+    }
+
 }

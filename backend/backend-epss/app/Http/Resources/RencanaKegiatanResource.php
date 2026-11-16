@@ -34,6 +34,7 @@ class RencanaKegiatanResource extends JsonResource
                         'id' => $mapping->indikator->id,
                         'kode' => $mapping->indikator->kode,
                         'nama' => $mapping->indikator->nama,
+                        'level' => $mapping->level,
                     ])
                     ->values()
             ),
