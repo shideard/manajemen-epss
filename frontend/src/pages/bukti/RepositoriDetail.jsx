@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
-import { Building2, CalendarDays, Clock3, UserRound } from 'lucide-react'
+import { Building2, CalendarDays, Clock3, File, FileImage, FileSpreadsheet, FileText, FileType, UserRound } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useBukti, useDetailKegiatan, useDokumenBukti, useInstrumen, usePeriode, useRencanaKegiatan, useSemuaKegiatan, useSkor } from '../../lib/store'
 import { buktiKey, formatTanggal, LEVELS, metaBerkas } from '../../lib/epss'
+import { bukaBerkas } from '../../lib/api'
 import { bolehUbah } from '../../config/menu'
 import { ChecklistItem, ContohOutput, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -16,6 +17,15 @@ import checkBadge from '../../assets/icons/check-badge.svg'
 import eyeIcon from '../../assets/icons/eye-line.svg'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import mindMap from '../../assets/icons/mind-map.svg'
+
+// Logo jenis file satu output: dari jenis yang dipilih verifikator, atau dari nama berkas contohnya
+const IKON_JENIS = [
+  [/pdf/, FileText],
+  [/gambar|jpe?g|png/, FileImage],
+  [/word|docx?/, FileType],
+  [/excel|xlsx?/, FileSpreadsheet],
+]
+const ikonJenis = (output) => IKON_JENIS.find(([pola]) => pola.test(`${output.jenis ?? ''} ${output.contoh?.nama ?? ''}`.toLowerCase()))?.[1] ?? File
 
 // Checklist satu indikator, hanya untuk level yang ditargetkan verifikator pada kegiatan ini.
 // Tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
@@ -139,6 +149,7 @@ function RepositoriDetail() {
   const [cari, setCari] = useState('')
   const [mengunggah, setMengunggah] = useState(false)
   const [errorBerkas, setErrorBerkas] = useState('')
+  const [errorOutput, setErrorOutput] = useState('')
   const fileInput = useRef(null)
 
   if (detail.error?.status === 404) return <Navigate to={daftarKegiatanPath} replace />
@@ -154,7 +165,7 @@ function RepositoriDetail() {
   const detailKegiatan = [
     [Building2, 'OPD', k.opd],
     [UserRound, 'PIC', k.pic],
-    [CalendarDays, 'Jadwal', <>{formatTanggal(k.mulai)}<br />- {formatTanggal(k.selesai)}</>],
+    [CalendarDays, 'Jadwal', `${formatTanggal(k.mulai)} - ${formatTanggal(k.selesai)}`],
     ...(aktif?.batas ? [[Clock3, 'Deadline Bukti', formatTanggal(aktif.batas)]] : []),
   ]
 
@@ -237,12 +248,13 @@ function RepositoriDetail() {
             <span className="rounded-md border border-grey-500 px-5 py-1">Rencana Kegiatan</span>
             <h2 className="text-center text-h2">{k.nama}</h2>
             <hr className="w-full border-grey-50" />
-            <dl className="grid w-full grid-cols-2 gap-2.5 px-4 text-center md:grid-cols-4 md:px-15">
+            {/* Selebar kartu. OPD dan Jadwal memakai dua kolom supaya isinya muat satu baris; jumlah kolom mengikuti ada tidaknya Deadline Bukti */}
+            <dl className={`grid w-full grid-cols-1 gap-4 text-center ${detailKegiatan.length === 4 ? 'sm:grid-cols-6' : 'sm:grid-cols-5'}`}>
               {detailKegiatan.map(([Icon, label, value]) => (
-                <div key={label} className="flex flex-col items-center gap-2">
+                <div key={label} className={`flex flex-col items-center gap-2 ${label === 'Jadwal' || label === 'OPD' ? 'sm:col-span-2' : ''}`}>
                   <Icon size={25} aria-hidden="true" className="text-white bg-grey-500 py-1 px-1 rounded-xs" />
                   <dt className="font-bold">{label}</dt>
-                  <dd className="bg-lime-100 py-2 px-4 rounded-sm">{value}</dd>
+                  <dd className="flex min-h-14 w-full items-center justify-center rounded-sm bg-lime-100 px-4 py-2"><span>{value}</span></dd>
                 </div>
               ))}
             </dl>
@@ -262,22 +274,43 @@ function RepositoriDetail() {
             <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
               <h3 className="font-semibold">Output Bukti Dukung yang Ditargetkan :</h3>
               <ul className="flex w-full flex-col gap-2">
-                {k.output.map((o) => (
-                  <li key={o.id} className="flex min-h-[45px] flex-col justify-center rounded-md bg-lime-300 px-5 py-2">
-                    <span>
-                      {o.judul}
-                      {o.jenis && <span className="text-small"> ({o.jenis})</span>}
-                    </span>
-                    <ContohOutput kegiatanId={k.id} output={o} label="Contoh dari verifikator" />
-                  </li>
-                ))}
+                {k.output.map((o) => {
+                  const Ikon = ikonJenis(o)
+                  return (
+                    <li key={o.id} className="flex min-h-[45px] items-center justify-between gap-4 rounded-md bg-lime-300 px-5 py-2">
+                      <div className="flex min-w-0 items-center gap-3.5">
+                        <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-grey-300 text-lime-300">
+                          <Ikon size={28} aria-hidden="true" />
+                        </span>
+                        <span className="flex min-w-0 flex-col justify-center">
+                          <span>
+                            {o.judul}
+                            {o.jenis && <span className="text-small"> ({o.jenis})</span>}
+                          </span>
+                          <ContohOutput kegiatanId={k.id} output={o} label="Contoh dari verifikator" />
+                        </span>
+                      </div>
+                      {o.contoh?.berkas && (
+                        <button
+                          type="button"
+                          onClick={() => bukaBerkas(`/api/rencana-kegiatan/${k.id}/output-diharapkan/${o.id}/contoh`).then(() => setErrorOutput(''), (error) => setErrorOutput(error.message))}
+                          aria-label={`Pratinjau contoh ${o.judul}`}
+                          className="grid size-[30px] shrink-0 place-items-center rounded-sm bg-white"
+                        >
+                          <img src={eyeIcon} alt="" width={20} height={20} />
+                        </button>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
+              <FormError>{errorOutput}</FormError>
             </div>
           )}
 
           <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
             <h3 className="font-semibold">Dokumen Bukti yang Terlampir:</h3>
-            {files.length === 0 && <p className="text-small text-grey-200">Belum ada berkas yang diunggah.</p>}
+            {files.length === 0 && <p className="w-full rounded-sm border border-dashed border-grey-75 px-7 py-5 text-center text-small text-grey-200">Belum ada berkas yang diunggah.</p>}
             {files.map((f) => (
               <div key={f.id} className="flex w-full items-center justify-between gap-4 rounded-sm border border-grey-500 px-7 py-2">
                 <div className="flex min-w-0 items-center gap-3.5">
