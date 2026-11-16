@@ -274,11 +274,21 @@ export const PREDIKAT_BATAS = [
 
 export const predikat = (ips) => PREDIKAT_BATAS.find(([batas]) => ips >= batas)?.[1] ?? 'Kurang'
 
-// Verifikasi berjenjang: level terpenuhi = jumlah level berurutan dari level 1 yang semua syaratnya dicentang
-export function levelTerpenuhi(levels, checked = {}) {
-  let level = 0
-  while (level < levels.length && levels[level].syarat.every((_, i) => checked[level + 1]?.[i])) level++
-  return level
+// Level indikator dari ajuan terverifikasi: tiap ajuan memenuhi satu level (level target kegiatannya).
+// Berjenjang dari level 1 tanpa celah: level 1, 2, dan 4 terpenuhi → level 2; setelah level 3 terpenuhi → level 4.
+// Indikator tanpa level 1 tidak masuk hasil (hitungIps tetap menghitungnya level 1)
+export function levelIndikator(ajuan) {
+  const terpenuhi = {}
+  for (const b of ajuan) {
+    if (b.status === 'terverifikasi' && b.level) (terpenuhi[b.indikatorId] ??= new Set()).add(b.level)
+  }
+  const hasil = {}
+  for (const [id, set] of Object.entries(terpenuhi)) {
+    let level = 0
+    while (set.has(level + 1)) level++
+    if (level > 0) hasil[id] = level
+  }
+  return hasil
 }
 
 export const buktiKey = (kegiatanId, indikatorId) => `${kegiatanId}:${indikatorId}`

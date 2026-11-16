@@ -7,6 +7,7 @@ import {
   hitungIps,
   INDIKATOR,
   KEYS,
+  levelIndikator,
   notifikasi,
   SEED_PENGINGAT,
   SEED_PERIODE,
@@ -77,6 +78,8 @@ const mapRencanaKegiatan = (item) => ({
   indikator: item.indikator ?? [],
   // Kode indikator menjadi id UI, sehingga relasi tidak bergantung pada daftar indikator frontend.
   indikatorIds: (item.indikator ?? []).map((i) => String(i.kode)),
+  // Level yang ditargetkan verifikator per indikator (kode indikator → level)
+  levelTarget: Object.fromEntries((item.indikator ?? []).map((i) => [String(i.kode), i.level ?? 1])),
 })
 
 async function apiAll(path) {
@@ -208,7 +211,7 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
       const saved = response.data
       await api(`/api/rencana-kegiatan/${saved.id}/indikator`, {
         method: 'PUT',
-        body: { indikator_ids: data.indikator_ids ?? [] },
+        body: { indikator_ids: data.indikator_ids ?? [], levels: data.levels ?? {} },
       })
       // Output memakai endpoint dan izin terpisah dari perubahan detail kegiatan.
       // Kirim hanya jika form memang menyediakan daftar output.
@@ -301,14 +304,14 @@ export function useBukti() {
         throw error
       }
     },
-    // Verifikator: keputusan 'terverifikasi' (dengan level) atau 'perbaikan' (dengan catatan)
-    async verifikasi(ajuan, { keputusan, checked, level, catatan }) {
+    // Verifikator: keputusan 'terverifikasi' (level = level target pemetaan, ditetapkan server) atau 'perbaikan' (dengan catatan)
+    async verifikasi(ajuan, { keputusan, checked, catatan }) {
       const { data: a } = await api(`/api/ajuan-bukti/${ajuan.id}/verifikasi`, {
         method: 'PATCH',
         body: {
           keputusan: keputusan === 'terverifikasi' ? 'TERVERIFIKASI' : 'PERBAIKAN',
           checklist: checked,
-          ...(keputusan === 'terverifikasi' ? { level } : { catatan }),
+          ...(keputusan === 'perbaikan' && { catatan }),
         },
       })
       return terima(a)
@@ -524,12 +527,7 @@ export function useSkor(indikatorData = INDIKATOR, kegiatan = EMPTY_LIST, bukti 
   const [snapshot, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
   const levels = indikatorData === INDIKATOR
     ? levelLokal
-    : Object.fromEntries(indikatorData.flatMap((indikator) => {
-        const tertaut = kegiatan.filter((item) => item.indikatorIds.includes(indikator.id))
-        const hasil = tertaut.map((item) => bukti[buktiKey(item.id, indikator.id)])
-        if (!hasil.length || hasil.some((ajuan) => ajuan?.status !== 'terverifikasi')) return []
-        return [[indikator.id, Math.min(...hasil.map((ajuan) => ajuan.level))]]
-      }))
+    : levelIndikator(kegiatan.flatMap((item) => item.indikatorIds.map((id) => bukti[buktiKey(item.id, id)]).filter(Boolean)))
   return {
     levels,
     snapshot,
