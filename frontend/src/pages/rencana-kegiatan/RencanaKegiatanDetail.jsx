@@ -71,7 +71,7 @@ function RencanaKegiatanDetailVerifikator() {
             <div className="rounded-full bg-lime-300 px-3 py-1 text-small font-medium">{statusOf(k)}</div>
             {k.deskripsi && <p className="max-w-3xl text-center text-grey-200">{k.deskripsi}</p>}
             <hr className="w-full border-grey-50" />
-            <dl className="grid w-full grid-cols-2 gap-2.5 px-4 text-center md:grid-cols-3 md:px-15">
+            <dl className="grid w-full max-w-4xl grid-cols-1 gap-4 text-center sm:grid-cols-3">
               {[
                 [Building2, 'OPD', k.opd],
                 [UserRound, 'PIC', k.pic],
@@ -80,7 +80,7 @@ function RencanaKegiatanDetailVerifikator() {
                 <div key={label} className="flex flex-col items-center gap-2">
                   <Icon size={25} aria-hidden="true" className="rounded-xs bg-grey-500 px-1 py-1 text-white" />
                   <dt className="font-bold">{label}</dt>
-                  <dd className="rounded-sm bg-lime-100 px-4 py-2">{value}</dd>
+                  <dd className="flex min-h-14 w-full items-center justify-center rounded-sm bg-lime-100 px-4 py-2"><span>{value}</span></dd>
                 </div>
               ))}
             </dl>
