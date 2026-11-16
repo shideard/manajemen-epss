@@ -24,6 +24,14 @@ export async function unduh(path) {
   return res.blob()
 }
 
+// Buka berkas terlindungi di tab baru (pratinjau); URL dicabut setelah tab sempat memuatnya.
+// PDF dan gambar tampil langsung; Word/Excel diunduh browser karena tidak bisa dirender
+export async function bukaBerkas(path) {
+  const url = URL.createObjectURL(await unduh(path))
+  window.open(url, '_blank', 'noopener')
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
+
 // Unduh lalu simpan ke perangkat dengan nama berkas tertentu
 export async function unduhBerkas(path, nama) {
   const url = URL.createObjectURL(await unduh(path))
