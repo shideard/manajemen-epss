@@ -459,6 +459,8 @@ export function useSemuaDokumen(periodeIds) {
             ...mapDokumen(document),
             oleh: kegiatan.pic,
             periodeId,
+            // Halaman arsip mengelompokkan per folder periode lewat daftar ini
+            periode: [periodeId],
             kegiatan: [kegiatan],
             indikator,
           }))
