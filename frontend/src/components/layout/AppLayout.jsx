@@ -77,7 +77,9 @@ function AppLayout({ bare = false }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-grey2-100">
+    // Klik tautan internal → gulir ke atas sebelum halaman berganti. Halaman baru dimulai dari atas, dan animasi
+    // Motion di sidebar (fixed) tidak mengira menunya ikut berpindah sejauh guliran lalu meluncur naik
+    <div className="flex min-h-screen bg-grey2-100" onClickCapture={(e) => e.target.closest('a[href^="/"]') && window.scrollTo(0, 0)}>
       <Sidebar user={user} onLogout={logout} ringkas={ringkas} open={menuMobile} onClose={() => setMenuMobile(false)} />
       <main className="min-w-0 flex-1 px-4 pt-6.5 pb-24 font-sans sm:px-6 lg:px-10">
         <div className="flex items-start gap-2">
