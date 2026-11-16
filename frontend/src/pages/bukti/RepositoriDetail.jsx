@@ -248,10 +248,10 @@ function RepositoriDetail() {
             <span className="rounded-md border border-grey-500 px-5 py-1">Rencana Kegiatan</span>
             <h2 className="text-center text-h2">{k.nama}</h2>
             <hr className="w-full border-grey-50" />
-            {/* Jadwal memakai dua kolom supaya rentang tanggalnya muat satu baris; jumlah kolom mengikuti ada tidaknya Deadline Bukti */}
-            <dl className={`grid w-full max-w-4xl grid-cols-1 gap-4 text-center ${detailKegiatan.length === 4 ? 'sm:grid-cols-5' : 'sm:grid-cols-4'}`}>
+            {/* Selebar kartu. OPD dan Jadwal memakai dua kolom supaya isinya muat satu baris; jumlah kolom mengikuti ada tidaknya Deadline Bukti */}
+            <dl className={`grid w-full grid-cols-1 gap-4 text-center ${detailKegiatan.length === 4 ? 'sm:grid-cols-6' : 'sm:grid-cols-5'}`}>
               {detailKegiatan.map(([Icon, label, value]) => (
-                <div key={label} className={`flex flex-col items-center gap-2 ${label === 'Jadwal' ? 'sm:col-span-2' : ''}`}>
+                <div key={label} className={`flex flex-col items-center gap-2 ${label === 'Jadwal' || label === 'OPD' ? 'sm:col-span-2' : ''}`}>
                   <Icon size={25} aria-hidden="true" className="text-white bg-grey-500 py-1 px-1 rounded-xs" />
                   <dt className="font-bold">{label}</dt>
                   <dd className="flex min-h-14 w-full items-center justify-center rounded-sm bg-lime-100 px-4 py-2"><span>{value}</span></dd>
