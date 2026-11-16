@@ -4,13 +4,10 @@ import {
   buktiKey,
   EMPTY_LIST,
   EMPTY_OBJECT,
-  hitungIps,
-  INDIKATOR,
   KEYS,
   levelIndikator,
   notifikasi,
   SEED_PENGINGAT,
-  SEED_PERIODE,
   toISODate,
   WARNA,
 } from './epss'
@@ -262,11 +259,11 @@ const mapAjuan = (a) => ({
   diverifikasi: a.diverifikasi_pada,
 })
 
-// bukti = { 'kegiatanId:indikatorId': { kegiatanId, indikatorId, checked, status, level, catatan, ... } } untuk periode aktif.
-// Belum ada ajuan = draft kosong (pemanggil memakai `?? { status: 'draft' }`).
-export function useBukti() {
+// bukti = { 'kegiatanId:indikatorId': { kegiatanId, indikatorId, checked, status, level, catatan, ... } } untuk periode aktif
+// (atau periode lain bila idPeriode diisi). Belum ada ajuan = draft kosong (pemanggil memakai `?? { status: 'draft' }`).
+export function useBukti(idPeriode) {
   const { aktif } = usePeriode()
-  const periodeId = aktif?.id
+  const periodeId = idPeriode ?? aktif?.id
   const ambil = useCallback(
     () => api(`/api/periode-evaluasi/${periodeId}/ajuan-bukti`).then((res) => Object.fromEntries((res.data ?? []).map(mapAjuan).map((b) => [buktiKey(b.kegiatanId, b.indikatorId), b]))),
     [periodeId],
@@ -520,40 +517,18 @@ export function useDokumenBukti(kegiatanId) {
   }
 }
 
-// Level terverifikasi per indikator + riwayat snapshot skor IPS tiap kali level ditetapkan
-// ponytail: level belum dipisah per periode; tambahkan periodeId saat pindah ke API
-export function useSkor(indikatorData = INDIKATOR, kegiatan = EMPTY_LIST, bukti = EMPTY_OBJECT) {
-  const [levelLokal, setLevels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
-  const [snapshot, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
-  const levels = indikatorData === INDIKATOR
-    ? levelLokal
-    : levelIndikator(kegiatan.flatMap((item) => item.indikatorIds.map((id) => bukti[buktiKey(item.id, id)]).filter(Boolean)))
+// Level terverifikasi per indikator, berjenjang dari ajuan terverifikasi di server (lihat levelIndikator)
+export function useSkor(_indikatorData, kegiatan = EMPTY_LIST, bukti = EMPTY_OBJECT) {
   return {
-    levels,
-    snapshot,
+    levels: levelIndikator(kegiatan.flatMap((item) => item.indikatorIds.map((id) => bukti[buktiKey(item.id, id)]).filter(Boolean))),
     ...SIAP,
-    tetapkanLevel(periodeId, indikator, level) {
-      const baru = { ...levels, [indikator.id]: level }
-      setLevels(baru)
-      setSnapshot((list) => [
-        {
-          id: crypto.randomUUID(),
-          periodeId,
-          waktu: new Date().toISOString(),
-          nilai: hitungIps(indikatorData, baru),
-          perubahan: `Verifikasi Indikator ${indikator.nomor} (Level ${level})`,
-        },
-        ...list,
-      ])
-    },
   }
 }
 
 // Daftar periode + periode yang sedang dipilih user (default: periode pertama yang belum dikunci)
 export function usePeriode() {
-  const [periode, setPeriode] = useStore(KEYS.periode, SEED_PERIODE)
+  const [periode, setPeriode] = useStore(KEYS.periode, EMPTY_LIST)
   const [aktifId, setAktifId] = useStore(KEYS.periodeAktif, null)
-  const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
   const aktif = periode.find((p) => p.id === aktifId && p.status === 'AKTIF')
     ?? periode.find((p) => p.status === 'AKTIF')
     ?? null
@@ -669,7 +644,6 @@ export function usePeriode() {
       })
 
       setPeriode((list) => list.filter((p) => p.id !== id))
-      setSnapshot((list) => list.filter((s) => s.periodeId !== id))
     },
 
     aktifkan: async (id) => {

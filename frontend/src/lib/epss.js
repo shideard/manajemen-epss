@@ -20,13 +20,11 @@ export function agendaTerdekat(list, today, limit = 4) {
     .slice(0, limit)
 }
 
-// Key localStorage untuk useStore
-// ponytail: data disimpan di localStorage browser; pindahkan ke API Laravel saat endpoint-nya siap
+// Key localStorage untuk useStore. Data resmi (kegiatan, bukti, level, skor) selalu dari API;
+// yang di browser hanya salinan daftar periode dan preferensi per perangkat
 export const KEYS = {
-  periode: 'epss.periode',
+  periode: 'epss.periode', // salinan GET periode supaya tampil seketika saat halaman dimuat ulang
   periodeAktif: 'epss.periode-aktif',
-  levelIndikator: 'epss.level-indikator', // { indikatorId: level terverifikasi }
-  snapshot: 'epss.snapshot',
   notifDibaca: 'epss.notif-dibaca',
   pengingat: 'epss.pengingat',
 }
@@ -260,6 +258,21 @@ export function hitungIps(indikator, levels) {
     bobot += i.bobot
   }
   return bobot ? total / bobot : 0
+}
+
+// Riwayat skor IPS satu periode: satu titik tiap ajuan diverifikasi terpenuhi, terbaru dulu.
+// Diturunkan dari ajuan di server, jadi sama di semua perangkat
+export function riwayatIps(ajuan, indikatorList) {
+  const nomor = Object.fromEntries(indikatorList.map((i) => [i.id, i.nomor]))
+  const terverifikasi = ajuan.filter((b) => b.status === 'terverifikasi' && b.diverifikasi).sort((a, b) => a.diverifikasi.localeCompare(b.diverifikasi))
+  return terverifikasi
+    .map((b, n) => ({
+      id: b.id,
+      waktu: b.diverifikasi,
+      nilai: hitungIps(indikatorList, levelIndikator(terverifikasi.slice(0, n + 1))),
+      perubahan: `Indikator ${nomor[b.indikatorId] ?? b.indikatorId} Level ${b.level} terverifikasi`,
+    }))
+    .reverse()
 }
 
 // Predikat IPS sesuai Peraturan BPS No 3/2022
