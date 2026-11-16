@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { LEVELS } from '../../lib/epss'
+import { usePeriode, useSemuaKegiatan } from '../../lib/store'
+import { levelTerpakai } from './kegiatan'
 import { DialogHeader, Field, FormError, Input, ModalActions, Select } from '../../components/ui'
 import { buttonClass, fieldClass } from '../../components/classes'
 import bookIcon from '../../assets/icons/book-mark-fill.svg'
@@ -55,6 +57,10 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
   const [error, setError] = useState('')
   // [{ id, level }]: indikator tertaut beserta level yang ditargetkan dipenuhi kegiatan ini
   const [dipetakan, setDipetakan] = useState(() => indikator.map((item) => ({ id: item.id ?? item.indikatorId, level: item.level ?? 1 })))
+  // Level indikator yang sudah dipakai kegiatan lain di periode ini tidak bisa dipilih lagi
+  const { aktif } = usePeriode()
+  const terpakai = levelTerpakai(useSemuaKegiatan(aktif?.id).kegiatan, kegiatan.id)
+  const levelBebas = (id) => LEVELS.findIndex((_, i) => !terpakai[id]?.[i + 1]) + 1
   const namaIndikator = (id) => {
     const i = indikatorPilihan.find((x) => x.id === id) ?? indikator.find((x) => x.id === id)
     return i ? `Indikator ${i.nomor ?? i.kode}: ${i.nama}` : id
@@ -232,15 +238,15 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                 Lihat Pedoman Indikator
               </button>
             </div>
-            <Select id="pilih-indikator" value="" onChange={(e) => setDipetakan((list) => [...list, { id: e.target.value, level: 1 }])}>
+            <Select id="pilih-indikator" value="" onChange={(e) => setDipetakan((list) => [...list, { id: e.target.value, level: levelBebas(e.target.value) }])}>
               <option value="">Pilih indikator yang akan ditambahkan...</option>
-              {indikatorPilihan.filter((i) => !dipetakan.some((d) => d.id === i.id)).map((i) => (
+              {indikatorPilihan.filter((i) => !dipetakan.some((d) => d.id === i.id) && levelBebas(i.id) > 0).map((i) => (
                 <option key={i.id} value={i.id}>
                   Indikator {i.nomor ?? i.kode}: {i.nama}
                 </option>
               ))}
             </Select>
-            {dipetakan.length > 0 && <p className="text-small text-grey-200">Tentukan level indikator yang dipenuhi oleh kegiatan ini. Operator hanya dapat mengisi checklist level tersebut.</p>}
+            {dipetakan.length > 0 && <p className="text-small text-grey-200">Tentukan level indikator yang dipenuhi oleh kegiatan ini. Operator hanya dapat mengisi checklist level tersebut. Level yang sudah dipakai kegiatan lain tidak dapat dipilih.</p>}
             {dipetakan.map(({ id, level }) => (
               <div key={id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-lime-300 px-2.5 py-1.5 text-small">
                 <span className="min-w-0 flex-1">{namaIndikator(id)}</span>
@@ -252,8 +258,8 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                     className="rounded-sm border border-grey-500 bg-white px-2 py-1"
                   >
                     {LEVELS.map((nama, i) => (
-                      <option key={nama} value={i + 1}>
-                        Level {i + 1} ({nama})
+                      <option key={nama} value={i + 1} disabled={Boolean(terpakai[id]?.[i + 1])}>
+                        Level {i + 1} ({nama}){terpakai[id]?.[i + 1] ? ` - dipakai ${terpakai[id][i + 1]}` : ''}
                       </option>
                     ))}
                   </select>

@@ -1,6 +1,6 @@
 // Jalankan: node src/pages/rencana-kegiatan/kegiatan.check.js
 import assert from 'node:assert/strict'
-import { isOnDate, kartuKanban, matches, monthCells } from './kegiatan.js'
+import { isOnDate, kartuKanban, levelTerpakai, matches, monthCells } from './kegiatan.js'
 
 const k = { nama: 'Survei SKM', deskripsi: 'Kepuasan warga', opd: 'DINSOS', pic: 'Deshi', mulai: '2026-09-10', selesai: '2026-09-20' }
 
@@ -36,5 +36,14 @@ assert.deepEqual(
 )
 assert.deepEqual(kolom['Bukti dukung diunggah'][0], { kegiatan: daftar[2], indikatorIds: ['i1', 'i2'], diajukan: 1, lampiran: 2, catatan: 1 })
 assert.deepEqual(kolom['Sedang dilaksanakan'][0].indikatorIds, ['i4'])
+
+// Level yang dipakai kegiatan lain; kegiatan yang sedang diedit tidak dihitung
+const pemetaan = [
+  { id: 'a', nama: 'A', indikator: [{ id: 'i1', level: 1 }, { id: 'i2' }] },
+  { id: 'b', nama: 'B', indikator: [{ id: 'i1', level: 2 }] },
+  { id: 'c', nama: 'C' },
+]
+assert.deepEqual(levelTerpakai(pemetaan, 'b'), { i1: { 1: 'A' }, i2: { 1: 'A' } })
+assert.deepEqual(levelTerpakai(pemetaan), { i1: { 1: 'A', 2: 'B' }, i2: { 1: 'A' } })
 
 console.log('kegiatan.check: OK')

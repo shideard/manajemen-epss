@@ -221,6 +221,34 @@ class AjuanBuktiTest extends TestCase
         $this->assertDatabaseHas('kegiatan_indikator', ['indikator_id' => $id, 'level' => 3]);
     }
 
+    public function test_indicator_level_can_only_be_mapped_to_one_activity_per_period(): void
+    {
+        $s = $this->createScenario();
+        $id = $s['indikator']->id;
+        $lain = $s['kegiatan']->replicate();
+        $lain->nama_kegiatan = 'Kegiatan Lain';
+        $lain->save();
+        $url = '/api/rencana-kegiatan/' . $lain->id . '/indikator';
+
+        // Level 3 sudah dipakai kegiatan skenario
+        $this->sebagai($s['verifikator'], 'web')
+            ->putJson($url, ['indikator_ids' => [$id], 'levels' => [$id => 3]])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Indikator 1 Level 3 sudah dipakai kegiatan "Kegiatan Pengujian".');
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->putJson($url, ['indikator_ids' => [$id], 'levels' => [$id => 2]])
+            ->assertNoContent();
+
+        // Mengubah ke level yang sudah dipakai juga ditolak; menyimpan ulang tanpa perubahan tetap boleh
+        $this->sebagai($s['verifikator'], 'web')
+            ->putJson($url, ['indikator_ids' => [$id], 'levels' => [$id => 3]])
+            ->assertStatus(422);
+        $this->sebagai($s['verifikator'], 'web')
+            ->putJson($url, ['indikator_ids' => [$id], 'levels' => [$id => 2]])
+            ->assertNoContent();
+    }
+
     public function test_pic_can_save_draft_checklist_then_submit(): void
     {
         $s = $this->createScenario();

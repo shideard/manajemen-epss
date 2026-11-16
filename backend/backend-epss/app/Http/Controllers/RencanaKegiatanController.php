@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\StatusAjuanBukti;
 use App\Http\Requests\Planning\StoreRencanaKegiatanRequest;
 use App\Http\Resources\RencanaKegiatanResource;
+use App\Models\KegiatanIndikator;
 use App\Models\RencanaKegiatan;
 use Illuminate\Http\JsonResponse;
 use App\Enums\UserRole;
@@ -118,6 +119,24 @@ class RencanaKegiatanController extends Controller
                 409,
                 'Indikator dengan ajuan yang menunggu verifikasi atau sudah terverifikasi tidak dapat dilepas atau diubah levelnya.'
             );
+
+            // Satu level indikator hanya boleh dipenuhi satu kegiatan dalam periode yang sama.
+            // Hanya pasangan baru/berubah yang diperiksa, supaya data lama tidak menghalangi simpan.
+            // ponytail: tanpa unique index (periode ada di tabel kegiatan), dua simpan bersamaan masih bisa lolos; tambah kolom periode_id + unique bila itu terjadi
+            foreach ([...$levelBerubah, ...array_diff($indikatorIds, $indikatorSaatIni)] as $indikatorId) {
+                $level = (int) ($levels[$indikatorId] ?? 1);
+                $bentrok = KegiatanIndikator::query()
+                    ->with(['kegiatan:id,nama_kegiatan', 'indikator:id,kode'])
+                    ->where('indikator_id', $indikatorId)
+                    ->where('level', $level)
+                    ->where('kegiatan_id', '!=', $rencanaKegiatan->id)
+                    ->whereHas('kegiatan', fn ($q) => $q->where('periode_id', $rencanaKegiatan->periode_id))
+                    ->first();
+
+                if ($bentrok) {
+                    abort(422, "Indikator {$bentrok->indikator->kode} Level {$level} sudah dipakai kegiatan \"{$bentrok->kegiatan->nama_kegiatan}\".");
+                }
+            }
 
             foreach ($levelBerubah as $indikatorId) {
                 $rencanaKegiatan->indikatorMappings()
