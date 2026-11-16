@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { PeriodeFields } from './PengaturanPeriode'
-import { usePeriode, useSkor, useVersiInstrumen } from '../../lib/store'
-import { predikat, PREDIKAT_TONE, validasiPeriode } from '../../lib/epss'
+import { useBukti, useInstrumen, usePeriode, useVersiInstrumen } from '../../lib/store'
+import { predikat, PREDIKAT_TONE, riwayatIps, validasiPeriode } from '../../lib/epss'
 import { Badge, Memuat, PageHeader } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
@@ -11,13 +11,13 @@ const formatWaktu = (iso) => new Date(iso).toLocaleString('sv-SE', { dateStyle: 
 
 function KonfigurasiPeriode() {
   const { id } = useParams()
-  const muat = [usePeriode(), useSkor(), useVersiInstrumen()]
+  const muat = [usePeriode(), useBukti(id), useVersiInstrumen(), useInstrumen(id)]
   const [{
     periode,
     ubah: ubahPeriode,
     kunci: kunciPeriode,
     aktifkan: aktifkanPeriode,
-  }, { snapshot }, versiInstrumen] = muat
+  }, { bukti }, versiInstrumen, instrumen] = muat
   const [pesan, setPesan] = useState('')
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
@@ -26,7 +26,7 @@ function KonfigurasiPeriode() {
   if (!p) return <Navigate to="/pengaturan-periode" replace />
 
   const lainnya = periode.filter((item) => item.id !== id && item.actual != null)
-  const riwayat = snapshot.filter((s) => s.periodeId === id)
+  const riwayat = riwayatIps(Object.values(bukti), instrumen.indikator)
   const ubah = (perubahan) => ubahPeriode(id, perubahan)
 
   async function handleSubmit(event) {
@@ -203,7 +203,7 @@ function KonfigurasiPeriode() {
               {riwayat.length === 0 && (
                 <tr>
                   <td colSpan={4} className="py-10 text-grey-200">
-                    Belum ada snapshot. Snapshot terekam saat verifikator memverifikasi indikator.
+                    Belum ada snapshot. Snapshot terekam setiap ajuan bukti dukung diverifikasi terpenuhi.
                   </td>
                 </tr>
               )}

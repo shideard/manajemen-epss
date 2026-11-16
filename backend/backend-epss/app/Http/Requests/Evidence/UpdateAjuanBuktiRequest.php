@@ -40,15 +40,25 @@ class UpdateAjuanBuktiRequest extends FormRequest
                 return;
             }
 
+            $kegiatan = $this->route('rencanaKegiatan');
             $indikator = $this->route('indikator');
-            if (! $indikator instanceof IndikatorEPSS) {
+            if (! $kegiatan instanceof RencanaKegiatan || ! $indikator instanceof IndikatorEPSS) {
+                return;
+            }
+
+            // Level target pemetaan; tanpa pemetaan controller yang menolak (404)
+            $level = $kegiatan->indikatorMappings()
+                ->where('indikator_id', $indikator->id)
+                ->value('level');
+            if ($level === null) {
                 return;
             }
 
             $pesan = ChecklistBuktiValidator::kekurangan(
                 $indikator,
                 $this->input('checklist', []),
-                1
+                $level,
+                $level
             );
 
             if ($pesan) {

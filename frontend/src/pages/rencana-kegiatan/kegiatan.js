@@ -24,6 +24,17 @@ export function kartuKanban(kegiatan, bukti, today) {
   return kolom
 }
 
+// Satu level indikator hanya boleh dipenuhi satu kegiatan per periode (server yang menegakkan).
+// Hasil: { indikatorId: { level: nama kegiatan pemakainya } } dari kegiatan lain selain kecualiId
+export function levelTerpakai(kegiatan, kecualiId) {
+  const hasil = {}
+  for (const k of kegiatan) {
+    if (k.id === kecualiId) continue
+    for (const i of k.indikator ?? []) (hasil[i.id] ??= {})[i.level ?? 1] = k.nama
+  }
+  return hasil
+}
+
 export const isOnDate = (kegiatan, date) => kegiatan.mulai <= date && date <= kegiatan.selesai
 
 export function matches(kegiatan, query) {

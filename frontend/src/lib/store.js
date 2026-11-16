@@ -4,12 +4,10 @@ import {
   buktiKey,
   EMPTY_LIST,
   EMPTY_OBJECT,
-  hitungIps,
-  INDIKATOR,
   KEYS,
+  levelIndikator,
   notifikasi,
   SEED_PENGINGAT,
-  SEED_PERIODE,
   toISODate,
   WARNA,
 } from './epss'
@@ -18,11 +16,12 @@ import {
 const cache = new Map()
 const listeners = new Map()
 
-function read(key, seed) {
+// persist = false: hanya di memori (dibagi antar komponen), sumber datanya API
+function read(key, seed, persist = true) {
   if (!cache.has(key)) {
     let value
     try {
-      value = JSON.parse(localStorage.getItem(key))
+      value = persist ? JSON.parse(localStorage.getItem(key)) : null
     } catch {
       value = null
     }
@@ -32,7 +31,7 @@ function read(key, seed) {
 }
 
 // seed harus konstanta (bukan objek baru tiap render)
-function useStore(key, seed) {
+function useStore(key, seed, persist = true) {
   const subscribe = useCallback(
     (listener) => {
       if (!listeners.has(key)) listeners.set(key, new Set())
@@ -41,16 +40,16 @@ function useStore(key, seed) {
     },
     [key],
   )
-  const value = useSyncExternalStore(subscribe, () => read(key, seed))
+  const value = useSyncExternalStore(subscribe, () => read(key, seed, persist))
 
   const set = useCallback(
     (next) => {
-      const value = typeof next === 'function' ? next(read(key, seed)) : next
+      const value = typeof next === 'function' ? next(read(key, seed, persist)) : next
       cache.set(key, value)
-      localStorage.setItem(key, JSON.stringify(value))
+      if (persist) localStorage.setItem(key, JSON.stringify(value))
       listeners.get(key)?.forEach((listener) => listener())
     },
-    [key, seed],
+    [key, seed, persist],
   )
 
   return [value, set]
@@ -77,7 +76,34 @@ const mapRencanaKegiatan = (item) => ({
   indikator: item.indikator ?? [],
   // Kode indikator menjadi id UI, sehingga relasi tidak bergantung pada daftar indikator frontend.
   indikatorIds: (item.indikator ?? []).map((i) => String(i.kode)),
+  // Level yang ditargetkan verifikator per indikator (kode indikator → level)
+  levelTarget: Object.fromEntries((item.indikator ?? []).map((i) => [String(i.kode), i.level ?? 1])),
 })
+
+// Simpan daftar output yang ditargetkan (id dikirim supaya baris & berkas contohnya dipertahankan),
+// lalu unggah berkas contoh yang baru dipilih ke output pada urutan yang sama
+async function simpanOutputKegiatan(kegiatanId, output) {
+  const base = `/api/rencana-kegiatan/${kegiatanId}`
+  await api(`${base}/output-diharapkan`, {
+    method: 'PUT',
+    body: {
+      output: output.map(({ id, judul, jenis, contoh }) => ({
+        id: id ?? null,
+        judul,
+        jenis: jenis || null,
+        contoh: contoh ? { nama: contoh } : null,
+      })),
+    },
+  })
+  if (!output.some((o) => o.file)) return
+  const tersimpan = (await api(base)).data.output ?? []
+  for (const [i, o] of output.entries()) {
+    if (!o.file) continue
+    const body = new FormData()
+    body.append('file', o.file)
+    await api(`${base}/output-diharapkan/${tersimpan[i].id}/contoh`, { method: 'POST', body })
+  }
+}
 
 async function apiAll(path) {
   const first = await api(path)
@@ -208,36 +234,16 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
       const saved = response.data
       await api(`/api/rencana-kegiatan/${saved.id}/indikator`, {
         method: 'PUT',
-        body: { indikator_ids: data.indikator_ids ?? [] },
+        body: { indikator_ids: data.indikator_ids ?? [], levels: data.levels ?? {} },
       })
       // Output memakai endpoint dan izin terpisah dari perubahan detail kegiatan.
       // Kirim hanya jika form memang menyediakan daftar output.
-      if (data.output !== undefined) {
-        await api(`/api/rencana-kegiatan/${saved.id}/output-diharapkan`, {
-          method: 'PUT',
-          body: {
-            output: data.output.map(({ judul, jenis, contoh }) => ({
-              judul,
-              jenis: jenis || null,
-              contoh: contoh ? { nama: contoh } : null,
-            })),
-          },
-        })
-      }
+      if (data.output !== undefined) await simpanOutputKegiatan(saved.id, data.output)
       await muat()
       return await detail(saved.id)
     },
     async simpanOutput(id, output) {
-      await api(`/api/rencana-kegiatan/${id}/output-diharapkan`, {
-        method: 'PUT',
-        body: {
-          output: output.map(({ judul, jenis, contoh }) => ({
-            judul,
-            jenis: jenis || null,
-            contoh: contoh ? { nama: contoh } : null,
-          })),
-        },
-      })
+      await simpanOutputKegiatan(id, output)
       return await detail(id)
     },
   }
@@ -259,11 +265,11 @@ const mapAjuan = (a) => ({
   diverifikasi: a.diverifikasi_pada,
 })
 
-// bukti = { 'kegiatanId:indikatorId': { kegiatanId, indikatorId, checked, status, level, catatan, ... } } untuk periode aktif.
-// Belum ada ajuan = draft kosong (pemanggil memakai `?? { status: 'draft' }`).
-export function useBukti() {
+// bukti = { 'kegiatanId:indikatorId': { kegiatanId, indikatorId, checked, status, level, catatan, ... } } untuk periode aktif
+// (atau periode lain bila idPeriode diisi). Belum ada ajuan = draft kosong (pemanggil memakai `?? { status: 'draft' }`).
+export function useBukti(idPeriode) {
   const { aktif } = usePeriode()
-  const periodeId = aktif?.id
+  const periodeId = idPeriode ?? aktif?.id
   const ambil = useCallback(
     () => api(`/api/periode-evaluasi/${periodeId}/ajuan-bukti`).then((res) => Object.fromEntries((res.data ?? []).map(mapAjuan).map((b) => [buktiKey(b.kegiatanId, b.indikatorId), b]))),
     [periodeId],
@@ -301,14 +307,14 @@ export function useBukti() {
         throw error
       }
     },
-    // Verifikator: keputusan 'terverifikasi' (dengan level) atau 'perbaikan' (dengan catatan)
-    async verifikasi(ajuan, { keputusan, checked, level, catatan }) {
+    // Verifikator: keputusan 'terverifikasi' (level = level target pemetaan, ditetapkan server) atau 'perbaikan' (dengan catatan)
+    async verifikasi(ajuan, { keputusan, checked, catatan }) {
       const { data: a } = await api(`/api/ajuan-bukti/${ajuan.id}/verifikasi`, {
         method: 'PATCH',
         body: {
           keputusan: keputusan === 'terverifikasi' ? 'TERVERIFIKASI' : 'PERBAIKAN',
           checklist: checked,
-          ...(keputusan === 'terverifikasi' ? { level } : { catatan }),
+          ...(keputusan === 'perbaikan' && { catatan }),
         },
       })
       return terima(a)
@@ -517,45 +523,18 @@ export function useDokumenBukti(kegiatanId) {
   }
 }
 
-// Level terverifikasi per indikator + riwayat snapshot skor IPS tiap kali level ditetapkan
-// ponytail: level belum dipisah per periode; tambahkan periodeId saat pindah ke API
-export function useSkor(indikatorData = INDIKATOR, kegiatan = EMPTY_LIST, bukti = EMPTY_OBJECT) {
-  const [levelLokal, setLevels] = useStore(KEYS.levelIndikator, EMPTY_OBJECT)
-  const [snapshot, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
-  const levels = indikatorData === INDIKATOR
-    ? levelLokal
-    : Object.fromEntries(indikatorData.flatMap((indikator) => {
-        const tertaut = kegiatan.filter((item) => item.indikatorIds.includes(indikator.id))
-        const hasil = tertaut.map((item) => bukti[buktiKey(item.id, indikator.id)])
-        if (!hasil.length || hasil.some((ajuan) => ajuan?.status !== 'terverifikasi')) return []
-        return [[indikator.id, Math.min(...hasil.map((ajuan) => ajuan.level))]]
-      }))
+// Level terverifikasi per indikator, berjenjang dari ajuan terverifikasi di server (lihat levelIndikator)
+export function useSkor(_indikatorData, kegiatan = EMPTY_LIST, bukti = EMPTY_OBJECT) {
   return {
-    levels,
-    snapshot,
+    levels: levelIndikator(kegiatan.flatMap((item) => item.indikatorIds.map((id) => bukti[buktiKey(item.id, id)]).filter(Boolean))),
     ...SIAP,
-    tetapkanLevel(periodeId, indikator, level) {
-      const baru = { ...levels, [indikator.id]: level }
-      setLevels(baru)
-      setSnapshot((list) => [
-        {
-          id: crypto.randomUUID(),
-          periodeId,
-          waktu: new Date().toISOString(),
-          nilai: hitungIps(indikatorData, baru),
-          perubahan: `Verifikasi Indikator ${indikator.nomor} (Level ${level})`,
-        },
-        ...list,
-      ])
-    },
   }
 }
 
 // Daftar periode + periode yang sedang dipilih user (default: periode pertama yang belum dikunci)
 export function usePeriode() {
-  const [periode, setPeriode] = useStore(KEYS.periode, SEED_PERIODE)
+  const [periode, setPeriode] = useStore(KEYS.periode, EMPTY_LIST)
   const [aktifId, setAktifId] = useStore(KEYS.periodeAktif, null)
-  const [, setSnapshot] = useStore(KEYS.snapshot, EMPTY_LIST)
   const aktif = periode.find((p) => p.id === aktifId && p.status === 'AKTIF')
     ?? periode.find((p) => p.status === 'AKTIF')
     ?? null
@@ -671,7 +650,6 @@ export function usePeriode() {
       })
 
       setPeriode((list) => list.filter((p) => p.id !== id))
-      setSnapshot((list) => list.filter((s) => s.periodeId !== id))
     },
 
     aktifkan: async (id) => {
@@ -817,6 +795,10 @@ export function useAuth() {
   }
 }
 
+// Pengaturan H-n dan notifikasi yang sudah dibaca disimpan per akun di server, jadi sama di semua perangkat
+const PREFERENSI_AWAL = { hariPengingat: SEED_PENGINGAT, dibaca: EMPTY_LIST }
+const mapPreferensi = (res) => ({ hariPengingat: res.data.hari_pengingat, dibaca: res.data.dibaca })
+
 // Notifikasi pengingat diturunkan dari rencana kegiatan + pengaturan H-n
 export function useNotifikasi() {
   const { aktif } = usePeriode()
@@ -832,10 +814,27 @@ export function useNotifikasi() {
     }))
   }, [periodeId])
   const { data: kegiatan = EMPTY_LIST, ...state } = useMuat(periodeId, ambil)
-  const [hariPengingat, setHariPengingat] = useStore(KEYS.pengingat, SEED_PENGINGAT)
-  const [dibaca, setDibaca] = useStore(KEYS.notifDibaca, EMPTY_LIST)
+  // Dibagi antara Topbar dan halaman Notifikasi; tiap pemakai memuat ulang dari server saat tampil
+  const [{ hariPengingat, dibaca }, setPreferensi] = useStore('epss.preferensi-notifikasi', PREFERENSI_AWAL, false)
+  useEffect(() => {
+    api('/api/user/notifikasi').then((res) => setPreferensi(mapPreferensi(res)), () => {})
+  }, [setPreferensi])
+  // Perubahan langsung tampil; dikembalikan jika server menolak
+  const simpan = (lokal, body) => {
+    const sebelum = { hariPengingat, dibaca }
+    setPreferensi({ ...sebelum, ...lokal })
+    return api('/api/user/notifikasi', { method: 'PUT', body }).then(
+      (res) => setPreferensi(mapPreferensi(res)),
+      () => setPreferensi(sebelum),
+    )
+  }
   const list = notifikasi(kegiatan, hariPengingat, toISODate(new Date()))
-  const tandaiDibaca = (id) => setDibaca((ids) => (ids.includes(id) ? ids : [...ids, id]))
-  const tandaiSemuaDibaca = () => setDibaca((ids) => [...new Set([...ids, ...list.map((n) => n.id)])])
+  const tandai = (ids) => {
+    const baru = ids.filter((id) => !dibaca.includes(id))
+    if (baru.length) simpan({ dibaca: [...dibaca, ...baru] }, { dibaca: baru })
+  }
+  const tandaiDibaca = (id) => tandai([id])
+  const tandaiSemuaDibaca = () => tandai(list.map((n) => n.id))
+  const setHariPengingat = (hari) => simpan({ hariPengingat: hari }, { hari_pengingat: hari })
   return { list, dibaca, tandaiDibaca, tandaiSemuaDibaca, belumDibaca: list.filter((n) => !dibaca.includes(n.id)).length, hariPengingat, setHariPengingat, ...state }
 }

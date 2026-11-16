@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelTerpenuhi, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelIndikator, riwayatIps, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -16,13 +16,18 @@ assert.equal(predikat(2.74), 'Baik')
 assert.equal(predikat(3.5), 'Sangat Baik')
 assert.equal(predikat(4.2), 'Memuaskan')
 
-// Berjenjang: level 3 lengkap tapi level 2 belum → tetap level 1
-const { levels } = INDIKATOR[0]
-const centang = (level) => levels[level - 1].syarat.map(() => true)
-assert.equal(levelTerpenuhi(levels, {}), 0)
-assert.equal(levelTerpenuhi(levels, { 1: centang(1), 3: centang(3) }), 1)
-assert.equal(levelTerpenuhi(levels, { 1: centang(1), 2: centang(2) }), 2)
-assert.equal(levelTerpenuhi(levels, { 1: centang(1), 2: [true, false] }), 1)
+// Level indikator = level berurutan dari 1 yang terverifikasi; celah di level 3 menahan di level 2
+const ajuan = (indikatorId, level, status = 'terverifikasi') => ({ indikatorId, level, status })
+assert.deepEqual(levelIndikator([ajuan('a', 1), ajuan('a', 2), ajuan('a', 4)]), { a: 2 })
+assert.deepEqual(levelIndikator([ajuan('a', 1), ajuan('a', 2), ajuan('a', 4), ajuan('a', 3)]), { a: 4 })
+assert.deepEqual(levelIndikator([ajuan('a', 2), ajuan('b', 1), ajuan('b', 2, 'menunggu')]), { b: 1 })
+assert.deepEqual(levelIndikator([]), {})
+// Riwayat skor: level 2 baru terhitung setelah level 1; ajuan yang belum terverifikasi tidak masuk
+const riwayat = riwayatIps(
+  [{ ...ajuan('a', 2), id: 'x2', diverifikasi: '2026-01-02' }, { ...ajuan('a', 1), id: 'x1', diverifikasi: '2026-01-01' }, { ...ajuan('a', 3, 'menunggu'), id: 'x3' }],
+  [{ id: 'a', nomor: 7, bobot: 1 }],
+)
+assert.deepEqual(riwayat.map((r) => [r.perubahan, r.nilai]), [['Indikator 7 Level 2 terverifikasi', 2], ['Indikator 7 Level 1 terverifikasi', 1]])
 
 const k = { id: 'k1', mulai: '2026-09-10', selesai: '2026-09-20' }
 assert.equal(statusKegiatan(k, [], 0, '2026-09-01'), 'Belum dilaksanakan')

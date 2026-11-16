@@ -34,6 +34,7 @@ class RencanaKegiatanResource extends JsonResource
                         'id' => $mapping->indikator->id,
                         'kode' => $mapping->indikator->kode,
                         'nama' => $mapping->indikator->nama,
+                        'level' => $mapping->level,
                     ])
                     ->values()
             ),
@@ -46,7 +47,12 @@ class RencanaKegiatanResource extends JsonResource
                         'jenis' => $output->jenis,
                         'contoh' => $output->contoh_nama === null
                             ? null
-                            : ['nama' => $output->contoh_nama],
+                            : [
+                                'nama' => $output->contoh_nama,
+                                // false = hanya nama (belum ada berkas yang bisa diunduh)
+                                'berkas' => $output->contoh_storage_key !== null,
+                                'ukuran' => $output->contoh_size_bytes,
+                            ],
                     ])
                     ->values()
             ),

@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { animate, AnimatePresence, motion } from 'motion/react'
+import { unduhBerkas } from '../lib/api'
 import closeIcon from '../assets/rencana/close-line.svg'
 import triangle from '../assets/rencana/dropdown-triangle.svg'
 import arrowDown from '../assets/rencana/arrow-down-s-line.svg'
@@ -378,6 +379,25 @@ const TONES = {
   yellow: 'border-yellow-500 bg-yellow-50 text-yellow-500',
   blue: 'border-blue-500 bg-blue-50 text-blue-500',
   green: 'border-green-500 bg-green-50 text-green-500',
+}
+
+// Contoh berkas satu output yang ditargetkan: bisa diunduh bila berkasnya sudah diunggah, selain itu hanya namanya
+export function ContohOutput({ kegiatanId, output, label = 'Contoh' }) {
+  const [error, setError] = useState('')
+  if (!output.contoh) return null
+  if (!output.contoh.berkas) return <span className="truncate text-small text-grey-200">{label}: {output.contoh.nama}</span>
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => unduhBerkas(`/api/rencana-kegiatan/${kegiatanId}/output-diharapkan/${output.id}/contoh`, output.contoh.nama).then(() => setError(''), (err) => setError(err.message))}
+        className="max-w-full self-start truncate text-small text-grey-200 underline"
+      >
+        {label}: {output.contoh.nama}
+      </button>
+      {error && <span role="alert" className="text-small text-red-500">{error}</span>}
+    </>
+  )
 }
 
 export function Badge({ tone, icon, children, className = '' }) {
