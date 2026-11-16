@@ -247,16 +247,15 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                 </option>
               ))}
             </Select>
-            {dipetakan.length > 0 && <p className="text-small text-grey-200">Tentukan level indikator yang dipenuhi oleh kegiatan ini. Operator hanya dapat mengisi checklist level tersebut. Level yang sudah dipakai kegiatan lain tidak dapat dipilih.</p>}
             {dipetakan.map(({ id, level }) => (
-              <div key={id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-lime-300 px-2.5 py-1.5 text-small">
+              <div key={id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-lime-300 px-5 py-2">
                 <span className="min-w-0 flex-1">{namaIndikator(id)}</span>
                 <label className="flex items-center gap-2">
                   <span className="sr-only">Level untuk {namaIndikator(id)}</span>
                   <select
                     value={level}
                     onChange={(e) => setDipetakan((list) => list.map((d) => (d.id === id ? { ...d, level: Number(e.target.value) } : d)))}
-                    className="rounded-sm border border-grey-500 bg-white px-2 py-1"
+                    className="h-9 rounded-sm border border-grey-500 bg-white px-3"
                   >
                     {LEVELS.map((nama, i) => (
                       <option key={nama} value={i + 1} disabled={Boolean(terpakai[id]?.[i + 1])}>
@@ -266,7 +265,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                   </select>
                 </label>
                 <button type="button" onClick={() => setDipetakan((list) => list.filter((d) => d.id !== id))} aria-label={`Lepas ${namaIndikator(id)}`}>
-                  <img src={removeIcon} alt="" width={15} height={15} className="grayscale" />
+                  <img src={removeIcon} alt="" width={24} height={24} className="grayscale" />
                 </button>
               </div>
             ))}
