@@ -247,7 +247,6 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                 </option>
               ))}
             </Select>
-            {dipetakan.length > 0 && <p className="text-grey-200">Tentukan level indikator yang dipenuhi oleh kegiatan ini. Operator hanya dapat mengisi checklist level tersebut. Level yang sudah dipakai kegiatan lain tidak dapat dipilih.</p>}
             {dipetakan.map(({ id, level }) => (
               <div key={id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-lime-300 px-5 py-2">
                 <span className="min-w-0 flex-1">{namaIndikator(id)}</span>
