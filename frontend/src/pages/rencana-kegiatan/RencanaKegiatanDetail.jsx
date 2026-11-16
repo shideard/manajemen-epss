@@ -71,13 +71,14 @@ function RencanaKegiatanDetailVerifikator() {
             <div className="rounded-full bg-lime-300 px-3 py-1 text-small font-medium">{statusOf(k)}</div>
             {k.deskripsi && <p className="max-w-3xl text-center text-grey-200">{k.deskripsi}</p>}
             <hr className="w-full border-grey-50" />
-            <dl className="grid w-full max-w-4xl grid-cols-1 gap-4 text-center sm:grid-cols-3">
+            {/* Jadwal memakai dua kolom supaya rentang tanggalnya muat satu baris */}
+            <dl className="grid w-full max-w-4xl grid-cols-1 gap-4 text-center sm:grid-cols-4">
               {[
                 [Building2, 'OPD', k.opd],
                 [UserRound, 'PIC', k.pic],
-                [CalendarDays, 'Jadwal', <>{formatTanggal(k.mulai)}<br />- {formatTanggal(k.selesai)}</>],
+                [CalendarDays, 'Jadwal', `${formatTanggal(k.mulai)} - ${formatTanggal(k.selesai)}`],
               ].map(([Icon, label, value]) => (
-                <div key={label} className="flex flex-col items-center gap-2">
+                <div key={label} className={`flex flex-col items-center gap-2 ${label === 'Jadwal' ? 'sm:col-span-2' : ''}`}>
                   <Icon size={25} aria-hidden="true" className="rounded-xs bg-grey-500 px-1 py-1 text-white" />
                   <dt className="font-bold">{label}</dt>
                   <dd className="flex min-h-14 w-full items-center justify-center rounded-sm bg-lime-100 px-4 py-2"><span>{value}</span></dd>
