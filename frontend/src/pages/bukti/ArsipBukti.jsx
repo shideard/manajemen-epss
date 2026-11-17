@@ -46,8 +46,10 @@ function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
   const pilihan = kegiatan.filter((k) => isPic(k, user) && !f.kegiatan.includes(k))
 
   return (
-    <aside className="flex w-[360px] max-w-full flex-col rounded-lg bg-white">
-      {/* Tanpa overflow-hidden: dropdown "Kaitkan" harus bisa keluar dari panel */}
+    // Sticky agar panel ikut layar saat tabel panjang; isinya bergulir sendiri bila lebih tinggi dari layar
+    // (dropdown "Kaitkan" yang melewati bawah panel tinggal digulir, tidak terpotong mati)
+    <aside className="sticky top-6 flex max-h-[calc(100vh-3rem)] w-[360px] max-w-full flex-col overflow-y-auto rounded-lg bg-white">
+      {/* className rounded-t-lg: sudut atas header ikut membulat */}
       <DialogHeader title={<span className="break-all">{f.nama}</span>} onClose={onClose} closeLabel="Tutup detail berkas" className="rounded-t-lg" />
       <div className="flex flex-col gap-6 p-6">
         <div className="flex h-40 flex-col items-center justify-center gap-4 rounded-md bg-grey2-75">
