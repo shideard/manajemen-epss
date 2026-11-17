@@ -200,10 +200,15 @@ function RepositoriDetail() {
     setErrorBerkas('')
     konfirmasi({
       title: 'Hapus Berkas',
-      message: `Hapus "${f.nama}" dari kegiatan ini? Kegiatan lain yang memakai berkas yang sama tidak terpengaruh.`,
+      message: `Hapus "${f.nama}" dari kegiatan ini? Kegiatan lain yang memakai berkas yang sama tidak terpengaruh.${
+        tertaut.some((b) => b.status === 'menunggu') ? ' Ajuan yang sedang menunggu verifikasi akan ditarik kembali ke draft.' : ''
+      }`,
       confirmLabel: 'Hapus',
       danger: true,
-      onConfirm: () => dokumen.hapus(f),
+      onConfirm: async () => {
+        await dokumen.hapus(f)
+        buktiData.muatUlang()
+      },
     })
   }
 

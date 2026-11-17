@@ -171,7 +171,7 @@ function ArsipBukti() {
   const muat = [periodeData, daftarKegiatan, dataArsip]
   const { kegiatan } = daftarKegiatan
   const { dokumen: arsip, kaitkan, lepas, hapus } = dataArsip
-  const { bukti } = useBukti()
+  const { bukti, muatUlang: muatUlangBukti } = useBukti()
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
   const [periodeId, setPeriodeId] = useState(null)
   const [dipilihId, setDipilihId] = useState(null)
@@ -340,13 +340,16 @@ function ArsipBukti() {
             onHapus={(semua) =>
               konfirmasi({
                 title: semua ? 'Hapus dari Semua Kegiatan' : 'Lepas dari Kegiatan Ini',
-                message: semua
+                message:
+                  (semua
                   ? `Hapus "${dipilih.nama}" beserta semua tautannya di kegiatan lain? Berkas tidak bisa dikembalikan.`
-                  : `Lepas "${dipilih.nama}" dari ${dipilih.kegiatan[0].nama}? Kegiatan lain yang memakai berkas ini tidak terpengaruh.`,
+                  : `Lepas "${dipilih.nama}" dari ${dipilih.kegiatan[0].nama}? Kegiatan lain yang memakai berkas ini tidak terpengaruh.`) +
+                  ' Ajuan yang sedang menunggu verifikasi akan ditarik kembali ke draft.',
                 confirmLabel: semua ? 'Hapus' : 'Lepas',
                 danger: true,
                 onConfirm: async () => {
                   await (semua ? hapus : lepas)(dipilih.kegiatan[0].id, dipilih.id)
+                  muatUlangBukti()
                   setDipilihId(null)
                   setPesanTone('green')
                   setPesan(`"${dipilih.nama}" ${semua ? 'dihapus' : 'dilepas dari kegiatan'}.`)

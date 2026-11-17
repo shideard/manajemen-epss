@@ -287,6 +287,11 @@ export function useBukti(idPeriode) {
   return {
     bukti,
     ...state,
+    // Ubahan lokal ikut dibuang: status dari server bisa berubah di luar halaman ini (mis. ajuan ditarik saat berkas dihapus)
+    muatUlang() {
+      setUbahan(EMPTY_OBJECT)
+      state.muatUlang()
+    },
     // Operator (PIC): simpan checklist sebagai draft, atau ajukan = true untuk mengirim ke verifikator.
     // kegiatan = hasil API (punya daftar indikator beserta id API-nya)
     async simpan(kegiatan, indikatorId, { checked, ajukan = false }) {
