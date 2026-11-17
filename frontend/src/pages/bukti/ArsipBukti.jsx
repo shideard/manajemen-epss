@@ -13,7 +13,7 @@ import eyeIcon from '../../assets/icons/eye-line.svg'
 
 const TAG_TABEL = 3 // sisanya diringkas jadi "+n"; daftar lengkap ada di panel detail
 const TAMPILAN = [
-  { value: 'semua', label: 'All', Icon: Files },
+  { value: 'semua', label: 'Semua', Icon: Files },
   { value: 'folder', label: 'Folder Kegiatan', Icon: FolderTree },
 ]
 

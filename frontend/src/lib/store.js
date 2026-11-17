@@ -324,6 +324,11 @@ export function useBukti(idPeriode) {
       })
       return terima(a)
     },
+    // Verifikator: cabut status terverifikasi → kembali ke 'perbaikan' dengan alasan untuk operator
+    async cabut(ajuan, catatan) {
+      const { data: a } = await api(`/api/ajuan-bukti/${ajuan.id}/cabut`, { method: 'PATCH', body: { catatan } })
+      return terima(a)
+    },
   }
 }
 
