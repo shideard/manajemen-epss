@@ -477,6 +477,16 @@ export function useSemuaDokumen(periodeIds) {
       await api(`/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti/${dokumenId}/tautan`, { method: 'POST' })
       state.muatUlang()
     },
+    // Lepas dari satu kegiatan saja; kegiatan lain yang memakai berkas yang sama tetap utuh
+    async lepas(kegiatanId, dokumenId) {
+      await api(`/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti/${dokumenId}/tautan`, { method: 'DELETE' })
+      state.muatUlang()
+    },
+    // Hapus berkas beserta semua tautannya di kegiatan lain
+    async hapus(kegiatanId, dokumenId) {
+      await api(`/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti/${dokumenId}`, { method: 'DELETE' })
+      state.muatUlang()
+    },
   }
 }
 
@@ -510,6 +520,14 @@ export function useDokumenBukti(kegiatanId) {
           body.append('evidence_date', toISODate(new Date()))
           await api(base, { method: 'POST', body })
         }
+      } finally {
+        await muat()
+      }
+    },
+    // Lepas berkas dari kegiatan ini (berkas fisik ikut terhapus bila tidak dipakai kegiatan lain)
+    async hapus(dokumen) {
+      try {
+        await api(`${base}/${dokumen.id}/tautan`, { method: 'DELETE' })
       } finally {
         await muat()
       }

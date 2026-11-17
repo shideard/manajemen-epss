@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { useDokumenBukti, usePeriode, useSemuaDokumen, useSemuaKegiatan } from '../../lib/store'
+import { useBukti, useDokumenBukti, usePeriode, useSemuaDokumen, useSemuaKegiatan } from '../../lib/store'
 import { formatTanggal, formatUkuran, includesText, isPic, paginate } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { Badge, DialogHeader, Dropdown, Memuat, Notice, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
+import { useConfirm } from '../../components/useConfirm'
 import folderIcon from '../../assets/sidebar/folder-5-fill.svg'
 import fileText from '../../assets/icons/file-text-fill.svg'
 import eyeIcon from '../../assets/icons/eye-line.svg'
@@ -36,7 +37,7 @@ function Ikon({ src, besar = false }) {
 }
 
 // Panel detail di kanan tabel (referensi: panel detail berkas ala Google Drive)
-function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
+function DetailBerkas({ f, user, aktif, kegiatan, terverifikasi, onKaitkan, onHapus, onClose }) {
   const [target, setTarget] = useState('')
   const [error, setError] = useState('')
   const dokumen = useDokumenBukti(f.kegiatan[0].id)
@@ -44,6 +45,8 @@ function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
   // Tautan baru masuk periode berjalan, jadi hanya kegiatan yang user ini PIC-nya dan periodenya belum dikunci
   const boleh = bolehUbah(user, 'unggahBukti', aktif)
   const pilihan = kegiatan.filter((k) => isPic(k, user) && !f.kegiatan.includes(k))
+  // Aturan backend: hanya PIC, periode berjalan yang belum dikunci, dan belum ada ajuan terverifikasi
+  const bolehHapus = boleh && f.periodeId === aktif?.id && isPic(f.kegiatan[0], user) && !terverifikasi
 
   return (
     // Sticky agar panel ikut layar saat tabel panjang; isinya bergulir sendiri bila lebih tinggi dari layar
@@ -139,6 +142,21 @@ function DetailBerkas({ f, user, aktif, kegiatan, onKaitkan, onClose }) {
             </>
           )}
         </section>
+
+        {bolehHapus && (
+          <>
+            <hr className="border-grey-75" />
+            <section className="flex flex-col gap-3">
+              <h3 className="font-semibold">Hapus Berkas</h3>
+              <button type="button" onClick={() => onHapus(false)} className={buttonClass('outline')}>
+                Lepas dari Kegiatan Ini
+              </button>
+              <button type="button" onClick={() => onHapus(true)} className={buttonClass('danger')}>
+                Hapus dari Semua Kegiatan
+              </button>
+            </section>
+          </>
+        )}
       </div>
     </aside>
   )
@@ -152,7 +170,9 @@ function ArsipBukti() {
   const dataArsip = useSemuaDokumen(periode.map((p) => p.id))
   const muat = [periodeData, daftarKegiatan, dataArsip]
   const { kegiatan } = daftarKegiatan
-  const { dokumen: arsip, kaitkan } = dataArsip
+  const { dokumen: arsip, kaitkan, lepas, hapus } = dataArsip
+  const { bukti } = useBukti()
+  const [konfirmasi, dialogKonfirmasi] = useConfirm()
   const [periodeId, setPeriodeId] = useState(null)
   const [dipilihId, setDipilihId] = useState(null)
   const [query, setQuery] = useState('')
@@ -315,7 +335,24 @@ function ArsipBukti() {
             user={user}
             aktif={aktif}
             kegiatan={kegiatan}
+            terverifikasi={Object.values(bukti).some((b) => b.kegiatanId === dipilih.kegiatan[0].id && b.status === 'terverifikasi')}
             onClose={() => setDipilihId(null)}
+            onHapus={(semua) =>
+              konfirmasi({
+                title: semua ? 'Hapus dari Semua Kegiatan' : 'Lepas dari Kegiatan Ini',
+                message: semua
+                  ? `Hapus "${dipilih.nama}" beserta semua tautannya di kegiatan lain? Berkas tidak bisa dikembalikan.`
+                  : `Lepas "${dipilih.nama}" dari ${dipilih.kegiatan[0].nama}? Kegiatan lain yang memakai berkas ini tidak terpengaruh.`,
+                confirmLabel: semua ? 'Hapus' : 'Lepas',
+                danger: true,
+                onConfirm: async () => {
+                  await (semua ? hapus : lepas)(dipilih.kegiatan[0].id, dipilih.id)
+                  setDipilihId(null)
+                  setPesanTone('green')
+                  setPesan(`"${dipilih.nama}" ${semua ? 'dihapus' : 'dilepas dari kegiatan'}.`)
+                },
+              })
+            }
             onKaitkan={async (kegiatanId) => {
               try {
                 await kaitkan(kegiatanId, dipilih.id)
@@ -329,6 +366,7 @@ function ArsipBukti() {
           />
         )}
       </div>
+      {dialogKonfirmasi}
     </div>
   )
 }
