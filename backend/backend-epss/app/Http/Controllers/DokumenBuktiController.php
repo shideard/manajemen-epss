@@ -291,6 +291,15 @@ class DokumenBuktiController extends Controller
         abort_unless($document->is_current, 409, 'Hanya berkas versi terbaru yang dapat dihapus.');
         $this->pastikanBolehHapus($request, $document->kegiatan);
 
+        // Berkas yang sedang diverifikasi berubah: ajuan yang menunggu ditarik kembali ke draft
+        $document->kegiatan->ajuanBukti()
+            ->where('status', StatusAjuanBukti::MENUNGGU->value)
+            ->update([
+                'status' => StatusAjuanBukti::DRAFT->value,
+                'diajukan_oleh' => null,
+                'diajukan_pada' => null,
+            ]);
+
         $kunci = [];
         // Dari anak ke induk, karena parent_document_id restrictOnDelete
         for ($item = $document; $item; $item = $induk) {

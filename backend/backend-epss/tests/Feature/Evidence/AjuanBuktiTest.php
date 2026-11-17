@@ -567,4 +567,20 @@ class AjuanBuktiTest extends TestCase
         $this->assertModelExists($dokumen);
         $this->assertModelExists($dokumenTerkunci);
     }
+
+    public function test_deleting_a_file_withdraws_a_waiting_submission(): void
+    {
+        $s = $this->createScenario();
+        Storage::fake();
+        $ajuan = $this->ajuanMenunggu($s);
+        $dokumen = DokumenBukti::firstOrFail();
+
+        $this->sebagai($s['pic'], 'web')
+            ->deleteJson('/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti/' . $dokumen->id . '/tautan')
+            ->assertNoContent();
+
+        $ajuan->refresh();
+        $this->assertSame(StatusAjuanBukti::DRAFT, $ajuan->status);
+        $this->assertNull($ajuan->diajukan_pada);
+    }
 }
