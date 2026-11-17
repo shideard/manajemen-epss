@@ -202,6 +202,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         )->whereUuid('ajuanBukti')
         ->name('ajuan-bukti.verify');
 
+        Route::patch('/ajuan-bukti/{ajuanBukti}/cabut',
+        [AjuanBuktiController::class, 'revoke']
+        )->whereUuid('ajuanBukti')
+        ->name('ajuan-bukti.revoke');
+
         Route::put('/rencana-kegiatan/{rencanaKegiatan}/output-diharapkan',
         \App\Http\Controllers\SyncRencanaKegiatanOutputController::class
         )->whereUuid('rencanaKegiatan')

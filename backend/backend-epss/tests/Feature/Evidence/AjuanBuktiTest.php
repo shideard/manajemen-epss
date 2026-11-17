@@ -596,4 +596,31 @@ class AjuanBuktiTest extends TestCase
         $this->assertSame(StatusAjuanBukti::DRAFT, $ajuan->status);
         $this->assertNull($ajuan->diajukan_pada);
     }
+
+    public function test_verifikator_can_revoke_a_verified_submission_back_to_revision(): void
+    {
+        $s = $this->createScenario();
+        $ajuan = $this->ajuanMenunggu($s);
+        $cabut = '/api/ajuan-bukti/' . $ajuan->id . '/cabut';
+
+        // Belum terverifikasi: tidak bisa dicabut
+        $this->sebagai($s['verifikator'], 'web')->patchJson($cabut, ['catatan' => 'Salah'])->assertStatus(409);
+
+        $this->patchJson('/api/ajuan-bukti/' . $ajuan->id . '/verifikasi', ['keputusan' => 'TERVERIFIKASI', 'checklist' => self::CHECKLIST])
+            ->assertOk();
+        $this->patchJson($cabut, [])->assertJsonValidationErrors(['catatan']);
+        $this->sebagai($s['pic'], 'web')->patchJson($cabut, ['catatan' => 'Salah'])->assertForbidden();
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->patchJson($cabut, ['catatan' => 'Berkas ternyata dari tahun lalu.'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'PERBAIKAN')
+            ->assertJsonPath('data.level', null)
+            ->assertJsonPath('data.catatan', 'Berkas ternyata dari tahun lalu.');
+
+        // Operator bisa memperbaiki lalu mengajukan ulang
+        $this->sebagai($s['pic'], 'web')
+            ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
+            ->assertSuccessful();
+    }
 }

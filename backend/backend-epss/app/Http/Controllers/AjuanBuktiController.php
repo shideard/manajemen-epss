@@ -12,6 +12,7 @@ use App\Models\KegiatanIndikator;
 use App\Models\PeriodeEvaluasi;
 use App\Models\RencanaKegiatan;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -143,6 +144,37 @@ class AjuanBuktiController extends Controller
             $ajuan->level = $disetujui ? $level : null;
             $ajuan->catatan = $disetujui ? null : trim($validated['catatan']);
             $ajuan->diverifikasi_oleh = $actorId;
+            $ajuan->diverifikasi_pada = now();
+            $ajuan->save();
+
+            return $ajuan;
+        });
+
+        return (new AjuanBuktiResource(
+            $ajuan->refresh()->load(['indikator:id,kode', 'pengaju:id,name', 'verifikator:id,name'])
+        ))->response();
+    }
+
+    // Verifikator: cabut status terverifikasi, ajuan kembali ke operator sebagai perbaikan dengan alasan
+    public function revoke(Request $request, AjuanBukti $ajuanBukti): JsonResponse
+    {
+        Gate::forUser($request->user())->authorize('verify', $ajuanBukti);
+        $catatan = trim($request->validate(['catatan' => ['required', 'string', 'max:2000']])['catatan']);
+
+        $ajuan = DB::transaction(function () use ($ajuanBukti, $catatan, $request): AjuanBukti {
+            $ajuan = AjuanBukti::query()->lockForUpdate()->findOrFail($ajuanBukti->id);
+
+            abort_if(
+                $ajuan->status !== StatusAjuanBukti::TERVERIFIKASI,
+                409,
+                'Hanya ajuan terverifikasi yang dapat dicabut.'
+            );
+
+            // Checklist dipertahankan supaya operator tinggal memperbaiki bagian yang dicatat
+            $ajuan->status = StatusAjuanBukti::PERBAIKAN;
+            $ajuan->level = null;
+            $ajuan->catatan = $catatan;
+            $ajuan->diverifikasi_oleh = $request->user()->id;
             $ajuan->diverifikasi_pada = now();
             $ajuan->save();
 
