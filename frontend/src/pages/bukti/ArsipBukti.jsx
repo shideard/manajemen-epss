@@ -1,18 +1,37 @@
 import { useState } from 'react'
-import { ArrowLeft, Link2 } from 'lucide-react'
+import { ArrowLeft, Files, FolderTree, Link2 } from 'lucide-react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useBukti, useDokumenBukti, usePeriode, useSemuaDokumen, useSemuaKegiatan } from '../../lib/store'
-import { formatTanggal, formatUkuran, includesText, isPic, paginate } from '../../lib/epss'
+import { formatTanggal, formatUkuran, includesText, isPic } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
-import { Badge, DialogHeader, Dropdown, Memuat, Notice, PageHeader, Pagination, SearchBox } from '../../components/ui'
+import { Badge, DialogHeader, Dropdown, Memuat, Notice, PageHeader, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import folderIcon from '../../assets/sidebar/folder-5-fill.svg'
 import fileText from '../../assets/icons/file-text-fill.svg'
 import eyeIcon from '../../assets/icons/eye-line.svg'
 
-const PAGE_SIZE = 8
 const TAG_TABEL = 3 // sisanya diringkas jadi "+n"; daftar lengkap ada di panel detail
+const TAMPILAN = [
+  { value: 'semua', label: 'All', Icon: Files },
+  { value: 'folder', label: 'Folder Kegiatan', Icon: FolderTree },
+]
+
+function DaftarIndikator({ indikator }) {
+  if (indikator.length === 0) return <span className="text-small font-light text-grey-200">Belum dipetakan</span>
+  return (
+    <span className="flex flex-wrap gap-1.5">
+      {indikator.slice(0, TAG_TABEL).map((i) => (
+        <TagIndikator key={i.id} indikator={i} />
+      ))}
+      {indikator.length > TAG_TABEL && (
+        <span title={indikator.slice(TAG_TABEL).map((i) => `Indikator ${i.nomor}`).join(', ')} className="px-1 text-small text-grey-200">
+          +{indikator.length - TAG_TABEL}
+        </span>
+      )}
+    </span>
+  )
+}
 
 function TagIndikator({ indikator }) {
   return (
@@ -196,10 +215,10 @@ function ArsipBukti() {
   const { bukti, muatUlang: muatUlangBukti } = useBukti()
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
   const [periodeId, setPeriodeId] = useState(null)
+  const [tampilan, setTampilan] = useState('folder')
   const [kegiatanId, setKegiatanId] = useState(null)
   const [dipilihId, setDipilihId] = useState(null)
   const [query, setQuery] = useState('')
-  const [page, setPage] = useState(1)
   const [pesan, setPesan] = useState('')
   const [pesanTone, setPesanTone] = useState('green')
 
@@ -207,27 +226,24 @@ function ArsipBukti() {
   const isiFolder = arsip.filter((f) => f.periode.includes(folder?.id))
   // Folder kegiatan: semua kegiatan periode berjalan (termasuk yang belum punya berkas) + kegiatan yang punya berkas
   const folderKegiatan = [...new Map([...(folder?.id === aktif?.id ? kegiatan : []), ...isiFolder.map((f) => f.kegiatan[0])].map((k) => [k.id, k])).values()]
-  const kegiatanBuka = folderKegiatan.find((k) => k.id === kegiatanId)
-  // Tanpa folder kegiatan terbuka, tabel hanya muncul saat mencari (lintas kegiatan)
-  const tampilTabel = Boolean(kegiatanBuka || query)
+  const kegiatanBuka = tampilan === 'folder' ? folderKegiatan.find((k) => k.id === kegiatanId) : undefined
+  // Mode folder di akar periode menampilkan baris folder; pencarian selalu menampilkan berkas lintas kegiatan
+  const barisFolder = tampilan === 'folder' && !kegiatanBuka && !query
   const cocok = isiFolder.filter((f) => (!kegiatanBuka || f.kegiatan[0].id === kegiatanBuka.id)).filter((f) =>
     includesText([f.nama, f.oleh, ...f.kegiatan.map((k) => k.nama), ...f.indikator.flatMap((i) => [i.nama, `indikator ${i.nomor}`, `ind. ${i.nomor}`])], query),
   )
-  const { rows, page: currentPage, pageCount } = paginate(cocok, page, PAGE_SIZE)
   const dipilih = isiFolder.find((f) => f.id === dipilihId)
   const keluarga = dipilih ? arsip.filter((f) => idAsli(f) === idAsli(dipilih)) : []
 
   function bukaKegiatan(id, berkasId = null) {
     setKegiatanId(id)
     setDipilihId(berkasId)
-    setPage(1)
   }
 
   function bukaFolder(id) {
     setPeriodeId(id)
     setKegiatanId(null)
     setDipilihId(null)
-    setPage(1)
     setPesan('')
   }
 
@@ -237,10 +253,7 @@ function ArsipBukti() {
       <PageHeader title="Repositori Bukti Dukung" subtitle="Arsip semua berkas bukti dukung per periode, beserta kegiatan yang memakainya.">
         <SearchBox
           value={query}
-          onChange={(value) => {
-            setQuery(value)
-            setPage(1)
-          }}
+          onChange={setQuery}
           placeholder="Cari berkas, kegiatan, atau indikator..."
         />
       </PageHeader>
@@ -285,124 +298,141 @@ function ArsipBukti() {
 
       <div className="flex flex-wrap items-start gap-6">
         <section className="flex min-w-0 flex-1 flex-col gap-3 rounded-lg bg-grey-500 px-2 pt-6 pb-2">
-          <div className="flex flex-wrap items-center gap-3 px-3">
-            {kegiatanBuka && (
-              <button type="button" onClick={() => bukaKegiatan(null)} aria-label="Kembali ke folder kegiatan" className="grid size-8 place-items-center rounded-sm bg-lime-300 text-grey-500">
-                <ArrowLeft size={20} aria-hidden="true" />
-              </button>
-            )}
-            <h2 className="text-h3 text-lime-300">
-              {folder ? `Periode ${folder.tahun1} - ${folder.tahun2}` : 'Berkas'}
-              {kegiatanBuka && <span className="text-white"> / {kegiatanBuka.nama}</span>}
-            </h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 px-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {kegiatanBuka && (
+                <button type="button" onClick={() => bukaKegiatan(null)} aria-label="Kembali ke folder kegiatan" className="grid size-8 place-items-center rounded-sm bg-lime-300 text-grey-500">
+                  <ArrowLeft size={20} aria-hidden="true" />
+                </button>
+              )}
+              <h2 className="text-h3 text-lime-300">
+                {folder ? `Periode ${folder.tahun1} - ${folder.tahun2}` : 'Berkas'}
+                {kegiatanBuka && <span className="text-white"> / {kegiatanBuka.nama}</span>}
+              </h2>
+            </div>
+            <div role="group" aria-label="Tampilan" className="flex shrink-0 gap-1 rounded-md bg-grey2-75 p-1">
+              {TAMPILAN.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => {
+                    setTampilan(t.value)
+                    bukaKegiatan(null)
+                  }}
+                  aria-pressed={tampilan === t.value}
+                  className={`flex items-center gap-2 rounded-sm px-3.5 py-2 font-medium transition-colors ${
+                    tampilan === t.value ? 'bg-grey-300 text-lime-300' : 'text-grey-200 hover:bg-white'
+                  }`}
+                >
+                  <t.Icon size={18} aria-hidden="true" />
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Folder = rencana kegiatan; isinya berkas asli dan pintasan ke berkas di kegiatan lain */}
-          {!tampilTabel && (
-            <div className="rounded-md bg-white px-4 py-5">
-              {folderKegiatan.length === 0 && <p className="py-10 text-center text-grey-200">Belum ada kegiatan di periode ini.</p>}
-              <ul className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
-                {folderKegiatan.map((k) => {
-                  const isi = isiFolder.filter((f) => f.kegiatan[0].id === k.id)
-                  const pintasan = isi.filter((f) => f.sumber).length
-                  return (
-                    <li key={k.id}>
-                      <button
-                        type="button"
-                        onClick={() => bukaKegiatan(k.id)}
-                        className="flex size-full items-center gap-3.5 rounded-md bg-lime-100 p-4 text-left transition duration-300 ease-out-quint hover:-translate-y-0.5 hover:shadow-md"
-                      >
-                        <Ikon src={folderIcon} />
-                        <span className="flex min-w-0 flex-col gap-1">
-                          <span className="font-medium">{k.nama}</span>
-                          <span className="text-small text-grey-200">
-                            {isi.length} berkas{pintasan > 0 && ` (${pintasan} pintasan)`}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          )}
-
-          {tampilTabel && (
-            <div className="overflow-x-auto rounded-md bg-white px-4 py-5">
-              <table className="w-full min-w-[800px] text-left text-body text-grey-500">
-                <thead>
-                  <tr className="border-b border-grey-75 font-semibold">
-                    <th className="pb-3">Nama Berkas</th>
-                    {!kegiatanBuka && <th className="pb-3">Kegiatan</th>}
-                    <th className="pb-3">Indikator</th>
-                    <th className="pb-3">Ukuran</th>
-                    <th className="pb-3">Diunggah</th>
-                  </tr>
-                </thead>
-                <tbody className="font-medium">
-                  {cocok.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-10 text-center text-grey-200">
-                        {query ? 'Tidak ada berkas yang cocok.' : 'Belum ada berkas di kegiatan ini.'}
-                      </td>
-                    </tr>
-                  )}
-                  {rows.map((f) => {
-                    const [nama, ekstensi] = pecahNama(f.nama)
-                    return (
-                      <tr key={f.id} className={`border-b border-grey-75/50 last:border-0 ${f.id === dipilihId ? 'bg-lime-75' : ''}`}>
-                        <td className="py-2.5 pr-4">
-                          <button type="button" onClick={() => setDipilihId(f.id)} aria-pressed={f.id === dipilihId} className="flex items-center gap-3.5 text-left hover:underline">
-                            <Ikon src={fileText} pintasan={Boolean(f.sumber)} />
-                            <span className="flex flex-col gap-0.5">
-                              <span className="break-all">
-                                {nama}
-                                <span className="font-light text-grey-200">{ekstensi}</span>
-                              </span>
-                              {f.sumber && <span className="text-small font-light text-grey-200">Pintasan dari {f.sumber.kegiatanNama}</span>}
-                            </span>
-                          </button>
-                        </td>
-                        {!kegiatanBuka && (
-                          <td className="py-2.5 pr-4">
-                            <span className="text-small">{f.kegiatan[0].nama}</span>
-                          </td>
-                        )}
-                        <td className="py-2.5 pr-4">
-                          {f.indikator.length === 0 ? (
-                            <span className="text-small font-light text-grey-200">Belum dipetakan</span>
-                          ) : (
-                            <span className="flex flex-wrap gap-1.5">
-                              {f.indikator.slice(0, TAG_TABEL).map((i) => (
-                                <TagIndikator key={i.id} indikator={i} />
-                              ))}
-                              {f.indikator.length > TAG_TABEL && (
-                                <span title={f.indikator.slice(TAG_TABEL).map((i) => `Indikator ${i.nomor}`).join(', ')} className="px-1 text-small text-grey-200">
-                                  +{f.indikator.length - TAG_TABEL}
-                                </span>
-                              )}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-2.5 pr-4 whitespace-nowrap">{formatUkuran(f.ukuran)}</td>
-                        <td className="py-2.5">
-                          <span className="flex flex-col gap-1">
-                            <span className="whitespace-nowrap">{formatTanggal(f.tanggal, 'short')}</span>
-                            <span className="text-small font-light text-grey-200">{f.oleh}</span>
-                          </span>
+          {/* Satu tabel detail untuk folder dan berkas (ala tampilan Details di file explorer), tanpa paginasi */}
+          <div className="overflow-x-auto rounded-md bg-white px-4 py-5">
+            <table className="w-full min-w-[800px] text-left text-body text-grey-500">
+              <thead>
+                <tr className="border-b border-grey-75 font-semibold">
+                  <th className="pb-3">Nama</th>
+                  {!kegiatanBuka && !barisFolder && <th className="pb-3">Kegiatan</th>}
+                  <th className="pb-3">Indikator</th>
+                  <th className="pb-3">Ukuran</th>
+                  <th className="pb-3">Diunggah</th>
+                </tr>
+              </thead>
+              <tbody className="font-medium">
+                {barisFolder ? (
+                  <>
+                    {folderKegiatan.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-10 text-center text-grey-200">
+                          Belum ada kegiatan di periode ini.
                         </td>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {tampilTabel && cocok.length > PAGE_SIZE && (
-            <div className="pb-2">
-              <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />
-            </div>
-          )}
+                    )}
+                    {/* Folder = rencana kegiatan; isinya berkas asli dan pintasan ke berkas di kegiatan lain */}
+                    {folderKegiatan.map((k) => {
+                      const isi = isiFolder.filter((f) => f.kegiatan[0].id === k.id)
+                      const pintasan = isi.filter((f) => f.sumber).length
+                      const terbaru = isi.reduce((a, f) => (!a || f.tanggal > a.tanggal ? f : a), null)
+                      return (
+                        <tr key={k.id} className="border-b border-grey-75/50 last:border-0">
+                          <td className="py-2.5 pr-4">
+                            <button type="button" onClick={() => bukaKegiatan(k.id)} className="flex items-center gap-3.5 text-left hover:underline">
+                              <Ikon src={folderIcon} />
+                              <span className="flex flex-col gap-0.5">
+                                {k.nama}
+                                <span className="text-small font-light text-grey-200">
+                                  {isi.length} berkas{pintasan > 0 && ` (${pintasan} pintasan)`}
+                                </span>
+                              </span>
+                            </button>
+                          </td>
+                          <td className="py-2.5 pr-4">
+                            <DaftarIndikator indikator={isi[0]?.indikator ?? []} />
+                          </td>
+                          <td className="py-2.5 pr-4 whitespace-nowrap">{formatUkuran(isi.reduce((total, f) => total + f.ukuran, 0))}</td>
+                          <td className="py-2.5">
+                            <span className="flex flex-col gap-1">
+                              <span className="whitespace-nowrap">{terbaru ? formatTanggal(terbaru.tanggal, 'short') : '-'}</span>
+                              <span className="text-small font-light text-grey-200">{k.pic}</span>
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </>
+                ) : (
+                  <>
+                    {cocok.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-10 text-center text-grey-200">
+                          {query ? 'Tidak ada berkas yang cocok.' : kegiatanBuka ? 'Belum ada berkas di kegiatan ini.' : 'Belum ada berkas di periode ini.'}
+                        </td>
+                      </tr>
+                    )}
+                    {cocok.map((f) => {
+                      const [nama, ekstensi] = pecahNama(f.nama)
+                      return (
+                        <tr key={f.id} className={`border-b border-grey-75/50 last:border-0 ${f.id === dipilihId ? 'bg-lime-75' : ''}`}>
+                          <td className="py-2.5 pr-4">
+                            <button type="button" onClick={() => setDipilihId(f.id)} aria-pressed={f.id === dipilihId} className="flex items-center gap-3.5 text-left hover:underline">
+                              <Ikon src={fileText} pintasan={Boolean(f.sumber)} />
+                              <span className="flex flex-col gap-0.5">
+                                <span className="break-all">
+                                  {nama}
+                                  <span className="font-light text-grey-200">{ekstensi}</span>
+                                </span>
+                                {f.sumber && <span className="text-small font-light text-grey-200">Pintasan dari {f.sumber.kegiatanNama}</span>}
+                              </span>
+                            </button>
+                          </td>
+                          {!kegiatanBuka && (
+                            <td className="py-2.5 pr-4">
+                              <span className="text-small">{f.kegiatan[0].nama}</span>
+                            </td>
+                          )}
+                          <td className="py-2.5 pr-4">
+                            <DaftarIndikator indikator={f.indikator} />
+                          </td>
+                          <td className="py-2.5 pr-4 whitespace-nowrap">{formatUkuran(f.ukuran)}</td>
+                          <td className="py-2.5">
+                            <span className="flex flex-col gap-1">
+                              <span className="whitespace-nowrap">{formatTanggal(f.tanggal, 'short')}</span>
+                              <span className="text-small font-light text-grey-200">{f.oleh}</span>
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         {dipilih && (
