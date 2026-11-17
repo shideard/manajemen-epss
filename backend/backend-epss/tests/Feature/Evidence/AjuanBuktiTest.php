@@ -500,4 +500,127 @@ class AjuanBuktiTest extends TestCase
             )
             ->assertForbidden();
     }
+
+    // Kegiatan kedua milik PIC yang sama, berkas skenario ditautkan ke sana
+    private function denganTautan(array $s): array
+    {
+        Storage::fake();
+        $dokumen = DokumenBukti::firstOrFail();
+        Storage::put($dokumen->storage_key, 'isi');
+        $kedua = $s['kegiatan']->replicate();
+        $kedua->nama_kegiatan = 'Kegiatan Kedua';
+        $kedua->save();
+
+        $this->sebagai($s['pic'], 'web')
+            ->postJson('/api/rencana-kegiatan/' . $kedua->id . '/dokumen-bukti/' . $dokumen->id . '/tautan')
+            ->assertCreated();
+
+        return [$dokumen, $kedua, DokumenBukti::where('kegiatan_id', $kedua->id)->firstOrFail()];
+    }
+
+    public function test_unlink_removes_only_that_activitys_copy(): void
+    {
+        $s = $this->createScenario();
+        [$dokumen, $kedua, $tautan] = $this->denganTautan($s);
+
+        $this->sebagai($s['pic'], 'web')
+            ->deleteJson('/api/rencana-kegiatan/' . $kedua->id . '/dokumen-bukti/' . $tautan->id . '/tautan')
+            ->assertNoContent();
+
+        $this->assertModelMissing($tautan);
+        $this->assertModelExists($dokumen);
+        Storage::assertExists($dokumen->storage_key);
+    }
+
+    public function test_linked_file_points_to_its_original(): void
+    {
+        $s = $this->createScenario();
+        [$dokumen, $kedua] = $this->denganTautan($s);
+
+        $this->sebagai($s['pic'], 'web')
+            ->getJson('/api/rencana-kegiatan/' . $kedua->id . '/dokumen-bukti')
+            ->assertJsonPath('data.0.sumber.dokumen_id', $dokumen->id)
+            ->assertJsonPath('data.0.sumber.nama_kegiatan', 'Kegiatan Pengujian');
+        $this->getJson('/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti')
+            ->assertJsonPath('data.0.sumber', null);
+    }
+
+    public function test_destroy_removes_every_linked_copy_and_the_file(): void
+    {
+        $s = $this->createScenario();
+        [$dokumen, , $tautan] = $this->denganTautan($s);
+
+        $this->sebagai($s['pic'], 'web')
+            ->deleteJson('/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti/' . $dokumen->id)
+            ->assertNoContent();
+
+        $this->assertModelMissing($tautan);
+        $this->assertModelMissing($dokumen);
+        Storage::assertMissing($dokumen->storage_key);
+    }
+
+    public function test_document_cannot_be_deleted_after_verification_or_period_lock(): void
+    {
+        $s = $this->createScenario();
+        $ajuan = $this->ajuanMenunggu($s);
+        $dokumen = DokumenBukti::firstOrFail();
+        $url = '/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti/' . $dokumen->id;
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->patchJson('/api/ajuan-bukti/' . $ajuan->id . '/verifikasi', ['keputusan' => 'TERVERIFIKASI', 'checklist' => self::CHECKLIST])
+            ->assertOk();
+        $this->sebagai($s['pic'], 'web')->deleteJson($url)->assertStatus(409);
+        $this->sebagai($s['pic'], 'web')->deleteJson($url . '/tautan')->assertStatus(409);
+
+        $terkunci = $this->createScenario(StatusPeriode::TERKUNCI);
+        $dokumenTerkunci = DokumenBukti::where('kegiatan_id', $terkunci['kegiatan']->id)->firstOrFail();
+        $this->sebagai($terkunci['pic'], 'web')
+            ->deleteJson('/api/rencana-kegiatan/' . $terkunci['kegiatan']->id . '/dokumen-bukti/' . $dokumenTerkunci->id)
+            ->assertStatus(409);
+        $this->assertModelExists($dokumen);
+        $this->assertModelExists($dokumenTerkunci);
+    }
+
+    public function test_deleting_a_file_withdraws_a_waiting_submission(): void
+    {
+        $s = $this->createScenario();
+        Storage::fake();
+        $ajuan = $this->ajuanMenunggu($s);
+        $dokumen = DokumenBukti::firstOrFail();
+
+        $this->sebagai($s['pic'], 'web')
+            ->deleteJson('/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti/' . $dokumen->id . '/tautan')
+            ->assertNoContent();
+
+        $ajuan->refresh();
+        $this->assertSame(StatusAjuanBukti::DRAFT, $ajuan->status);
+        $this->assertNull($ajuan->diajukan_pada);
+    }
+
+    public function test_verifikator_can_revoke_a_verified_submission_back_to_revision(): void
+    {
+        $s = $this->createScenario();
+        $ajuan = $this->ajuanMenunggu($s);
+        $cabut = '/api/ajuan-bukti/' . $ajuan->id . '/cabut';
+
+        // Belum terverifikasi: tidak bisa dicabut
+        $this->sebagai($s['verifikator'], 'web')->patchJson($cabut, ['catatan' => 'Salah'])->assertStatus(409);
+
+        $this->patchJson('/api/ajuan-bukti/' . $ajuan->id . '/verifikasi', ['keputusan' => 'TERVERIFIKASI', 'checklist' => self::CHECKLIST])
+            ->assertOk();
+        $this->patchJson($cabut, [])->assertJsonValidationErrors(['catatan']);
+        $this->sebagai($s['pic'], 'web')->patchJson($cabut, ['catatan' => 'Salah'])->assertForbidden();
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->patchJson($cabut, ['catatan' => 'Berkas ternyata dari tahun lalu.'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'PERBAIKAN')
+            ->assertJsonPath('data.level', null)
+            ->assertJsonPath('data.catatan', 'Berkas ternyata dari tahun lalu.');
+
+        // Operator bisa memperbaiki lalu mengajukan ulang
+        $this->sebagai($s['pic'], 'web')
+            ->putJson($this->updateUrl($s), ['checklist' => self::CHECKLIST, 'ajukan' => true])
+            ->assertSuccessful();
+    }
 }

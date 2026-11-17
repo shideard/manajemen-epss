@@ -15,6 +15,7 @@ import bookIcon from '../../assets/icons/book-mark-fill-sm.svg'
 import fileText from '../../assets/icons/file-text-fill.svg'
 import checkBadge from '../../assets/icons/check-badge.svg'
 import eyeIcon from '../../assets/icons/eye-line.svg'
+import deleteIcon from '../../assets/icons/delete-bin-2-fill.svg'
 import addIcon from '../../assets/rencana/add-circle-fill.svg'
 import mindMap from '../../assets/icons/mind-map.svg'
 
@@ -151,6 +152,7 @@ function RepositoriDetail() {
   const [errorBerkas, setErrorBerkas] = useState('')
   const [errorOutput, setErrorOutput] = useState('')
   const fileInput = useRef(null)
+  const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   if (detail.error?.status === 404) return <Navigate to={daftarKegiatanPath} replace />
   if (!detail.kegiatan || instrumenData.loading) return <Memuat dari={[detail, instrumenData]} bentuk="detail" />
@@ -162,6 +164,8 @@ function RepositoriDetail() {
   // Operator lain boleh melihat sebagai referensi; hanya PIC yang bisa mengunggah, dan tidak saat periode dikunci
   const pic = k.pic_user_id === user.id
   const bolehEdit = pic && bolehUbah(user, 'unggahBukti', aktif)
+  // Aturan backend: berkas kegiatan yang sudah punya ajuan terverifikasi tidak boleh dihapus
+  const bolehHapus = bolehEdit && !tertaut.some((b) => b.status === 'terverifikasi')
   const detailKegiatan = [
     [Building2, 'OPD', k.opd],
     [UserRound, 'PIC', k.pic],
@@ -190,6 +194,22 @@ function RepositoriDetail() {
     } catch (error) {
       setErrorBerkas(error.message)
     }
+  }
+
+  function hapus(f) {
+    setErrorBerkas('')
+    konfirmasi({
+      title: 'Hapus Berkas',
+      message: `Hapus "${f.nama}" dari kegiatan ini? Kegiatan lain yang memakai berkas yang sama tidak terpengaruh.${
+        tertaut.some((b) => b.status === 'menunggu') ? ' Ajuan yang sedang menunggu verifikasi akan ditarik kembali ke draft.' : ''
+      }`,
+      confirmLabel: 'Hapus',
+      danger: true,
+      onConfirm: async () => {
+        await dokumen.hapus(f)
+        buktiData.muatUlang()
+      },
+    })
   }
 
   const simpanBukti = (indikatorId, perubahan) => simpanAjuan(k, indikatorId, perubahan)
@@ -319,7 +339,10 @@ function RepositoriDetail() {
                   </span>
                   <span className="flex min-w-0 flex-col gap-1">
                     <span className="truncate text-small font-medium">{f.nama}</span>
-                    <span className="text-caption font-light">{metaBerkas(f)}</span>
+                    <span className="text-caption font-light">
+                      {metaBerkas(f)}
+                      {f.sumber && ` · Pintasan dari ${f.sumber.kegiatanNama}`}
+                    </span>
                   </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-3.5">
@@ -327,9 +350,15 @@ function RepositoriDetail() {
                   <button type="button" onClick={() => lihat(f)} aria-label={`Lihat ${f.nama}`} className="grid size-[30px] place-items-center rounded-sm bg-lime-200">
                     <img src={eyeIcon} alt="" width={20} height={20} />
                   </button>
+                  {bolehHapus && f.isCurrent && (
+                    <button type="button" onClick={() => hapus(f)} aria-label={`Hapus ${f.nama}`} className="grid size-[30px] place-items-center rounded-sm bg-red-200">
+                      <img src={deleteIcon} alt="" width={20} height={20} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
+            {dialogKonfirmasi}
             <FormError>{errorBerkas}</FormError>
             {bolehEdit && (
               <>

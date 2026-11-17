@@ -287,6 +287,11 @@ export function useBukti(idPeriode) {
   return {
     bukti,
     ...state,
+    // Ubahan lokal ikut dibuang: status dari server bisa berubah di luar halaman ini (mis. ajuan ditarik saat berkas dihapus)
+    muatUlang() {
+      setUbahan(EMPTY_OBJECT)
+      state.muatUlang()
+    },
     // Operator (PIC): simpan checklist sebagai draft, atau ajukan = true untuk mengirim ke verifikator.
     // kegiatan = hasil API (punya daftar indikator beserta id API-nya)
     async simpan(kegiatan, indikatorId, { checked, ajukan = false }) {
@@ -317,6 +322,11 @@ export function useBukti(idPeriode) {
           ...(keputusan === 'perbaikan' && { catatan }),
         },
       })
+      return terima(a)
+    },
+    // Verifikator: cabut status terverifikasi → kembali ke 'perbaikan' dengan alasan untuk operator
+    async cabut(ajuan, catatan) {
+      const { data: a } = await api(`/api/ajuan-bukti/${ajuan.id}/cabut`, { method: 'PATCH', body: { catatan } })
       return terima(a)
     },
   }
@@ -434,7 +444,17 @@ export function useSemuaKegiatan(periodeId) {
 }
 
 // Dokumen bukti satu rencana kegiatan dari API Laravel (berkas tersimpan di server, bukan di browser)
-const mapDokumen = (d) => ({ id: d.id, nama: d.nama_file, ukuran: d.size_bytes, tanggal: d.evidence_date, mime: d.mime_type, uploadedBy: d.uploaded_by, isCurrent: d.is_current })
+// sumber: berkas asli bila baris ini tautan (pintasan) dari kegiatan lain, null bila berkas asli
+const mapDokumen = (d) => ({
+  id: d.id,
+  nama: d.nama_file,
+  ukuran: d.size_bytes,
+  tanggal: d.evidence_date,
+  mime: d.mime_type,
+  uploadedBy: d.uploaded_by,
+  isCurrent: d.is_current,
+  sumber: d.sumber ? { id: d.sumber.dokumen_id, kegiatanId: d.sumber.kegiatan_id, kegiatanNama: d.sumber.nama_kegiatan } : null,
+})
 
 export function useSemuaDokumen(periodeIds) {
   const key = Array.isArray(periodeIds) ? [...periodeIds].sort().join(',') : ''
@@ -477,6 +497,16 @@ export function useSemuaDokumen(periodeIds) {
       await api(`/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti/${dokumenId}/tautan`, { method: 'POST' })
       state.muatUlang()
     },
+    // Lepas dari satu kegiatan saja; kegiatan lain yang memakai berkas yang sama tetap utuh
+    async lepas(kegiatanId, dokumenId) {
+      await api(`/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti/${dokumenId}/tautan`, { method: 'DELETE' })
+      state.muatUlang()
+    },
+    // Hapus berkas beserta semua tautannya di kegiatan lain
+    async hapus(kegiatanId, dokumenId) {
+      await api(`/api/rencana-kegiatan/${kegiatanId}/dokumen-bukti/${dokumenId}`, { method: 'DELETE' })
+      state.muatUlang()
+    },
   }
 }
 
@@ -510,6 +540,14 @@ export function useDokumenBukti(kegiatanId) {
           body.append('evidence_date', toISODate(new Date()))
           await api(base, { method: 'POST', body })
         }
+      } finally {
+        await muat()
+      }
+    },
+    // Lepas berkas dari kegiatan ini (berkas fisik ikut terhapus bila tidak dipakai kegiatan lain)
+    async hapus(dokumen) {
+      try {
+        await api(`${base}/${dokumen.id}/tautan`, { method: 'DELETE' })
       } finally {
         await muat()
       }
