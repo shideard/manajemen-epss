@@ -30,8 +30,32 @@ class DokumenBuktiController extends Controller
             ->dokumenBukti()
             ->orderBy('created_at')
             ->orderBy('id')
+            ->get();
+
+        // Tautan berbagi storage_key dengan berkas aslinya: baris tertua (kegiatan belum dihapus) = asli
+        $asli = DokumenBukti::query()
+            ->whereIn('storage_key', $documents->pluck('storage_key'))
+            ->whereHas('kegiatan')
+            ->with('kegiatan:id,nama_kegiatan')
+            ->orderBy('created_at')
+            ->orderBy('id')
             ->get()
+            ->groupBy('storage_key')
+            ->map->first();
+
+        $sumberDari = function (DokumenBukti $document) use ($asli): ?array {
+            $sumber = $asli[$document->storage_key] ?? null;
+
+            return $sumber && $sumber->id !== $document->id ? [
+                'dokumen_id' => $sumber->id,
+                'kegiatan_id' => $sumber->kegiatan_id,
+                'nama_kegiatan' => $sumber->kegiatan->nama_kegiatan,
+            ] : null;
+        };
+
+        $documents = $documents
             ->map(fn (DokumenBukti $document): array => [
+                'sumber' => $sumberDari($document),
                 'id' => $document->id,
                 'kegiatan_id' => $document->kegiatan_id,
                 'uploaded_by' => $document->uploaded_by,

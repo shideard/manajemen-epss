@@ -532,6 +532,19 @@ class AjuanBuktiTest extends TestCase
         Storage::assertExists($dokumen->storage_key);
     }
 
+    public function test_linked_file_points_to_its_original(): void
+    {
+        $s = $this->createScenario();
+        [$dokumen, $kedua] = $this->denganTautan($s);
+
+        $this->sebagai($s['pic'], 'web')
+            ->getJson('/api/rencana-kegiatan/' . $kedua->id . '/dokumen-bukti')
+            ->assertJsonPath('data.0.sumber.dokumen_id', $dokumen->id)
+            ->assertJsonPath('data.0.sumber.nama_kegiatan', 'Kegiatan Pengujian');
+        $this->getJson('/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti')
+            ->assertJsonPath('data.0.sumber', null);
+    }
+
     public function test_destroy_removes_every_linked_copy_and_the_file(): void
     {
         $s = $this->createScenario();
