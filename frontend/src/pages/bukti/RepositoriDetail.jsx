@@ -339,7 +339,10 @@ function RepositoriDetail() {
                   </span>
                   <span className="flex min-w-0 flex-col gap-1">
                     <span className="truncate text-small font-medium">{f.nama}</span>
-                    <span className="text-caption font-light">{metaBerkas(f)}</span>
+                    <span className="text-caption font-light">
+                      {metaBerkas(f)}
+                      {f.sumber && ` · Pintasan dari ${f.sumber.kegiatanNama}`}
+                    </span>
                   </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-3.5">

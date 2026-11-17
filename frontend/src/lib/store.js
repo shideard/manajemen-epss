@@ -439,7 +439,17 @@ export function useSemuaKegiatan(periodeId) {
 }
 
 // Dokumen bukti satu rencana kegiatan dari API Laravel (berkas tersimpan di server, bukan di browser)
-const mapDokumen = (d) => ({ id: d.id, nama: d.nama_file, ukuran: d.size_bytes, tanggal: d.evidence_date, mime: d.mime_type, uploadedBy: d.uploaded_by, isCurrent: d.is_current })
+// sumber: berkas asli bila baris ini tautan (pintasan) dari kegiatan lain, null bila berkas asli
+const mapDokumen = (d) => ({
+  id: d.id,
+  nama: d.nama_file,
+  ukuran: d.size_bytes,
+  tanggal: d.evidence_date,
+  mime: d.mime_type,
+  uploadedBy: d.uploaded_by,
+  isCurrent: d.is_current,
+  sumber: d.sumber ? { id: d.sumber.dokumen_id, kegiatanId: d.sumber.kegiatan_id, kegiatanNama: d.sumber.nama_kegiatan } : null,
+})
 
 export function useSemuaDokumen(periodeIds) {
   const key = Array.isArray(periodeIds) ? [...periodeIds].sort().join(',') : ''
