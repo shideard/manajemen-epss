@@ -500,4 +500,71 @@ class AjuanBuktiTest extends TestCase
             )
             ->assertForbidden();
     }
+
+    // Kegiatan kedua milik PIC yang sama, berkas skenario ditautkan ke sana
+    private function denganTautan(array $s): array
+    {
+        Storage::fake();
+        $dokumen = DokumenBukti::firstOrFail();
+        Storage::put($dokumen->storage_key, 'isi');
+        $kedua = $s['kegiatan']->replicate();
+        $kedua->nama_kegiatan = 'Kegiatan Kedua';
+        $kedua->save();
+
+        $this->sebagai($s['pic'], 'web')
+            ->postJson('/api/rencana-kegiatan/' . $kedua->id . '/dokumen-bukti/' . $dokumen->id . '/tautan')
+            ->assertCreated();
+
+        return [$dokumen, $kedua, DokumenBukti::where('kegiatan_id', $kedua->id)->firstOrFail()];
+    }
+
+    public function test_unlink_removes_only_that_activitys_copy(): void
+    {
+        $s = $this->createScenario();
+        [$dokumen, $kedua, $tautan] = $this->denganTautan($s);
+
+        $this->sebagai($s['pic'], 'web')
+            ->deleteJson('/api/rencana-kegiatan/' . $kedua->id . '/dokumen-bukti/' . $tautan->id . '/tautan')
+            ->assertNoContent();
+
+        $this->assertModelMissing($tautan);
+        $this->assertModelExists($dokumen);
+        Storage::assertExists($dokumen->storage_key);
+    }
+
+    public function test_destroy_removes_every_linked_copy_and_the_file(): void
+    {
+        $s = $this->createScenario();
+        [$dokumen, , $tautan] = $this->denganTautan($s);
+
+        $this->sebagai($s['pic'], 'web')
+            ->deleteJson('/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti/' . $dokumen->id)
+            ->assertNoContent();
+
+        $this->assertModelMissing($tautan);
+        $this->assertModelMissing($dokumen);
+        Storage::assertMissing($dokumen->storage_key);
+    }
+
+    public function test_document_cannot_be_deleted_after_verification_or_period_lock(): void
+    {
+        $s = $this->createScenario();
+        $ajuan = $this->ajuanMenunggu($s);
+        $dokumen = DokumenBukti::firstOrFail();
+        $url = '/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti/' . $dokumen->id;
+
+        $this->sebagai($s['verifikator'], 'web')
+            ->patchJson('/api/ajuan-bukti/' . $ajuan->id . '/verifikasi', ['keputusan' => 'TERVERIFIKASI', 'checklist' => self::CHECKLIST])
+            ->assertOk();
+        $this->sebagai($s['pic'], 'web')->deleteJson($url)->assertStatus(409);
+        $this->sebagai($s['pic'], 'web')->deleteJson($url . '/tautan')->assertStatus(409);
+
+        $terkunci = $this->createScenario(StatusPeriode::TERKUNCI);
+        $dokumenTerkunci = DokumenBukti::where('kegiatan_id', $terkunci['kegiatan']->id)->firstOrFail();
+        $this->sebagai($terkunci['pic'], 'web')
+            ->deleteJson('/api/rencana-kegiatan/' . $terkunci['kegiatan']->id . '/dokumen-bukti/' . $dokumenTerkunci->id)
+            ->assertStatus(409);
+        $this->assertModelExists($dokumen);
+        $this->assertModelExists($dokumenTerkunci);
+    }
 }
