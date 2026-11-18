@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/store'
@@ -18,6 +18,7 @@ function Login() {
   const [captchaQuestion, setCaptchaQuestion] = useState('')
   const [captchaLoading, setCaptchaLoading] = useState(true)
   const [captchaError, setCaptchaError] = useState('')
+  const captchaLoadStarted = useRef(false)
 
   async function loadCaptcha() {
     setCaptchaLoading(true)
@@ -34,6 +35,9 @@ function Login() {
   }
 
   useEffect(() => {
+    if (captchaLoadStarted.current) return
+
+    captchaLoadStarted.current = true
     loadCaptcha()
   }, [])
 
