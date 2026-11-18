@@ -25,6 +25,27 @@ import filterIcon from '../../assets/kanban/filter-3-fill.svg'
 
 const PAGE_SIZE = 5
 
+function IndikatorTerkait({ kegiatan, detail }) {
+  const [hasil, setHasil] = useState(null)
+  useEffect(() => {
+    let aktif = true
+    // shortcut: one detail request per visible row; use list data when the API includes indicators.
+    detail(kegiatan.id).then(
+      (data) => aktif && setHasil({ sumber: kegiatan, indikator: data.indikator }),
+      () => aktif && setHasil({ sumber: kegiatan, error: true }),
+    )
+    return () => { aktif = false }
+  }, [kegiatan, detail])
+  if (hasil?.sumber !== kegiatan) return <span className="text-grey-200">Memuat indikator...</span>
+  if (hasil.error) return <span role="alert" className="text-red-500">Gagal memuat indikator.</span>
+  if (!hasil.indikator.length) return <span className="text-grey-200">Belum ada indikator terkait.</span>
+  return (
+    <ul className="flex flex-col gap-2">
+      {hasil.indikator.map((indikator) => <li key={indikator.id}>{indikator.kode} — {indikator.nama}</li>)}
+    </ul>
+  )
+}
+
 // Ikon dipakai sebagai mask supaya warnanya ikut teks tab (aktif/tidak)
 const TAMPILAN = [
   { value: 'tabel', label: 'Tabel', icon: tableIcon },
@@ -317,7 +338,8 @@ function RencanaKegiatan() {
             <thead>
               <tr className="border-b border-grey-75 text-center text-body font-semibold">
                 <th className="w-14 py-5">No.</th>
-                <th className="w-[35%] py-5">Informasi Kegiatan</th>
+                <th className="w-[25%] py-5">Informasi Kegiatan</th>
+                <th className="w-[20%] py-5">Indikator terkait</th>
                 <th className="py-5">OPD</th>
                 <th className="py-5">PIC</th>
                 <th className="py-5">Jadwal Kegiatan</th>
@@ -328,7 +350,7 @@ function RencanaKegiatan() {
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-grey-200">
+                  <td colSpan={8} className="py-16 text-center text-grey-200">
                     {kegiatan.length === 0
                       ? kelola
                         ? 'Belum ada rencana kegiatan. Klik "Tambah Rencana Kegiatan" untuk menambahkan.'
@@ -345,6 +367,9 @@ function RencanaKegiatan() {
                     <td className="py-5 pr-4">
                       <p className="text-body font-semibold">{k.nama}</p>
                       {k.deskripsi && <p className="mt-2 font-light">{k.deskripsi}</p>}
+                    </td>
+                    <td className="py-5 pr-4">
+                      <IndikatorTerkait kegiatan={k} detail={rencana.detail} />
                     </td>
                     <td className="py-5 pr-4">
                       <span className="inline-block max-w-full rounded-sm bg-grey-200 px-2.5 py-1 whitespace-normal font-medium text-white">{k.opd}</span>
