@@ -1,5 +1,25 @@
 // Logika murni rencana kegiatan (tanpa React), dicek oleh kegiatan.check.js
-import { statusKegiatan } from '../../lib/epss.js'
+import { statusKegiatan, statusOf } from '../../lib/epss.js'
+
+export const PILIHAN_URUTAN = [
+  { value: 'status', label: 'Status' },
+  { value: 'nama', label: 'Nama kegiatan' },
+  { value: 'opd', label: 'OPD' },
+  { value: 'mulai', label: 'Tanggal mulai' },
+  { value: 'selesai', label: 'Tanggal selesai' },
+  { value: 'created_at', label: 'Tanggal ditambahkan' },
+]
+
+export function urutkanKegiatan(kegiatan, urutan, today) {
+  const status = { Berjalan: 0, 'Belum Mulai': 1, Selesai: 2 }
+  const [field, arah] = urutan.split('-')
+  return kegiatan.slice().sort((a, b) => {
+    const beda = field === 'status'
+      ? status[statusOf(a, today)] - status[statusOf(b, today)]
+      : (a[field] ?? '').localeCompare(b[field] ?? '', 'id', { numeric: true, sensitivity: 'base' })
+    return beda * (arah === 'desc' ? -1 : 1) || a.mulai.localeCompare(b.mulai) || a.id.localeCompare(b.id)
+  })
+}
 
 // Kolom kanban, urut sesuai alur; key = hasil statusKegiatan
 export const KOLOM_KANBAN = ['Belum dilaksanakan', 'Sedang dilaksanakan', 'Bukti dukung diunggah', 'Terverifikasi']

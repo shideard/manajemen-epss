@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check } from 'lucide-react'
+import { ArrowDownUp, Check } from 'lucide-react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
 import KanbanKegiatan from './KanbanKegiatan'
 import { usePeriode, useRencanaKegiatan } from '../../lib/store'
 import { formatTanggal, statusOf } from '../../lib/epss'
-import { matches } from './kegiatan'
+import { matches, PILIHAN_URUTAN, urutkanKegiatan } from './kegiatan'
 import { bolehUbah } from '../../config/menu'
 import { Badge, Dropdown, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -24,6 +24,27 @@ import kanbanIcon from '../../assets/kanban/layout-column-line.svg'
 import filterIcon from '../../assets/kanban/filter-3-fill.svg'
 
 const PAGE_SIZE = 5
+
+function IndikatorTerkait({ kegiatan, detail }) {
+  const [hasil, setHasil] = useState(null)
+  useEffect(() => {
+    let aktif = true
+    // shortcut: one detail request per visible row; use list data when the API includes indicators.
+    detail(kegiatan.id).then(
+      (data) => aktif && setHasil({ sumber: kegiatan, indikator: data.indikator }),
+      () => aktif && setHasil({ sumber: kegiatan, error: true }),
+    )
+    return () => { aktif = false }
+  }, [kegiatan, detail])
+  if (hasil?.sumber !== kegiatan) return <span className="text-grey-200">Memuat indikator...</span>
+  if (hasil.error) return <span role="alert" className="text-red-500">Gagal memuat indikator.</span>
+  if (!hasil.indikator.length) return <span className="text-grey-200">Belum ada indikator terkait.</span>
+  return (
+    <ul className="flex flex-col gap-2">
+      {hasil.indikator.map((indikator) => <li key={indikator.id}>{indikator.kode} — {indikator.nama}</li>)}
+    </ul>
+  )
+}
 
 // Ikon dipakai sebagai mask supaya warnanya ikut teks tab (aktif/tidak)
 const TAMPILAN = [
@@ -104,8 +125,10 @@ function RencanaKegiatan() {
   const [pic, setPic] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [urutan, setUrutan] = useState('status')
+  const [arahUrutan, setArahUrutan] = useState('asc')
   const statusApi = { 'Belum Mulai': 'BELUM_MULAI', Berjalan: 'BERJALAN', Selesai: 'SELESAI' }
-  const rencana = useRencanaKegiatan(aktif?.id, { page, q: query, tahun, opd_id: opd, pic_user_id: pic, status: statusApi[statusFilter] })
+  const rencana = useRencanaKegiatan(aktif?.id, { semua: true, q: query, tahun, opd_id: opd, pic_user_id: pic, status: statusApi[statusFilter] })
   const kegiatan = rencana.kegiatan
   const muat = [rencana]
   const [editing, setEditing] = useState(null) // null = form tertutup, {} = tambah baru
@@ -114,11 +137,10 @@ function RencanaKegiatan() {
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const years = aktif ? [String(aktif.tahun1), String(aktif.tahun2)] : []
-  const urutanStatus = { Berjalan: 0, 'Belum Mulai': 1, Selesai: 2 }
-  const filtered = kegiatan.slice().sort((a, b) => urutanStatus[statusOf(a)] - urutanStatus[statusOf(b)])
-  const rows = filtered
-  const currentPage = rencana.meta?.current_page ?? page
-  const pageCount = rencana.meta?.last_page ?? 1
+  const filtered = urutkanKegiatan(kegiatan, `${urutan}-${arahUrutan}`)
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount)
+  const rows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   async function save(data) {
     const kegiatanBaru = !editing.id
@@ -200,6 +222,46 @@ function RencanaKegiatan() {
             placeholder="Cari Rencana Kegiatan..."
             className="ml-auto w-[330px]"
           />
+          {tampilan === 'tabel' && (
+            <Dropdown
+              label="Urutkan berdasarkan"
+              value={urutan}
+              onChange={(value) => {
+                setUrutan(value)
+                setPage(1)
+              }}
+              options={PILIHAN_URUTAN}
+              suffix={` - ${arahUrutan === 'asc' ? 'Ascending' : 'Descending'}`}
+              className="w-[47px] shrink-0"
+              tombolClass="justify-center px-0!"
+              icon={<ArrowDownUp aria-hidden size={24} />}
+              dots
+            >
+              <fieldset className="flex flex-col gap-1">
+                <legend className="sr-only">Arah urutan</legend>
+                {[
+                  { value: 'asc', label: 'Ascending' },
+                  { value: 'desc', label: 'Descending' },
+                ].map((arah) => (
+                  <label key={arah.value} className="flex cursor-pointer items-center gap-3 rounded-sm px-3.5 py-3 hover:bg-grey2-100 has-focus-visible:outline-2 has-focus-visible:outline-grey-300">
+                    <input
+                      type="radio"
+                      className="sr-only"
+                      name="arah-urutan"
+                      value={arah.value}
+                      checked={arahUrutan === arah.value}
+                      onChange={() => {
+                        setArahUrutan(arah.value)
+                        setPage(1)
+                      }}
+                    />
+                    {arahUrutan === arah.value && <span aria-hidden className="size-2 rounded-full bg-yellow-300" />}
+                    {arah.label}
+                  </label>
+                ))}
+              </fieldset>
+            </Dropdown>
+          )}
           <PanelFilter
             jumlahAktif={[tahun, opd, pic, statusFilter].filter(Boolean).length}
             onReset={() => {
@@ -276,7 +338,8 @@ function RencanaKegiatan() {
             <thead>
               <tr className="border-b border-grey-75 text-center text-body font-semibold">
                 <th className="w-14 py-5">No.</th>
-                <th className="w-[35%] py-5">Informasi Kegiatan</th>
+                <th className="w-[25%] py-5">Informasi Kegiatan</th>
+                <th className="w-[20%] py-5">Indikator terkait</th>
                 <th className="py-5">OPD</th>
                 <th className="py-5">PIC</th>
                 <th className="py-5">Jadwal Kegiatan</th>
@@ -287,7 +350,7 @@ function RencanaKegiatan() {
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-grey-200">
+                  <td colSpan={8} className="py-16 text-center text-grey-200">
                     {kegiatan.length === 0
                       ? kelola
                         ? 'Belum ada rencana kegiatan. Klik "Tambah Rencana Kegiatan" untuk menambahkan.'
@@ -304,6 +367,9 @@ function RencanaKegiatan() {
                     <td className="py-5 pr-4">
                       <p className="text-body font-semibold">{k.nama}</p>
                       {k.deskripsi && <p className="mt-2 font-light">{k.deskripsi}</p>}
+                    </td>
+                    <td className="py-5 pr-4">
+                      <IndikatorTerkait kegiatan={k} detail={rencana.detail} />
                     </td>
                     <td className="py-5 pr-4">
                       <span className="inline-block max-w-full rounded-sm bg-grey-200 px-2.5 py-1 whitespace-normal font-medium text-white">{k.opd}</span>
