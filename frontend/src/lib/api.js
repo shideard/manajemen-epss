@@ -51,7 +51,8 @@ export async function api(path, { method = 'GET', body } = {}) {
 
   const data = res.status === 204 ? null : await res.json().catch(() => null)
   if (!res.ok) {
-    const error = new Error(data?.message ?? 'Terjadi kesalahan, coba lagi.')
+    const fieldMessage = data?.errors && Object.values(data.errors).flat()[0]
+    const error = new Error(fieldMessage ?? data?.message ?? 'Terjadi kesalahan, coba lagi.')
     error.status = res.status
     error.errors = data?.errors
     throw error

@@ -15,6 +15,7 @@ export default defineConfig({
     proxy: {
       '/api': backend,
       '/sanctum': backend,
+      '/captcha': backend,
       '/login': { target: backend, bypass: (req) => (req.method === 'GET' ? req.url : undefined) },
       '/logout': backend,
     },

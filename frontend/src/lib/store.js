@@ -815,9 +815,9 @@ export function useAuth() {
   return {
     ...state,
     // Mengembalikan pesan error, atau undefined jika berhasil
-    async login(username, password) {
+    async login(username, password, captcha) {
       try {
-        await api('/login', { method: 'POST', body: { username: username.trim(), password } })
+        await api('/login', { method: 'POST', body: { username: username.trim(), password, captcha } })
       } catch (error) {
         return error.message
       }

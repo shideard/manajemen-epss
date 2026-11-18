@@ -34,7 +34,8 @@ class UserPolicy
     {
         return $actor->status_aktif
             && in_array($actor->role, [
-                UserRole::VERIFIKATOR
+                UserRole::VERIFIKATOR,
+                UserRole::OPERATOR,
             ], true);
     }
 }
