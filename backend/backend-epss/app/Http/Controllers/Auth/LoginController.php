@@ -19,10 +19,24 @@ class LoginController extends Controller
         $key = 'login:'.strtolower($validated['username']).'|'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            return response()->json([
-                'message' => 'Terlalu banyak percobaan login.',
-                'retry_after' => RateLimiter::availableIn($key),
-            ], 429);
+            $detikTersisa = RateLimiter::availableIn($key);
+
+            throw ValidationException::withMessages([
+                'username' => [
+                    "Terlalu banyak percobaan login. Coba lagi dalam 3 menit.",
+                ],
+            ])->status(429);
+        }
+
+        $jawabanBenar = $request->session()->pull('captcha_answer');
+
+        if (
+            $jawabanBenar === null ||
+            (int) $validated['captcha'] !== (int) $jawabanBenar
+        ) {
+            throw ValidationException::withMessages([
+                'captcha' => ['Jawaban operasi hitung belum benar. Silakan muat soal baru.'],
+            ]);
         }
 
         $authenticated = Auth::guard('web')->attempt([
@@ -35,14 +49,11 @@ class LoginController extends Controller
             RateLimiter::hit($key, 180); // 180 detik = 3 menit
 
             if (RateLimiter::tooManyAttempts($key, 5)) {
-                // Mulai masa kunci 3 menit saat percobaan kelima, bukan saat percobaan pertama.
-                RateLimiter::clear($key);
-                RateLimiter::hit($key, 180);
-
-                return response()->json([
-                    'message' => 'Terlalu banyak percobaan login.',
-                    'retry_after' => RateLimiter::availableIn($key),
-                ], 429);
+                throw ValidationException::withMessages([
+                    'username' => [
+                        'Terlalu banyak percobaan login. Coba lagi dalam 3 menit.',
+                    ],
+                ])->status(429);
             }
 
             throw ValidationException::withMessages([
