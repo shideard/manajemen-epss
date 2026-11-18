@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
@@ -18,6 +18,16 @@ const RINGKAS_KEY = 'epss.sidebar-ringkas'
 function AppLayout({ bare = false }) {
   const location = useLocation()
   const auth = useAuth()
+  useEffect(() => {
+    function cekSesiSaatKembali(event) {
+      if (event.persisted) {
+        auth.refresh()
+      }
+    }
+
+    window.addEventListener('pageshow', cekSesiSaatKembali)
+    return () => window.removeEventListener('pageshow', cekSesiSaatKembali)
+  }, [auth.refresh])
   const { user } = auth
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
   const [menuMobile, setMenuMobile] = useState(false)

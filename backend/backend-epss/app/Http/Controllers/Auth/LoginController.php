@@ -65,6 +65,7 @@ class LoginController extends Controller
 
         RateLimiter::clear($key); // Reset hit count setelah login berhasil
         $request->session()->regenerate();
+        $request->session()->put('auth.login_at', now()->timestamp);
 
         return response()->json([
             'message' => 'Login berhasil!',

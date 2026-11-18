@@ -797,11 +797,18 @@ function setSesi(perubahan) {
   sesiListeners.forEach((listener) => listener())
 }
 // 401 = belum login; 403 = akun dinonaktifkan (backend sudah mengeluarkannya). Keduanya berarti tanpa sesi, bukan error
-const muatSesi = () =>
-  api('/api/user').then(
+const muatSesi = () => { setSesi({ loading: true, error: null })
+
+return api('/api/user').then(
     (user) => setSesi({ user, loading: false, error: null }),
-    (error) => setSesi([401, 403].includes(error.status) ? { user: null, loading: false, error: null } : { loading: false, error }),
+    (error) =>
+      setSesi(
+        [401, 403].includes(error.status)
+          ? { user: null, loading: false, error: null }
+          : { loading: false, error },
+      ),
   )
+}
 let sesiDimuat = false
 
 // Akun yang sedang login (null = belum login)
@@ -826,6 +833,9 @@ export function useAuth() {
     async logout() {
       await api('/logout', { method: 'POST' })
       setSesi({ user: null })
+    },
+    async refresh() {
+      await muatSesi()
     },
     // data = { current_password, password, password_confirmation }; error validasi (error.errors) dilempar ke pemanggil
     async gantiPassword(data) {

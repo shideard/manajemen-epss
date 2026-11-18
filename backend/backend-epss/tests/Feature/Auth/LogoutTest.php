@@ -26,5 +26,7 @@ class LogoutTest extends TestCase
         $response->assertNoContent();
 
         $this->assertGuest('web');
+
+        $this->getJson('/api/user')->assertUnauthorized();
     }
 }
