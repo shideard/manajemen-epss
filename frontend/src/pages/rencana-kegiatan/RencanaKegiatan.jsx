@@ -6,7 +6,7 @@ import KalenderKegiatan from './KalenderKegiatan'
 import KanbanKegiatan from './KanbanKegiatan'
 import { usePeriode, useRencanaKegiatan } from '../../lib/store'
 import { formatTanggal, statusOf } from '../../lib/epss'
-import { matches } from './kegiatan'
+import { matches, PILIHAN_URUTAN, urutkanKegiatan } from './kegiatan'
 import { bolehUbah } from '../../config/menu'
 import { Badge, Dropdown, Memuat, PageHeader, Pagination, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -104,8 +104,9 @@ function RencanaKegiatan() {
   const [pic, setPic] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [urutan, setUrutan] = useState('status')
   const statusApi = { 'Belum Mulai': 'BELUM_MULAI', Berjalan: 'BERJALAN', Selesai: 'SELESAI' }
-  const rencana = useRencanaKegiatan(aktif?.id, { page, q: query, tahun, opd_id: opd, pic_user_id: pic, status: statusApi[statusFilter] })
+  const rencana = useRencanaKegiatan(aktif?.id, { semua: true, q: query, tahun, opd_id: opd, pic_user_id: pic, status: statusApi[statusFilter] })
   const kegiatan = rencana.kegiatan
   const muat = [rencana]
   const [editing, setEditing] = useState(null) // null = form tertutup, {} = tambah baru
@@ -114,11 +115,10 @@ function RencanaKegiatan() {
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const years = aktif ? [String(aktif.tahun1), String(aktif.tahun2)] : []
-  const urutanStatus = { Berjalan: 0, 'Belum Mulai': 1, Selesai: 2 }
-  const filtered = kegiatan.slice().sort((a, b) => urutanStatus[statusOf(a)] - urutanStatus[statusOf(b)])
-  const rows = filtered
-  const currentPage = rencana.meta?.current_page ?? page
-  const pageCount = rencana.meta?.last_page ?? 1
+  const filtered = urutkanKegiatan(kegiatan, urutan)
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount)
+  const rows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   async function save(data) {
     const kegiatanBaru = !editing.id
@@ -200,6 +200,18 @@ function RencanaKegiatan() {
             placeholder="Cari Rencana Kegiatan..."
             className="ml-auto w-[330px]"
           />
+          {tampilan === 'tabel' && (
+            <Dropdown
+              label="Urutkan berdasarkan"
+              value={urutan}
+              onChange={(value) => {
+                setUrutan(value)
+                setPage(1)
+              }}
+              options={PILIHAN_URUTAN}
+              className="w-full sm:w-[300px]"
+            />
+          )}
           <PanelFilter
             jumlahAktif={[tahun, opd, pic, statusFilter].filter(Boolean).length}
             onReset={() => {

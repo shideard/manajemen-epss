@@ -1,6 +1,6 @@
 // Jalankan: node src/pages/rencana-kegiatan/kegiatan.check.js
 import assert from 'node:assert/strict'
-import { isOnDate, kartuKanban, levelTerpakai, matches, monthCells } from './kegiatan.js'
+import { isOnDate, kartuKanban, levelTerpakai, matches, monthCells, urutkanKegiatan } from './kegiatan.js'
 
 const k = { nama: 'Survei SKM', deskripsi: 'Kepuasan warga', opd: 'DINSOS', pic: 'Deshi', mulai: '2026-09-10', selesai: '2026-09-20' }
 
@@ -45,5 +45,29 @@ const pemetaan = [
 ]
 assert.deepEqual(levelTerpakai(pemetaan, 'b'), { i1: { 1: 'A' }, i2: { 1: 'A' } })
 assert.deepEqual(levelTerpakai(pemetaan), { i1: { 1: 'A', 2: 'B' }, i2: { 1: 'A' } })
+
+// Sort the whole result before pagination, keeping the source order untouched.
+const untukUrutan = [
+  { id: 'a', nama: 'Zebra', opd: 'Dinas B', mulai: '2026-08-01', selesai: '2026-08-31' },
+  { id: 'b', nama: 'Survei 10', opd: 'Dinas A', mulai: '2026-09-01', selesai: '2026-09-20' },
+  { id: 'c', nama: 'Survei 2', opd: 'Dinas C', mulai: '2026-10-01', selesai: '2026-10-31' },
+  { id: 'd', nama: 'Beta', opd: 'Dinas B', mulai: '2026-09-02', selesai: '2026-09-30' },
+  { id: 'e', nama: 'Gamma', opd: 'Dinas C', mulai: '2026-11-01', selesai: '2026-11-30' },
+  { id: 'f', nama: 'Alpha', opd: 'Dinas A', mulai: '2026-07-01', selesai: '2026-07-31' },
+]
+const ids = (urutan) => urutkanKegiatan(untukUrutan, urutan, '2026-09-15').map((item) => item.id)
+assert.deepEqual(ids('status'), ['b', 'd', 'c', 'e', 'f', 'a'])
+assert.deepEqual(ids('nama'), ['f', 'd', 'e', 'c', 'b', 'a'])
+assert.deepEqual(ids('opd'), ['f', 'b', 'a', 'd', 'c', 'e'])
+assert.deepEqual(ids('mulai'), ['f', 'a', 'b', 'd', 'c', 'e'])
+assert.deepEqual(ids('mulai-desc'), ['e', 'c', 'd', 'b', 'a', 'f'])
+assert.deepEqual(ids('selesai'), ['f', 'a', 'b', 'd', 'c', 'e'])
+assert.deepEqual(ids('selesai-desc'), ['e', 'c', 'd', 'b', 'a', 'f'])
+assert.deepEqual(urutkanKegiatan(untukUrutan, 'nama').slice(0, 5).map((item) => item.id), ['f', 'd', 'e', 'c', 'b'])
+assert.deepEqual(untukUrutan.map((item) => item.id), ['a', 'b', 'c', 'd', 'e', 'f'])
+assert.deepEqual(urutkanKegiatan([], 'nama'), [])
+assert.deepEqual(urutkanKegiatan([
+  { ...untukUrutan[0], id: 'z' }, untukUrutan[0],
+], 'nama').map((item) => item.id), ['a', 'z'])
 
 console.log('kegiatan.check: OK')

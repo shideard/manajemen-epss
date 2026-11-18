@@ -133,6 +133,12 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
     if (filters[key]) query.set(key, filters[key])
   }
   const queryString = query.toString()
+  const semua = filters.semua ?? false
+  const ambilDaftar = useCallback(async () => {
+    const path = `/api/rencana-kegiatan?${queryString}`
+    // shortcut: local sorting loads every page; move sorting to the API when the dataset grows.
+    return semua ? { data: await apiAll(path) } : api(path)
+  }, [queryString, semua])
 
   // Pilihan OPD, PIC, dan indikator untuk form; state hanya diisi setelah respons datang
   useEffect(() => {
@@ -164,7 +170,7 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
   useEffect(() => {
     if (!periodeId) return
     let hidup = true
-    api(`/api/rencana-kegiatan?${queryString}`).then(
+    ambilDaftar().then(
       (daftar) => {
         if (!hidup) return
         terima(daftar)
@@ -180,13 +186,13 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
     return () => {
       hidup = false
     }
-  }, [periodeId, queryString, terima])
+  }, [periodeId, queryString, terima, ambilDaftar])
 
   const muat = useCallback(async () => {
     if (!periodeId) return []
     setState({ loading: true, error: null })
     try {
-      const daftar = await api(`/api/rencana-kegiatan?${queryString}`)
+      const daftar = await ambilDaftar()
       terima(daftar)
       setState(SIAP)
       return daftar.data ?? []
@@ -194,7 +200,7 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
       setState({ loading: false, error })
       return []
     }
-  }, [periodeId, queryString, terima, setState])
+  }, [periodeId, ambilDaftar, terima, setState])
 
   const detail = useCallback(async (id) => {
     const response = await api(`/api/rencana-kegiatan/${id}`)
