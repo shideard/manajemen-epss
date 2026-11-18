@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { LEVELS } from '../../lib/epss'
 import { usePeriode, useSemuaKegiatan } from '../../lib/store'
 import { levelTerpakai } from './kegiatan'
-import { DialogHeader, Field, FormError, Input, ModalActions, Select } from '../../components/ui'
+import { DialogHeader, Dropdown, Field, FormError, Input, ModalActions, Select } from '../../components/ui'
 import { buttonClass, fieldClass } from '../../components/classes'
 import bookIcon from '../../assets/icons/book-mark-fill.svg'
 import removeIcon from '../../assets/icons/close-circle-line.svg'
@@ -60,7 +60,13 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
   // Level indikator yang sudah dipakai kegiatan lain di periode ini tidak bisa dipilih lagi
   const { aktif } = usePeriode()
   const terpakai = levelTerpakai(useSemuaKegiatan(aktif?.id).kegiatan, kegiatan.id)
-  const levelBebas = (id) => LEVELS.findIndex((_, i) => !terpakai[id]?.[i + 1]) + 1
+  const levelMulai = kegiatan.id ? 1 : 2
+  const levelBebas = (id) => {
+    for (let level = levelMulai; level <= LEVELS.length; level++) {
+      if (!terpakai[id]?.[level]) return level
+    }
+    return 0
+  }
   const namaIndikator = (id) => {
     const i = indikatorPilihan.find((x) => x.id === id) ?? indikator.find((x) => x.id === id)
     return i ? `Indikator ${i.nomor ?? i.kode}: ${i.nama}` : id
@@ -248,23 +254,21 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
               ))}
             </Select>
             {dipetakan.map(({ id, level }) => (
-              <div key={id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-lime-300 px-5 py-2">
-                <span className="min-w-0 flex-1">{namaIndikator(id)}</span>
-                <label className="flex items-center gap-2">
-                  <span className="sr-only">Level untuk {namaIndikator(id)}</span>
-                  <select
-                    value={level}
-                    onChange={(e) => setDipetakan((list) => list.map((d) => (d.id === id ? { ...d, level: Number(e.target.value) } : d)))}
-                    className="h-9 rounded-sm border border-grey-500 bg-white px-3"
-                  >
-                    {LEVELS.map((nama, i) => (
-                      <option key={nama} value={i + 1} disabled={Boolean(terpakai[id]?.[i + 1])}>
-                        Level {i + 1} ({nama}){terpakai[id]?.[i + 1] ? ` - dipakai ${terpakai[id][i + 1]}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button type="button" onClick={() => setDipetakan((list) => list.filter((d) => d.id !== id))} aria-label={`Lepas ${namaIndikator(id)}`}>
+              <div key={id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-md bg-lime-300 px-5 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)_auto]">
+                <span className="min-w-0 break-words">{namaIndikator(id)}</span>
+                <Dropdown
+                  value={level}
+                  label={`Level untuk ${namaIndikator(id)}`}
+                  size="small"
+                  onChange={(value) => setDipetakan((list) => list.map((d) => (d.id === id ? { ...d, level: Number(value) } : d)))}
+                  className="col-span-2 w-full sm:col-span-1 sm:col-start-2 sm:row-start-1"
+                  options={LEVELS.map((nama, i) => ({
+                    value: i + 1,
+                    label: `Level ${i + 1} (${nama})${terpakai[id]?.[i + 1] ? ` - dipakai ${terpakai[id][i + 1]}` : ''}`,
+                    disabled: i + 1 < levelMulai || Boolean(terpakai[id]?.[i + 1]),
+                  })).filter((option) => option.value >= levelMulai)}
+                />
+                <button type="button" onClick={() => setDipetakan((list) => list.filter((d) => d.id !== id))} aria-label={`Lepas ${namaIndikator(id)}`} className="col-start-2 row-start-1 sm:col-start-3 sm:row-auto">
                   <img src={removeIcon} alt="" width={24} height={24} className="grayscale" />
                 </button>
               </div>
