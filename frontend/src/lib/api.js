@@ -9,6 +9,7 @@ async function send(path, method, body) {
   const form = body instanceof FormData
   return fetch(path, {
     method,
+    cache: 'no-store',
     headers: { Accept: 'application/json', ...(!form && { 'Content-Type': 'application/json' }), 'X-XSRF-TOKEN': xsrfToken() },
     body: form ? body : body && JSON.stringify(body),
   })

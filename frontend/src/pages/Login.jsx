@@ -23,7 +23,7 @@ function Login() {
     setCaptchaLoading(true)
     setCaptchaError('')
     try {
-      const response = await api('/captcha')
+      const response = await api(`/captcha?_=${Date.now()}`)
       setCaptchaQuestion(response.question)
     } catch {
       setCaptchaQuestion('')

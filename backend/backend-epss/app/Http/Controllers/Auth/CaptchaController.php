@@ -16,6 +16,10 @@ class CaptchaController
 
         return response()->json([
             'question' => "{$a} + {$b} = ?",
+        ], 200, [
+            'Cache-Control' => 'private, no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
         ]);
     }
 }
