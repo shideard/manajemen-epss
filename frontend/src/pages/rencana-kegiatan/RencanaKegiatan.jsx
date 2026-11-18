@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check } from 'lucide-react'
+import { ArrowDownUp, Check } from 'lucide-react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 import KegiatanForm from './KegiatanForm'
 import KalenderKegiatan from './KalenderKegiatan'
@@ -211,7 +211,10 @@ function RencanaKegiatan() {
               }}
               options={PILIHAN_URUTAN}
               suffix={` - ${arahUrutan === 'asc' ? 'Ascending' : 'Descending'}`}
-              className="w-full sm:w-[300px]"
+              className="w-[47px] shrink-0"
+              tombolClass="justify-center px-0!"
+              icon={<ArrowDownUp aria-hidden size={24} />}
+              dots
             >
               <fieldset className="flex flex-col gap-1">
                 <legend className="sr-only">Arah urutan</legend>
@@ -219,9 +222,10 @@ function RencanaKegiatan() {
                   { value: 'asc', label: 'Ascending' },
                   { value: 'desc', label: 'Descending' },
                 ].map((arah) => (
-                  <label key={arah.value} className="flex cursor-pointer items-center gap-3 rounded-sm px-3.5 py-3 hover:bg-grey2-100">
+                  <label key={arah.value} className="flex cursor-pointer items-center gap-3 rounded-sm px-3.5 py-3 hover:bg-grey2-100 has-focus-visible:outline-2 has-focus-visible:outline-grey-300">
                     <input
                       type="radio"
+                      className="sr-only"
                       name="arah-urutan"
                       value={arah.value}
                       checked={arahUrutan === arah.value}
@@ -230,6 +234,7 @@ function RencanaKegiatan() {
                         setPage(1)
                       }}
                     />
+                    {arahUrutan === arah.value && <span aria-hidden className="size-2 rounded-full bg-yellow-300" />}
                     {arah.label}
                   </label>
                 ))}

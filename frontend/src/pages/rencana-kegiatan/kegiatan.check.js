@@ -79,3 +79,9 @@ assert.deepEqual(urutkanKegiatan([
 ], 'nama').map((item) => item.id), ['a', 'z'])
 
 console.log('kegiatan.check: OK')
+const dibuat = [
+  { ...untukUrutan[0], created_at: '2026-11-18T09:00:00.000000Z' },
+  { ...untukUrutan[1], created_at: '2026-11-18T08:00:00.000000Z' },
+]
+assert.deepEqual(urutkanKegiatan(dibuat, 'created_at-asc').map((item) => item.id), ['b', 'a'])
+assert.deepEqual(urutkanKegiatan(dibuat, 'created_at-desc').map((item) => item.id), ['a', 'b'])

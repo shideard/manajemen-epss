@@ -7,6 +7,7 @@ export const PILIHAN_URUTAN = [
   { value: 'opd', label: 'OPD' },
   { value: 'mulai', label: 'Tanggal mulai' },
   { value: 'selesai', label: 'Tanggal selesai' },
+  { value: 'created_at', label: 'Tanggal ditambahkan' },
 ]
 
 export function urutkanKegiatan(kegiatan, urutan, today) {
