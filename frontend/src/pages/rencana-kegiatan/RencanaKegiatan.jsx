@@ -202,29 +202,39 @@ function RencanaKegiatan() {
             className="ml-auto w-[330px]"
           />
           {tampilan === 'tabel' && (
-            <div role="group" aria-label="Sorting kegiatan" className="flex w-full flex-col gap-2 sm:w-[300px]">
-              <Dropdown
-                label="Urutkan berdasarkan"
-                value={urutan}
-                onChange={(value) => {
-                  setUrutan(value)
-                  setPage(1)
-                }}
-                options={PILIHAN_URUTAN}
-              />
-              <Dropdown
-                label="Arah urutan"
-                value={arahUrutan}
-                onChange={(value) => {
-                  setArahUrutan(value)
-                  setPage(1)
-                }}
-                options={[
+            <Dropdown
+              label="Urutkan berdasarkan"
+              value={urutan}
+              onChange={(value) => {
+                setUrutan(value)
+                setPage(1)
+              }}
+              options={PILIHAN_URUTAN}
+              suffix={` - ${arahUrutan === 'asc' ? 'Ascending' : 'Descending'}`}
+              className="w-full sm:w-[300px]"
+            >
+              <fieldset className="flex flex-col gap-1">
+                <legend className="sr-only">Arah urutan</legend>
+                {[
                   { value: 'asc', label: 'Ascending' },
                   { value: 'desc', label: 'Descending' },
-                ]}
-              />
-            </div>
+                ].map((arah) => (
+                  <label key={arah.value} className="flex cursor-pointer items-center gap-3 rounded-sm px-3.5 py-3 hover:bg-grey2-100">
+                    <input
+                      type="radio"
+                      name="arah-urutan"
+                      value={arah.value}
+                      checked={arahUrutan === arah.value}
+                      onChange={() => {
+                        setArahUrutan(arah.value)
+                        setPage(1)
+                      }}
+                    />
+                    {arah.label}
+                  </label>
+                ))}
+              </fieldset>
+            </Dropdown>
           )}
           <PanelFilter
             jumlahAktif={[tahun, opd, pic, statusFilter].filter(Boolean).length}

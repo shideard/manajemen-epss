@@ -108,7 +108,7 @@ export function Select({ className = '', children, ...props }) {
 // Dropdown filter (di atas kotak lime/peta) dengan daftar opsi bergaya aplikasi, bukan daftar native browser.
 // options = [{ value, label }]; opsi value "" (mis. "Semua tahun") tampil seperti placeholder saat terpilih.
 // className = wadah (lebar), tombolClass = tambahan class kotak pemicunya (mis. garis tepi)
-export function Dropdown({ value, options, onChange, label, className = '', tombolClass = '' }) {
+export function Dropdown({ value, options, onChange, label, className = '', tombolClass = '', suffix = '', children }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const pemicuRef = useRef(null)
@@ -145,12 +145,12 @@ export function Dropdown({ value, options, onChange, label, className = '', tomb
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="true"
         aria-expanded={open}
-        aria-label={`${label}: ${terpilih.label}`}
+        aria-label={`${label}: ${terpilih.label}${suffix}`}
         className={`flex h-[45px] w-full items-center gap-3 rounded-md bg-grey2-75 px-3.5 text-left text-body focus-visible:outline-2 focus-visible:outline-grey-300 ${
           value ? 'text-grey-500' : 'font-light text-grey-75 italic'
         } ${tombolClass}`}
       >
-        <span className="flex-1 truncate">{terpilih.label}</span>
+        <span className="flex-1 truncate">{terpilih.label}{suffix}</span>
         {/* Kotak abunya diam, hanya panah putih di dalamnya yang berputar */}
         <span className="shrink-0 rounded-xs bg-grey-300">
           <img src={arrowDown} alt="" width={24} height={24} className={`block transition-transform duration-300 ease-out-quint ${open ? 'rotate-180' : ''}`} />
@@ -180,6 +180,7 @@ export function Dropdown({ value, options, onChange, label, className = '', tomb
                 </li>
               )
             })}
+            {children && <li className="mt-1 border-t border-dashed border-grey-75 pt-2">{children}</li>}
           </motion.ul>
         )}
       </AnimatePresence>
