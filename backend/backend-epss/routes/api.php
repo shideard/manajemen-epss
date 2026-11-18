@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserStatusController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\PreferensiNotifikasiController;
+use App\Http\Middleware\EnforceSessionAge;
 
 // versi isntrumen + periode evaluasi
 use App\Http\Controllers\PeriodeEvaluasiController;
@@ -31,7 +32,7 @@ use App\Http\Controllers\DokumenBuktiController;
 use App\Http\Controllers\AjuanBuktiController;
 use App\Http\Controllers\EksporBuktiController;
 
-Route::middleware(['auth:sanctum', 'active'])->group(function () {
+Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active'])->group(function () {
     Route::get('/user', function(Request $request){
         return $request->user();
     });
