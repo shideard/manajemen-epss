@@ -158,6 +158,18 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ->whereUuid('dokumenBukti')
         ->name('rencana-kegiatan.dokumen-bukti.link');
 
+        Route::delete('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti/{dokumenBukti}/tautan',
+        [DokumenBuktiController::class, 'unlink']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('dokumenBukti')
+        ->name('rencana-kegiatan.dokumen-bukti.unlink');
+
+        Route::delete('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti/{dokumenBukti}',
+        [DokumenBuktiController::class, 'destroy']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('dokumenBukti')
+        ->name('rencana-kegiatan.dokumen-bukti.destroy');
+
         Route::get('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti/{dokumenBukti}/download',
         [DokumenBuktiController::class, 'download']
         )->whereUuid('rencanaKegiatan')
@@ -189,6 +201,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         [AjuanBuktiController::class, 'verify']
         )->whereUuid('ajuanBukti')
         ->name('ajuan-bukti.verify');
+
+        Route::patch('/ajuan-bukti/{ajuanBukti}/cabut',
+        [AjuanBuktiController::class, 'revoke']
+        )->whereUuid('ajuanBukti')
+        ->name('ajuan-bukti.revoke');
 
         Route::put('/rencana-kegiatan/{rencanaKegiatan}/output-diharapkan',
         \App\Http\Controllers\SyncRencanaKegiatanOutputController::class

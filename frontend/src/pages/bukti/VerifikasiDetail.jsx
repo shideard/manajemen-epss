@@ -23,7 +23,7 @@ function VerifikasiDetail() {
   const instrumenData = useInstrumen(aktif?.id)
   const muat = [detail, buktiData, dokumen, instrumenData]
   const { kegiatan: k } = detail
-  const { bukti: semuaBukti, verifikasi } = buktiData
+  const { bukti: semuaBukti, verifikasi, cabut } = buktiData
   const [dipilih, setDipilih] = useState(0)
   const [pratinjau, setPratinjau] = useState({ id: null })
   const [catatan, setCatatan] = useState('')
@@ -64,6 +64,8 @@ function VerifikasiDetail() {
 
   // Hanya ajuan berstatus "menunggu" yang bisa diputuskan, dan tidak saat periode dikunci
   const bolehPutuskan = bolehUbah(user, 'verifikasiBukti', aktif) && bukti.status === 'menunggu'
+  // Ajuan terverifikasi bisa dicabut (kembali ke perbaikan) selama periode belum dikunci
+  const bolehCabut = bolehUbah(user, 'verifikasiBukti', aktif) && bukti.status === 'terverifikasi'
   // Hanya level yang ditargetkan verifikator untuk kegiatan ini yang diperiksa
   const levelAktif = k.levelTarget[indikatorId] ?? 1
   const syarat = indikator.levels[levelAktif - 1]?.syarat ?? []
@@ -98,6 +100,20 @@ function VerifikasiDetail() {
       message: `Nyatakan "${k.nama}" memenuhi Indikator ${indikator.nomor} Level ${levelAktif} (${LEVELS[levelAktif - 1]})? Ajuan akan berstatus Terverifikasi.`,
       confirmLabel: 'Setujui',
       onConfirm: () => simpan({ keputusan: 'terverifikasi' }),
+    })
+  }
+
+  function cabutVerifikasi() {
+    if (!catatan.trim()) return setError('Isi alasan pencabutan untuk operator terlebih dahulu.')
+    konfirmasi({
+      title: 'Cabut Verifikasi',
+      message: `Cabut status terverifikasi "${k.nama}" pada Indikator ${indikator.nomor} Level ${levelAktif}? Ajuan kembali ke operator dengan status Perlu Perbaikan.`,
+      confirmLabel: 'Cabut',
+      danger: true,
+      onConfirm: async () => {
+        await cabut(bukti, catatan.trim())
+        navigate('/verifikasi-bukti-dukung')
+      },
     })
   }
 
@@ -197,14 +213,14 @@ function VerifikasiDetail() {
             </button>
           </div>
 
-          {!bolehPutuskan && (
+          {!bolehPutuskan && !bolehCabut && (
             <Notice tone="yellow" className="text-small">
               {aktif.terkunci ? 'Periode aktif sudah dikunci. Ajuan hanya dapat dilihat.' : 'Ajuan ini tidak sedang menunggu verifikasi, sehingga tidak dapat diputuskan.'}
             </Notice>
           )}
 
-          {bolehPutuskan && (
-            <Field label="Catatan perbaikan untuk operator">
+          {(bolehPutuskan || bolehCabut) && (
+            <Field label={bolehCabut ? 'Alasan pencabutan untuk operator' : 'Catatan perbaikan untuk operator'}>
               <textarea
                 value={catatan}
                 onChange={(e) => {
@@ -227,6 +243,12 @@ function VerifikasiDetail() {
                 Setujui Level {levelAktif}
               </button>
             </div>
+          )}
+
+          {bolehCabut && (
+            <button type="button" onClick={cabutVerifikasi} className={buttonClass('danger')}>
+              Cabut Verifikasi Level {levelAktif}
+            </button>
           )}
         </div>
 
