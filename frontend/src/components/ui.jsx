@@ -108,11 +108,14 @@ export function Select({ className = '', children, ...props }) {
 // Dropdown filter (di atas kotak lime/peta) dengan daftar opsi bergaya aplikasi, bukan daftar native browser.
 // options = [{ value, label }]; opsi value "" (mis. "Semua tahun") tampil seperti placeholder saat terpilih.
 // className = wadah (lebar), tombolClass = tambahan class kotak pemicunya (mis. garis tepi)
-export function Dropdown({ value, options, onChange, label, className = '', tombolClass = '', suffix = '', children, icon, dots = false }) {
+export function Dropdown({ value, options, onChange, label, className = '', tombolClass = '', suffix = '', children, icon, dots = false, size = 'medium' }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const pemicuRef = useRef(null)
   const terpilih = options.find((o) => o.value === value) ?? options[0]
+  const ukuran = size === 'small'
+    ? { pemicu: 'h-9 px-3 text-small', opsi: 'px-3 py-2 text-small' }
+    : { pemicu: 'h-[45px] px-3.5 text-body', opsi: 'px-3.5 py-3 text-body' }
 
   // Tertutup saat klik di luar atau tekan Esc (fokus kembali ke tombolnya)
   useEffect(() => {
@@ -131,8 +134,9 @@ export function Dropdown({ value, options, onChange, label, className = '', tomb
     }
   }, [open])
 
-  function pilih(v) {
-    onChange(v)
+  function pilih(option) {
+    if (option.disabled) return
+    onChange(option.value)
     setOpen(false)
     pemicuRef.current.focus()
   }
@@ -146,7 +150,7 @@ export function Dropdown({ value, options, onChange, label, className = '', tomb
         aria-haspopup="true"
         aria-expanded={open}
         aria-label={`${label}: ${terpilih.label}${suffix}`}
-        className={`flex h-[45px] w-full items-center gap-3 rounded-md bg-grey2-75 px-3.5 text-left text-body focus-visible:outline-2 focus-visible:outline-grey-300 ${
+        className={`flex w-full items-center gap-3 rounded-md bg-grey2-75 text-left focus-visible:outline-2 focus-visible:outline-grey-300 ${ukuran.pemicu} ${
           value ? 'text-grey-500' : 'font-light text-grey-75 italic'
         } ${tombolClass}`}
       >
@@ -171,9 +175,10 @@ export function Dropdown({ value, options, onChange, label, className = '', tomb
                 <li key={o.value}>
                   <button
                     type="button"
-                    onClick={() => pilih(o.value)}
+                    onClick={() => pilih(o)}
+                    disabled={o.disabled}
                     aria-current={dipilih}
-                    className={`w-full rounded-sm px-3.5 py-3 text-left text-body text-grey-500 ${dipilih ? 'bg-lime-300 font-semibold' : 'hover:bg-grey2-100'}`}
+                    className={`w-full rounded-sm text-left text-grey-500 disabled:cursor-not-allowed disabled:opacity-40 ${ukuran.opsi} ${dipilih ? 'bg-lime-300 font-semibold' : 'hover:bg-grey2-100'}`}
                   >
                     {dots && dipilih && <span aria-hidden className="mr-3 inline-block size-2 rounded-full bg-yellow-300" />}
                     {o.label}
