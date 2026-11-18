@@ -105,6 +105,7 @@ function RencanaKegiatan() {
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
   const [urutan, setUrutan] = useState('status')
+  const [arahUrutan, setArahUrutan] = useState('asc')
   const statusApi = { 'Belum Mulai': 'BELUM_MULAI', Berjalan: 'BERJALAN', Selesai: 'SELESAI' }
   const rencana = useRencanaKegiatan(aktif?.id, { semua: true, q: query, tahun, opd_id: opd, pic_user_id: pic, status: statusApi[statusFilter] })
   const kegiatan = rencana.kegiatan
@@ -115,7 +116,7 @@ function RencanaKegiatan() {
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   const years = aktif ? [String(aktif.tahun1), String(aktif.tahun2)] : []
-  const filtered = urutkanKegiatan(kegiatan, urutan)
+  const filtered = urutkanKegiatan(kegiatan, `${urutan}-${arahUrutan}`)
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, pageCount)
   const rows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
@@ -201,16 +202,29 @@ function RencanaKegiatan() {
             className="ml-auto w-[330px]"
           />
           {tampilan === 'tabel' && (
-            <Dropdown
-              label="Urutkan berdasarkan"
-              value={urutan}
-              onChange={(value) => {
-                setUrutan(value)
-                setPage(1)
-              }}
-              options={PILIHAN_URUTAN}
-              className="w-full sm:w-[300px]"
-            />
+            <div role="group" aria-label="Sorting kegiatan" className="flex w-full flex-col gap-2 sm:w-[300px]">
+              <Dropdown
+                label="Urutkan berdasarkan"
+                value={urutan}
+                onChange={(value) => {
+                  setUrutan(value)
+                  setPage(1)
+                }}
+                options={PILIHAN_URUTAN}
+              />
+              <Dropdown
+                label="Arah urutan"
+                value={arahUrutan}
+                onChange={(value) => {
+                  setArahUrutan(value)
+                  setPage(1)
+                }}
+                options={[
+                  { value: 'asc', label: 'Ascending' },
+                  { value: 'desc', label: 'Descending' },
+                ]}
+              />
+            </div>
           )}
           <PanelFilter
             jumlahAktif={[tahun, opd, pic, statusFilter].filter(Boolean).length}

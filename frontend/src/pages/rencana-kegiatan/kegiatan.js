@@ -2,13 +2,11 @@
 import { statusKegiatan, statusOf } from '../../lib/epss.js'
 
 export const PILIHAN_URUTAN = [
-  { value: 'status', label: 'Status: berjalan lebih dulu' },
-  { value: 'nama', label: 'Nama kegiatan: A–Z' },
-  { value: 'opd', label: 'OPD: A–Z' },
-  { value: 'mulai', label: 'Tanggal mulai: paling awal' },
-  { value: 'mulai-desc', label: 'Tanggal mulai: paling akhir' },
-  { value: 'selesai', label: 'Tanggal selesai: paling awal' },
-  { value: 'selesai-desc', label: 'Tanggal selesai: paling akhir' },
+  { value: 'status', label: 'Status' },
+  { value: 'nama', label: 'Nama kegiatan' },
+  { value: 'opd', label: 'OPD' },
+  { value: 'mulai', label: 'Tanggal mulai' },
+  { value: 'selesai', label: 'Tanggal selesai' },
 ]
 
 export function urutkanKegiatan(kegiatan, urutan, today) {
