@@ -334,17 +334,17 @@ function RencanaKegiatan() {
           />
         ) : (
         <div className="overflow-x-auto rounded-lg bg-grey2-50 px-5 py-3">
-          <table className="w-full min-w-[920px] text-left text-grey-500">
+          <table className="w-full min-w-[1200px] table-fixed text-left text-grey-500">
             <thead>
               <tr className="border-b border-grey-75 text-center text-body font-semibold">
-                <th className="w-14 py-5">No.</th>
-                <th className="w-[25%] py-5">Informasi Kegiatan</th>
+                <th className="w-[5%] py-5">No.</th>
+                <th className="w-[22%] py-5">Informasi Kegiatan</th>
                 <th className="w-[20%] py-5">Indikator terkait</th>
-                <th className="py-5">OPD</th>
-                <th className="py-5">PIC</th>
-                <th className="py-5">Jadwal Kegiatan</th>
-                <th className="py-5">Status</th>
-                <th className="py-5">Aksi</th>
+                <th className="w-[14%] py-5">OPD</th>
+                <th className="w-[12%] py-5">PIC</th>
+                <th className="w-[17%] py-5">Jadwal Kegiatan</th>
+                <th className="w-[10%] py-5">Status</th>
+                <th className="w-[10%] py-5">Aksi</th>
               </tr>
             </thead>
             <tbody>
