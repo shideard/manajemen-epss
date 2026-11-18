@@ -149,12 +149,6 @@ function RencanaKegiatan() {
     if (kegiatanBaru) setKegiatanBaruId(saved.id)
   }
 
-  useEffect(() => {
-    if (!kegiatanBaruId) return undefined
-    const timer = window.setTimeout(() => navigate(`/rencana-kegiatan/${kegiatanBaruId}`, { replace: true }), 1600)
-    return () => window.clearTimeout(timer)
-  }, [kegiatanBaruId, navigate])
-
   async function buka(k) {
     if (!kelola) return navigate(`/rencana-kegiatan/${k.id}`)
     try {
@@ -443,12 +437,20 @@ function RencanaKegiatan() {
       )}
       {dialogKonfirmasi}
       {kegiatanBaruId && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-grey-500/40 px-4" role="status" aria-live="polite">
-          <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-xl bg-white px-8 py-9 text-center shadow-xl">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-grey-500/40 px-4" role="dialog" aria-modal="true" aria-labelledby="kegiatan-berhasil-title">
+          <div className="flex w-full max-w-lg flex-col items-center gap-5 rounded-xl bg-white px-6 py-8 text-center shadow-xl sm:px-8 sm:py-9">
             <span className="grid size-16 place-items-center rounded-full bg-green-50 text-green-500">
               <Check size={34} strokeWidth={3} aria-hidden="true" />
             </span>
-            <p className="text-h3 font-semibold">Kegiatan berhasil dibuat</p>
+            <p id="kegiatan-berhasil-title" className="text-h3 font-semibold">Rencana kegiatan berhasil dibuat</p>
+            <div className="flex w-full flex-col justify-center gap-3 sm:flex-row">
+              <button type="button" onClick={() => setKegiatanBaruId(null)} className={buttonClass('secondary')}>
+                Kembali
+              </button>
+              <button type="button" onClick={() => navigate(`/rencana-kegiatan/${kegiatanBaruId}`)} className={buttonClass()}>
+                Lihat Kegiatan
+              </button>
+            </div>
           </div>
         </div>
       )}

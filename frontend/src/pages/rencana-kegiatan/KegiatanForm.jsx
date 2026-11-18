@@ -60,7 +60,13 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
   // Level indikator yang sudah dipakai kegiatan lain di periode ini tidak bisa dipilih lagi
   const { aktif } = usePeriode()
   const terpakai = levelTerpakai(useSemuaKegiatan(aktif?.id).kegiatan, kegiatan.id)
-  const levelBebas = (id) => LEVELS.findIndex((_, i) => !terpakai[id]?.[i + 1]) + 1
+  const levelMulai = kegiatan.id ? 1 : 2
+  const levelBebas = (id) => {
+    for (let level = levelMulai; level <= LEVELS.length; level++) {
+      if (!terpakai[id]?.[level]) return level
+    }
+    return 0
+  }
   const namaIndikator = (id) => {
     const i = indikatorPilihan.find((x) => x.id === id) ?? indikator.find((x) => x.id === id)
     return i ? `Indikator ${i.nomor ?? i.kode}: ${i.nama}` : id
@@ -259,8 +265,8 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                   options={LEVELS.map((nama, i) => ({
                     value: i + 1,
                     label: `Level ${i + 1} (${nama})${terpakai[id]?.[i + 1] ? ` - dipakai ${terpakai[id][i + 1]}` : ''}`,
-                    disabled: Boolean(terpakai[id]?.[i + 1]),
-                  }))}
+                    disabled: i + 1 < levelMulai || Boolean(terpakai[id]?.[i + 1]),
+                  })).filter((option) => option.value >= levelMulai)}
                 />
                 <button type="button" onClick={() => setDipetakan((list) => list.filter((d) => d.id !== id))} aria-label={`Lepas ${namaIndikator(id)}`} className="col-start-2 row-start-1 sm:col-start-3 sm:row-auto">
                   <img src={removeIcon} alt="" width={24} height={24} className="grayscale" />
