@@ -391,6 +391,19 @@ function Dashboard() {
 
             <p className="text-small text-grey-200">Pilih indikator lalu tentukan level tujuannya untuk melihat dampaknya pada skor IPS.</p>
 
+            {/* Tombol di atas daftar, dan baris baru masuk paling atas, jadi tidak perlu scroll ke bawah */}
+            <div className="flex flex-wrap justify-end gap-3">
+              {simulasi.some((r) => r.indikatorId) && (
+                <button type="button" onClick={() => setSimulasi([{ indikatorId: '', level: 1 }])} className={buttonClass('outline')}>
+                  Reset
+                </button>
+              )}
+              <button type="button" onClick={() => setSimulasi((rows) => [{ indikatorId: '', level: 1 }, ...rows])} className={buttonClass()}>
+                <img src={addIcon} alt="" width={19} height={19} />
+                Tambah indikator
+              </button>
+            </div>
+
             <ul className="flex flex-col gap-3">
               {simulasi.map((row, index) => {
                 const levelSaatIni = levels[row.indikatorId] ?? 1
@@ -455,18 +468,6 @@ function Dashboard() {
               })}
               {simulasi.length === 0 && <li className="py-4 text-center text-small text-grey-200">Belum ada indikator yang disimulasikan.</li>}
             </ul>
-
-            <div className="mt-auto flex flex-wrap justify-end gap-3">
-              {simulasi.some((r) => r.indikatorId) && (
-                <button type="button" onClick={() => setSimulasi([{ indikatorId: '', level: 1 }])} className={buttonClass('outline')}>
-                  Reset
-                </button>
-              )}
-              <button type="button" onClick={() => setSimulasi((rows) => [...rows, { indikatorId: '', level: 1 }])} className={buttonClass()}>
-                <img src={addIcon} alt="" width={19} height={19} />
-                Tambah indikator
-              </button>
-            </div>
           </div>
         </section>
       </div>
