@@ -42,7 +42,7 @@ function PedomanIndikator() {
               <>
                 Domain {d + 1} - {domain.nama}
                 <span className="flex h-6 items-center rounded-full border border-grey-500 bg-lime-75 px-3 text-small font-normal text-grey-500">
-                  Bobot domain: {bobotDomain(domain)}%
+                  Bobot domain: {Math.round(bobotDomain(domain))}%
                 </span>
               </>
             }
@@ -56,7 +56,7 @@ function PedomanIndikator() {
                       <span className="font-semibold">
                         Indikator {i.nomor}: {i.nama}
                       </span>
-                      <span className="flex h-6 items-center rounded-full border border-grey-500 bg-green-50 px-3 text-small">Bobot: {i.bobot}%</span>
+                      <span className="flex h-6 items-center rounded-full border border-grey-500 bg-green-50 px-3 text-small">Bobot: {Math.round(i.bobot)}%</span>
                     </p>
                     <p className="flex flex-wrap gap-x-4 font-light text-grey-200">
                       <span>Level Terverifikasi: {levelLabel(levels[i.id])}</span>

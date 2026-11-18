@@ -306,7 +306,7 @@ function RencanaKegiatan() {
                       {k.deskripsi && <p className="mt-2 font-light">{k.deskripsi}</p>}
                     </td>
                     <td className="py-5 pr-4">
-                      <span className="inline-flex h-6 items-center rounded-sm bg-grey-200 px-2.5 font-medium text-white">{k.opd}</span>
+                      <span className="inline-block max-w-full rounded-sm bg-grey-200 px-2.5 py-1 whitespace-normal font-medium text-white">{k.opd}</span>
                     </td>
                     <td className="py-5 pr-4">
                       <p className="flex items-center gap-1">
