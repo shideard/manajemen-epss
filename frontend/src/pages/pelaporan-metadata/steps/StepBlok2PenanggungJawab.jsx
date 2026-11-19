@@ -64,13 +64,24 @@ function StepBlok2PenanggungJawab({ formData, updateBlok2 }) {
           </div>
 
           <div className="mt-4">
-            <label className="block text-[13px] font-semibold text-grey-200 mb-1">Alamat</label>
-            <input
-              type="text"
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <label className="block text-[13px] font-semibold text-grey-200">Alamat</label>
+              {/* Sumber tombol ini: alamat instansi di Blok I. */}
+              <button
+                type="button"
+                onClick={() => updateBlok2('teknisAlamat', formData.blok1?.alamat ?? '')}
+                disabled={!formData.blok1?.alamat}
+                className="text-[12px] font-semibold text-grey-300 underline decoration-grey-75 underline-offset-2 hover:text-grey-200 disabled:cursor-not-allowed disabled:text-grey-75 disabled:no-underline"
+              >
+                Sama dengan alamat instansi
+              </button>
+            </div>
+            <textarea
+              rows={3}
               placeholder="Tuliskan alamat penanggung jawab teknis"
               value={data.teknisAlamat}
               onChange={(e) => updateBlok2('teknisAlamat', e.target.value)}
-              className="w-full rounded-xl border border-grey-75/60 px-4 py-2.5 text-[14px] text-grey-300 focus:border-grey-300 outline-none transition"
+              className="w-full rounded-xl border border-grey-75/60 px-4 py-2.5 text-[14px] text-grey-300 focus:border-grey-300 outline-none transition resize-y"
             />
           </div>
 

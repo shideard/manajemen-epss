@@ -12,6 +12,11 @@ const ID_PEMERIKSAAN_KUALITAS = {
   'Task Force': 'task-force',
 }
 
+// Isian jumlah petugas hanya boleh angka; huruf/simbol dibuang saat diketik.
+function hanyaDigit(nilai) {
+  return String(nilai ?? '').replace(/\D/g, '')
+}
+
 // Hanya field pengumpulan yang masuk cakupan rekomendasi (bukan jumlah
 // petugas, pendidikan, atau pelatihan petugas).
 const LABEL_REKOMENDASI = {
@@ -212,7 +217,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
                 inputMode="numeric"
                 placeholder="4"
                 value={data.jumlahSupervisor}
-                onChange={(e) => updateBlok6('jumlahSupervisor', e.target.value)}
+                onChange={(e) => updateBlok6('jumlahSupervisor', hanyaDigit(e.target.value))}
                 className="w-full rounded-xl border border-grey-75/60 px-4 py-2 text-[14px] text-grey-300 outline-none focus:border-grey-300"
               />
               <span className="shrink-0 text-[13px] font-medium text-grey-100">Orang</span>
@@ -229,7 +234,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
                 inputMode="numeric"
                 placeholder="16"
                 value={data.jumlahEnumerator}
-                onChange={(e) => updateBlok6('jumlahEnumerator', e.target.value)}
+                onChange={(e) => updateBlok6('jumlahEnumerator', hanyaDigit(e.target.value))}
                 className="w-full rounded-xl border border-grey-75/60 px-4 py-2 text-[14px] text-grey-300 outline-none focus:border-grey-300"
               />
               <span className="shrink-0 text-[13px] font-medium text-grey-100">Orang</span>

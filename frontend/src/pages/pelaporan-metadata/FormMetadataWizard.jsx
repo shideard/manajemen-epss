@@ -212,10 +212,10 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div id="cetak-metadata" className="flex flex-col gap-6">
       {/* Toast Notification with Progress Bar */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 overflow-hidden rounded-2xl bg-grey-300 text-white shadow-2xl border border-lime-300/80 max-w-md">
+        <div data-cetak-sembunyi className="fixed top-6 right-6 z-50 overflow-hidden rounded-2xl bg-grey-300 text-white shadow-2xl border border-lime-300/80 max-w-md">
           <div className="flex items-start gap-3 px-5 py-3.5">
             <Sparkles size={19} className="text-lime-300 shrink-0 mt-0.5" />
             <span className="text-[13px] font-medium leading-snug">{toastMessage.msg}</span>
@@ -227,11 +227,12 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
       )}
 
       {/* Top Header Card */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-6 border border-grey-50 shadow-xs">
+      <div data-cetak-sembunyi className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-6 border border-grey-50 shadow-xs">
         <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={onBack}
+            data-cetak-sembunyi
             className="flex size-10 items-center justify-center rounded-xl bg-grey2-75 text-grey-200 hover:bg-grey-50 hover:text-black transition"
             title="Kembali ke Daftar"
           >
@@ -277,7 +278,7 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
       </div>
 
       {/* Modern Stepper Tabs */}
-      <div className="flex overflow-x-auto gap-2 p-1.5 rounded-2xl bg-grey2-75 border border-grey-50 no-scrollbar">
+      <div data-cetak-sembunyi className="flex overflow-x-auto gap-2 p-1.5 rounded-2xl bg-grey2-75 border border-grey-50 no-scrollbar">
         {visibleSteps.map((step, idx) => {
           const isActive = idx === activeIndex
           const isPassed = idx < activeIndex
@@ -384,7 +385,7 @@ function FormMetadataWizard({ initialData, onBack, onSaveSuccess }) {
       </div>
 
       {/* Bottom Navigation Buttons */}
-      <div className="flex items-center justify-between border-t border-grey-50 pt-5 mt-2">
+      <div data-cetak-sembunyi className="flex items-center justify-between border-t border-grey-50 pt-5 mt-2">
         <button
           type="button"
           onClick={prevStep}

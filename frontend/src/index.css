@@ -224,3 +224,79 @@
     }
   }
 }
+
+/* ---------- Cetak / simpan PDF (tombol "Download PDF" di Ringkasan) ----------
+   Hanya halaman yang sedang terbuka yang ikut tercetak. Sidebar, topbar, tombol
+   navigasi, dan panel transien disembunyikan lewat atribut data-cetak-sembunyi
+   supaya tidak perlu mengubah class tiap komponen. */
+.cetak-saja {
+  display: none;
+}
+
+@media print {
+  /* Semua warna latar (header gelap, badge) tetap tercetak */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 14mm 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  aside#sidebar,
+  [data-cetak-sembunyi] {
+    display: none !important;
+  }
+
+  /* Kerangka AppLayout: sidebar fixed + topbar dilepas, isi jadi satu kolom penuh.
+     Sidebar.jsx merender dua saudara: placeholder berlebar sidebar (aria-hidden)
+     dan <aside id="sidebar">. Tombol menu + Topbar = anak pertama <main>. */
+  body > #root > div > div > div[aria-hidden] {
+    display: none !important;
+  }
+
+  main > div > div:first-child {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  /* Animasi masuk blok halaman bisa membuat isi hilang/terpotong saat dicetak */
+  .stagger > *,
+  .stagger > * > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .cetak-saja {
+    display: block;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #17181c;
+    /* Hindari header terpotong di halaman pertama */
+    break-inside: avoid;
+  }
+
+  /* Satu blok ringkasan jangan terbelah di tengah halaman */
+  #cetak-metadata .rounded-2xl {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  #cetak-metadata > * + * {
+    margin-top: 14px;
+  }
+}
+

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import PanelRekomendasi from '../components/PanelRekomendasi'
 import IstilahTooltip from '../components/IstilahTooltip'
 import { cariRekomendasi, judulSiap } from '../lib/rekomendasiHelper'
+import { opsiTahun } from '../metadataData'
 
 const LABEL_REKOMENDASI = {
   caraPengumpulan: 'Cara Pengumpulan Data',
@@ -89,13 +90,21 @@ function StepHalamanAwal({ formData, updateHalamanAwal, terapkanRekomendasi }) {
             <label className="block text-[14px] font-bold text-grey-300 mb-1.5">
               Tahun <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              placeholder="Isikan Tahun Kegiatan"
+            <select
               value={data.tahun}
               onChange={(e) => updateHalamanAwal('tahun', e.target.value)}
-              className="w-full rounded-xl border border-grey-75/60 px-4 py-2.5 text-[14px] text-grey-300 placeholder:text-grey-75 focus:border-grey-300 focus:ring-1 focus:ring-grey-300 outline-none transition"
-            />
+              className="w-full rounded-xl border border-grey-75/60 px-4 py-2.5 text-[14px] text-grey-300 bg-white focus:border-grey-300 focus:ring-1 focus:ring-grey-300 outline-none transition"
+            >
+              <option value="">Pilih Tahun</option>
+              {/* Tahun lama yang tersimpan di draft tetap bisa terpilih walau di luar rentang. */}
+              {[...new Set([...opsiTahun(), data.tahun].filter(Boolean))]
+                .sort((a, b) => b.localeCompare(a))
+                .map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+            </select>
           </div>
         </div>
 

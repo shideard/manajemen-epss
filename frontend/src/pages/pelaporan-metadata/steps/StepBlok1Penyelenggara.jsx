@@ -1,5 +1,20 @@
+import { useEffect, useState } from 'react'
+import IsianSaran from '../components/IsianSaran'
+import { muatNamaOpd } from '../lib/opdHelper'
+
 function StepBlok1Penyelenggara({ formData, updateBlok1 }) {
   const data = formData.blok1
+  const [namaOpd, setNamaOpd] = useState([])
+
+  useEffect(() => {
+    let hidup = true
+    muatNamaOpd().then((daftar) => {
+      if (hidup) setNamaOpd(daftar)
+    })
+    return () => {
+      hidup = false
+    }
+  }, [])
 
   return (
     <div className="flex flex-col gap-6">
@@ -13,13 +28,16 @@ function StepBlok1Penyelenggara({ formData, updateBlok1 }) {
           <label className="block text-[14px] font-bold text-grey-300 mb-1.5">
             1.1. Instansi Penyelenggara <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
+          <IsianSaran
+            id="instansi-penyelenggara"
             placeholder="Nama Instansi Penyelenggara (mis. Dinas Komunikasi dan Informatika)"
             value={data.instansiPenyelenggara}
-            onChange={(e) => updateBlok1('instansiPenyelenggara', e.target.value)}
-            className="w-full rounded-xl border border-grey-75/60 px-4 py-2.5 text-[14px] text-grey-300 focus:border-grey-300 focus:ring-1 focus:ring-grey-300 outline-none transition"
+            onChange={(nilai) => updateBlok1('instansiPenyelenggara', nilai)}
+            daftar={namaOpd}
           />
+          <p className="mt-1 text-[12px] text-grey-100">
+            Pilih dari daftar OPD bila ada, atau ketik manual bila instansi tidak terdaftar.
+          </p>
         </div>
 
         <div>

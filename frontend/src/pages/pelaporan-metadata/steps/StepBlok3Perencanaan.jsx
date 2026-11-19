@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
-import { JADWAL_GRUP, buatBarisJadwal } from '../metadataData'
+import { JADWAL_GRUP, buatBarisJadwal, opsiTahun } from '../metadataData'
 
 const OPSI_BULAN = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
 ]
+
+const OPSI_TAHUN = opsiTahun()
 
 // Nilai pembanding urutan jadwal: pakai bulan-tahun (YYYY-MM) sesuai INDAH.
 // Tanggal (hari) hanya pelengkap dan tidak ikut menentukan urutan.
@@ -335,18 +337,24 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                                     </option>
                                   ))}
                                 </select>
-                                <input
-                                  type="number"
-                                  inputMode="numeric"
-                                  min="1900"
-                                  max="2999"
-                                  placeholder="Tahun"
+                                <select
+                                  title="Tahun mulai"
                                   value={item.mulaiTahun}
                                   onChange={(e) => handleJadwalChange(item.id, 'mulaiTahun', e.target.value)}
-                                  className={`w-[74px] rounded-lg border px-2 py-1.5 text-[13px] text-grey-300 outline-none ${
+                                  className={`w-[92px] rounded-lg border px-2 py-1.5 text-[13px] text-grey-300 bg-white outline-none ${
                                     urutBermasalah ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
                                   }`}
-                                />
+                                >
+                                  <option value="">Tahun</option>
+                                  {/* Tahun dari tanggal lama tetap tampil walau di luar rentang. */}
+                                  {[...new Set([...OPSI_TAHUN, item.mulaiTahun].filter(Boolean))]
+                                    .sort((a, b) => b.localeCompare(a))
+                                    .map((t) => (
+                                      <option key={t} value={t}>
+                                        {t}
+                                      </option>
+                                    ))}
+                                </select>
                               </div>
                               <input
                                 type="date"
@@ -373,18 +381,23 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
                                     </option>
                                   ))}
                                 </select>
-                                <input
-                                  type="number"
-                                  inputMode="numeric"
-                                  min="1900"
-                                  max="2999"
-                                  placeholder="Tahun"
+                                <select
+                                  title="Tahun selesai"
                                   value={item.selesaiTahun}
                                   onChange={(e) => handleJadwalChange(item.id, 'selesaiTahun', e.target.value)}
-                                  className={`w-[74px] rounded-lg border px-2 py-1.5 text-[13px] text-grey-300 outline-none ${
+                                  className={`w-[92px] rounded-lg border px-2 py-1.5 text-[13px] text-grey-300 bg-white outline-none ${
                                     wajibSelesai || salahRentang ? 'border-red-400' : 'border-grey-75/50 focus:border-grey-300'
                                   }`}
-                                />
+                                >
+                                  <option value="">Tahun</option>
+                                  {[...new Set([...OPSI_TAHUN, item.selesaiTahun].filter(Boolean))]
+                                    .sort((a, b) => b.localeCompare(a))
+                                    .map((t) => (
+                                      <option key={t} value={t}>
+                                        {t}
+                                      </option>
+                                    ))}
+                                </select>
                               </div>
                               <input
                                 type="date"

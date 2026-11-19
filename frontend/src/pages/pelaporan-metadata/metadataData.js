@@ -21,6 +21,15 @@ export function buatBarisJadwal(id, grup, kode, tahapan, tambahan = {}) {
   }
 }
 
+// Pilihan tahun untuk dropdown: 5 tahun ke belakang s.d. 1 tahun ke depan.
+// Dipakai bersama oleh Tahun Kegiatan (Halaman Awal) dan tahun jadwal tahapan (Blok 3).
+export function opsiTahun() {
+  const kini = new Date().getFullYear()
+  const daftar = []
+  for (let t = kini + 1; t >= kini - 5; t -= 1) daftar.push(String(t))
+  return daftar
+}
+
 export const INITIAL_METADATA_FORM = {
   // Metadata Dasar
   id: '',

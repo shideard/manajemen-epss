@@ -1,4 +1,4 @@
-import { CheckCircle2, Sparkles, Building, User, Calendar, Sliders, Database, Layers, Send } from 'lucide-react'
+import { CheckCircle2, Sparkles, Building, User, Calendar, Sliders, Database, Layers, Send, Printer } from 'lucide-react'
 import { JADWAL_GRUP, formatBulanTahun } from '../metadataData'
 
 function SummaryItem({ label, value }) {
@@ -46,6 +46,15 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Header khusus hasil cetak/PDF: tampil hanya di @media print */}
+      <div className="cetak-saja">
+        <h1 className="text-[18px] font-bold text-black">Ringkasan Metadata Kegiatan Statistik</h1>
+        <p className="text-[13px] text-black">
+          {halamanAwal.judulKegiatan || '-'} · Tahun {halamanAwal.tahun || '-'} · {blok1.instansiPenyelenggara || '-'}
+        </p>
+        <p className="text-[11px] text-black">Sistem Manajemen EPSS — Diskominfo Kota Bogor</p>
+      </div>
+
       <div className="border-b border-grey-50 pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h2 className="text-[18px] font-bold text-grey-300">RINGKASAN PELAPORAN METADATA</h2>
@@ -243,14 +252,22 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
       </div>
 
       {/* Confirmation & Submit Actions */}
-      <div className="rounded-2xl border border-lime-300 bg-lime-100/50 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div data-cetak-sembunyi className="rounded-2xl border border-lime-300 bg-lime-100/50 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h4 className="text-[15px] font-bold text-grey-300">Sudah Memastikan Semua Data Sesuai?</h4>
           <p className="text-[13px] text-grey-100 mt-0.5">
             Formulir yang disubmit akan dikirimkan ke antrean verifikasi Walidata dan Pembina Data Statistik BPS Kota Bogor.
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div data-cetak-sembunyi className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 rounded-full border border-grey-75 bg-white px-5 py-2.5 text-[13px] font-bold text-grey-300 hover:bg-grey2-75 transition"
+          >
+            <Printer size={16} />
+            Download PDF
+          </button>
           <button
             type="button"
             onClick={onSaveDraft}
