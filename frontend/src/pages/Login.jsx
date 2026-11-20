@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/store'
@@ -22,24 +22,23 @@ function Login() {
   const turnstileContainer = useRef(null)
   const turnstileWidget = useRef(null)
 
-  const loadTurnstileConfig = useCallback(async () => {
-    setCaptchaLoading(true)
-    setCaptchaError('')
-    try {
-      const response = await api(`/captcha?_=${Date.now()}`)
-      if (!response.siteKey) throw new Error('Cloudflare Turnstile belum dikonfigurasi.')
-      setTurnstileSiteKey(response.siteKey)
-    } catch {
-      setTurnstileSiteKey('')
-      setCaptchaError('Verifikasi keamanan gagal dimuat. Periksa konfigurasi Turnstile lalu coba lagi.')
-    } finally {
-      setCaptchaLoading(false)
-    }
-  }, [])
+  const [captchaAttempt, setCaptchaAttempt] = useState(0)
 
   useEffect(() => {
-    loadTurnstileConfig()
-  }, [loadTurnstileConfig])
+    let cancelled = false
+    api(`/captcha?_=${Date.now()}`)
+      .then((response) => {
+        if (!response.siteKey) throw new Error('Cloudflare Turnstile belum dikonfigurasi.')
+        if (!cancelled) setTurnstileSiteKey(response.siteKey)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setTurnstileSiteKey('')
+        setCaptchaError('Verifikasi keamanan gagal dimuat. Periksa konfigurasi Turnstile lalu coba lagi.')
+      })
+      .finally(() => { if (!cancelled) setCaptchaLoading(false) })
+    return () => { cancelled = true }
+  }, [captchaAttempt])
 
   useEffect(() => {
     if (!turnstileSiteKey || !turnstileContainer.current) return undefined
@@ -156,7 +155,7 @@ function Login() {
               {captchaError && (
                 <div className="flex items-center justify-between gap-3 text-small text-red-400">
                   <span>{captchaError}</span>
-                  <button type="button" onClick={loadTurnstileConfig} disabled={captchaLoading} className="shrink-0 underline">
+                  <button type="button" onClick={() => { setCaptchaLoading(true); setCaptchaError(''); setCaptchaAttempt((n) => n + 1) }} disabled={captchaLoading} className="shrink-0 underline">
                     Coba lagi
                   </button>
                 </div>
