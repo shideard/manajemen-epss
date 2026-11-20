@@ -822,9 +822,9 @@ export function useAuth() {
   return {
     ...state,
     // Mengembalikan pesan error, atau undefined jika berhasil
-    async login(username, password, captcha) {
+    async login(username, password, turnstileToken) {
       try {
-        await api('/login', { method: 'POST', body: { username: username.trim(), password, captcha } })
+        await api('/login', { method: 'POST', body: { username: username.trim(), password, turnstile_token: turnstileToken } })
       } catch (error) {
         return error.message
       }
