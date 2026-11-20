@@ -30,6 +30,14 @@ class UserPolicy
         && $actor->role === UserRole::SUPER_ADMIN_BIDANG;
     }
 
+    public function resetPassword(User $actor, User $target): bool
+    {
+        return $actor->status_aktif
+            && $actor->role === UserRole::SUPER_ADMIN_BIDANG
+            && ! $actor->is($target)
+            && in_array($target->role, [UserRole::OPERATOR, UserRole::VERIFIKATOR], true);
+    }
+
     public function viewPicOptions(User $actor): bool
     {
         return $actor->status_aktif

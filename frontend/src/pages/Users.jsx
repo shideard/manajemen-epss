@@ -22,7 +22,7 @@ function AkunForm({ onSave, onClose }) {
     setMengirim(true)
     setError('')
     try {
-      await onSave({ ...data, email: data.email.trim() || null })
+      await onSave({ ...data, email: data.email.trim() })
     } catch (err) {
       setError(pesanError(err))
       setMengirim(false)
@@ -49,8 +49,8 @@ function AkunForm({ onSave, onClose }) {
               placeholder="Contoh: ani.dinsos"
             />
           </Field>
-          <Field label="Email (opsional)">
-            <Input type="email" name="email" placeholder="Contoh: ani@kotabogor.go.id" />
+          <Field label="Email">
+            <Input type="email" name="email" required placeholder="Contoh: ani@kotabogor.go.id" />
           </Field>
           <Field label="Password">
             <Input type="password" name="password" required minLength={8} autoComplete="new-password" />
@@ -83,9 +83,10 @@ function AkunForm({ onSave, onClose }) {
 
 function Users() {
   const muat = [useUsers()]
-  const [{ users, tambah, setStatus }] = muat
+  const [{ users, tambah, setStatus, resetPassword: resetPasswordApi }] = muat
   const [membuat, setMembuat] = useState(false)
   const [error, setError] = useState('')
+  const [resetResult, setResetResult] = useState(null)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   async function save(data) {
@@ -106,6 +107,24 @@ function Users() {
     })
   }
 
+  function resetPassword(user) {
+    setError('')
+    setResetResult(null)
+    konfirmasi({
+      title: 'Reset password pengguna',
+      message: `Buat password sementara untuk ${user.username}? Pengguna harus menggantinya saat masuk kembali.`,
+      confirmLabel: 'Reset password',
+      onConfirm: async () => {
+        try {
+          const response = await resetPasswordApi(user.id)
+          setResetResult({ username: user.username, password: response.temporary_password })
+        } catch (err) {
+          setError(pesanError(err))
+        }
+      },
+    })
+  }
+
   return (
     <div className="flex w-full flex-col gap-8">
       <Memuat dari={muat} bentuk="tabel" />
@@ -121,6 +140,11 @@ function Users() {
           {error}
         </Notice>
       )}
+      {resetResult && (
+        <Notice tone="green" role="status">
+          Password sementara untuk {resetResult.username}: <strong className="select-all">{resetResult.password}</strong>. Salin dan sampaikan lewat kanal aman; password hanya ditampilkan kali ini.
+        </Notice>
+      )}
 
       <section className="flex flex-col gap-3 rounded-lg bg-grey-500 px-2 pt-6 pb-2">
         <div className="flex flex-col gap-1 px-3">
@@ -128,7 +152,7 @@ function Users() {
           <p className="text-small text-white">Menampilkan akun yang dibuat dari browser ini.</p>
         </div>
         <div className="overflow-x-auto rounded-md bg-white px-2 py-5">
-          <table className="w-full min-w-[720px] text-center text-body text-grey-500">
+          <table className="w-full min-w-[900px] text-center text-body text-grey-500">
             <thead>
               <tr className="border-b border-grey-75 font-semibold">
                 <th className="pb-3">Nama</th>
@@ -163,9 +187,12 @@ function Users() {
                     </Badge>
                   </td>
                   <td className="py-2.5">
-                    <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
-                      {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
-                    </button>
+                    <div className="flex justify-center gap-2">
+                      <button type="button" onClick={() => resetPassword(u)} className={buttonClass('outline', 'sm')}>Reset password</button>
+                      <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
+                        {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

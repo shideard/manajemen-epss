@@ -35,6 +35,8 @@ class CreateSuperAdmin extends Command
             (string) $this->ask('Username administrator')
         );
 
+        $email = trim((string) $this->ask('Email administrator'));
+
         $password = $this->secret('Password administrator');
 
         $passwordConfirmation = $this->secret('Ulangi password');
@@ -42,6 +44,7 @@ class CreateSuperAdmin extends Command
         $validator = Validator::make([
             'name' => $name,
             'username' => $username,
+            'email' => $email,
             'password' => $password,
             'password_confirmation' => $passwordConfirmation,
         ], [
@@ -55,6 +58,7 @@ class CreateSuperAdmin extends Command
                 'regex:/\A[a-z0-9._-]+\z/',
                 'unique:users,username',
             ],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => [
                 'required',
                 'string',
@@ -77,7 +81,7 @@ class CreateSuperAdmin extends Command
         $user->name = $data['name'];
         $user->username = $data['username'];
         $user->password = $data['password'];
-        $user->email = null;
+        $user->email = $data['email'];
         $user->role = UserRole::SUPER_ADMIN_BIDANG;
         $user->status_aktif = true;
 

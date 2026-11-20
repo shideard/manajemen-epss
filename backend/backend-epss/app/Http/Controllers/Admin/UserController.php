@@ -18,12 +18,13 @@ class UserController extends Controller
         $users = User::query()
             ->orderBy('name')
             ->orderBy('username')
-            ->get(['id', 'name', 'username', 'email', 'role', 'status_aktif'])
+            ->get(['id', 'name', 'username', 'email', 'email_verified_at', 'role', 'status_aktif'])
             ->map(fn (User $user) => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'username' => $user->username,
                 'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at,
                 'role' => $user->role->value,
                 'status_aktif' => $user->status_aktif,
             ]);
@@ -43,6 +44,7 @@ class UserController extends Controller
         $user->role = UserRole::from($validated['role']);
         $user->status_aktif = true;
         $user->save();
+        $user->sendEmailVerificationNotification();
 
         return response()->json([
             'data' => [
@@ -50,6 +52,7 @@ class UserController extends Controller
                 'name' => $user->name,
                 'username' => $user->username,
                 'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at,
                 'role' => $user->role->value,
                 'status_aktif' => $user->status_aktif,
             ],

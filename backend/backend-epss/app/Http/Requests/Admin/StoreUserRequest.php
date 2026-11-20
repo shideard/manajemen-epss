@@ -42,9 +42,10 @@ class StoreUserRequest extends FormRequest
                 Rule::unique('users', 'username'),
             ],
             'email' => [
-                'nullable',
+                'required',
                 'string',
                 'email',
+                'max:255',
                 'max:255',
                 Rule::unique('users', 'email'),
             ],

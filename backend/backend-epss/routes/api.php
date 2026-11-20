@@ -6,7 +6,9 @@ use Illuminate\Support\Facades\Route;
 // user
 use App\Http\Controllers\Admin\UserStatusController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserPasswordResetController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\RecoveryEmailController;
 use App\Http\Controllers\PreferensiNotifikasiController;
 use App\Http\Middleware\EnforceSessionAge;
 
@@ -32,6 +34,10 @@ use App\Http\Controllers\DokumenBuktiController;
 use App\Http\Controllers\AjuanBuktiController;
 use App\Http\Controllers\EksporBuktiController;
 
+Route::get('/email/verify/{id}/{hash}', [RecoveryEmailController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+
 Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active'])->group(function () {
     Route::get('/user', function(Request $request){
         return $request->user();
@@ -40,6 +46,10 @@ Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active'])->group(f
     Route::patch('/user/password', [PasswordController::class, 'update'])
         ->middleware('throttle:5,1')
         ->name('user.password.update');
+
+    Route::put('/user/recovery-email', [RecoveryEmailController::class, 'update'])
+        ->middleware('throttle:3,10')
+        ->name('user.recovery-email.update');
 
     Route::middleware('password.current')->group(function () {
         Route::get('/user/notifikasi', [PreferensiNotifikasiController::class, 'show'])
@@ -52,6 +62,10 @@ Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active'])->group(f
             UserStatusController::class,
             'update',
         ])->name('users.status.update');
+
+        Route::post('/users/{user}/password-reset', UserPasswordResetController::class)
+            ->middleware('throttle:5,1')
+            ->name('users.password-reset');
 
         Route::post('/users', [UserController::class, 'store'])
         ->name('users.save');

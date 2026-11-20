@@ -788,6 +788,7 @@ export function useUsers() {
       await api(`/api/users/${id}/status`, { method: 'PATCH', body: { status_aktif } })
       await muat()
     },
+    resetPassword: (id) => api(`/api/users/${id}/password-reset`, { method: 'POST' }),
   }
 }
 
