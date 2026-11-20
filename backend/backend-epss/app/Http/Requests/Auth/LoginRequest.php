@@ -32,7 +32,7 @@ class LoginRequest extends FormRequest
             'password' => ['required', 'string'],
             // harus diisi, harus string. 
             // aturan kekuatan password diatur di pembuatan/penggantian password
-            'captcha' => ['required', 'integer'],
+            'turnstile_token' => ['required', 'string', 'max:2048'],
         ];
     }
 }

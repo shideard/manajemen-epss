@@ -57,7 +57,7 @@ function RencanaKegiatanDetailVerifikator() {
       <PageHeader back="/rencana-kegiatan" title="Detail Rencana Kegiatan" subtitle="Informasi dan pemetaan indikator kegiatan.">
         {(bolehEdit || user.role === ROLES.VERIFIKATOR) && (
           <button type="button" onClick={() => setEditing(true)} className={buttonClass()}>
-            <img src={editIcon} alt="" width={19} height={19} />
+            <span aria-hidden className="size-[19px] bg-current" style={{ mask: `url("${editIcon}") center / contain no-repeat` }} />
             {bolehEdit ? 'Edit Kegiatan' : 'Edit Output'}
           </button>
         )}

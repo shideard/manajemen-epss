@@ -8,6 +8,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\ConnectionException;
 
 class LoginController extends Controller
 {
@@ -28,14 +30,9 @@ class LoginController extends Controller
             ])->status(429);
         }
 
-        $jawabanBenar = $request->session()->pull('captcha_answer');
-
-        if (
-            $jawabanBenar === null ||
-            (int) $validated['captcha'] !== (int) $jawabanBenar
-        ) {
+        if (!$this->turnstileValid($validated['turnstile_token'], $request->ip())) {
             throw ValidationException::withMessages([
-                'captcha' => ['Jawaban operasi hitung belum benar. Silakan muat soal baru.'],
+                'turnstile_token' => ['Verifikasi keamanan gagal. Silakan coba lagi.'],
             ]);
         }
 
@@ -70,5 +67,29 @@ class LoginController extends Controller
         return response()->json([
             'message' => 'Login berhasil!',
         ]);
+    }
+
+    private function turnstileValid(string $token, ?string $ip): bool
+    {
+        $secret = config('services.turnstile.secret_key');
+        if (!$secret) {
+            return false;
+        }
+
+        try {
+            $response = Http::asForm()
+                ->timeout(5)
+                ->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $secret,
+                    'response' => $token,
+                    'remoteip' => $ip,
+                ]);
+        } catch (ConnectionException) {
+            return false;
+        }
+
+        return $response->successful()
+            && $response->json('success') === true
+            && $response->json('action') === 'login';
     }
 }
