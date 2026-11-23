@@ -1,10 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import IsianSaran from '../components/IsianSaran'
-import { muatNamaOpd } from '../lib/opdHelper'
+import { cariAlamatInstansi, muatNamaOpd } from '../lib/opdHelper'
 
 function StepBlok1Penyelenggara({ formData, updateBlok1 }) {
   const data = formData.blok1
   const [namaOpd, setNamaOpd] = useState([])
+
+  // Nilai yang terakhir diisi otomatis. Dipakai agar isian boleh diperbarui saat
+  // instansi diganti, tetapi tidak menimpa alamat/email yang sudah diubah manual.
+  const [terisiOtomatis, setTerisiOtomatis] = useState({ alamat: null, email: null })
+  const dataTerkini = useRef(data)
+
+  useEffect(() => {
+    dataTerkini.current = data
+  }, [data])
 
   useEffect(() => {
     let hidup = true
@@ -15,6 +24,36 @@ function StepBlok1Penyelenggara({ formData, updateBlok1 }) {
       hidup = false
     }
   }, [])
+
+  // Lengkapi alamat & email saat instansi cocok dengan daftar OPD.
+  useEffect(() => {
+    let hidup = true
+    cariAlamatInstansi(data.instansiPenyelenggara).then((kontak) => {
+      if (!hidup || !kontak) return
+      const sekarang = dataTerkini.current
+      const bolehIsi = (nilai, isiLama) => !nilai || nilai === isiLama
+      const tambahan = {}
+
+      if (bolehIsi(sekarang.alamat, terisiOtomatis.alamat)) {
+        tambahan.alamat = kontak.alamat
+        updateBlok1('alamat', kontak.alamat)
+      }
+      if (bolehIsi(sekarang.email, terisiOtomatis.email)) {
+        tambahan.email = kontak.email
+        updateBlok1('email', kontak.email)
+      }
+      if (Object.keys(tambahan).length) {
+        setTerisiOtomatis((prev) => ({ ...prev, ...tambahan }))
+      }
+    })
+    return () => {
+      hidup = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.instansiPenyelenggara])
+
+  const alamatTerisiOtomatis =
+    !!data.alamat && data.alamat === terisiOtomatis.alamat
 
   return (
     <div className="flex flex-col gap-6">
@@ -37,6 +76,7 @@ function StepBlok1Penyelenggara({ formData, updateBlok1 }) {
           />
           <p className="mt-1 text-[12px] text-grey-100">
             Pilih dari daftar OPD bila ada, atau ketik manual bila instansi tidak terdaftar.
+            Alamat dan email terisi otomatis untuk OPD yang terdaftar.
           </p>
         </div>
 
@@ -51,6 +91,11 @@ function StepBlok1Penyelenggara({ formData, updateBlok1 }) {
             onChange={(e) => updateBlok1('alamat', e.target.value)}
             className="w-full rounded-xl border border-grey-75/60 px-4 py-2.5 text-[14px] text-grey-300 focus:border-grey-300 focus:ring-1 focus:ring-grey-300 outline-none transition"
           />
+          {alamatTerisiOtomatis && (
+            <p className="mt-1 text-[12px] text-grey-100">
+              Alamat terisi otomatis dari daftar OPD, silakan sesuaikan bila perlu.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
