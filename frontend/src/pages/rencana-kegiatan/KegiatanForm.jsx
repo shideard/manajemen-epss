@@ -53,28 +53,24 @@ function DaftarIndikator({ indikatorPilihan = [], onClose }) {
   )
 }
 
-// Input satu target output di bawah satu indikator; file contoh opsional (judul kosong → pakai nama file)
+// Input satu target output di bawah satu indikator: isi judul, jenis, dan (opsional) file contoh,
+// lalu output baru ditambahkan lewat tombol "Tambah Output". Memilih file tidak langsung menambah output.
 function TambahOutput({ onTambah }) {
   const [judul, setJudul] = useState('')
   const [jenis, setJenis] = useState('')
+  const [file, setFile] = useState(null)
   const fileContoh = useRef(null)
+  const bisaTambah = Boolean(judul.trim() || file)
 
-  function tambah(file) {
-    const nama = judul.trim() || file?.name
-    if (!nama) return
-    onTambah({ judul: nama, jenis, contoh: file?.name ?? '', file })
+  function tambah() {
+    if (!bisaTambah) return
+    onTambah({ judul: judul.trim() || file.name, jenis, contoh: file?.name ?? '', file: file ?? undefined })
     setJudul('')
+    setFile(null)
   }
 
   return (
-    <div
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault()
-        if (e.dataTransfer.files[0]) tambah(e.dataTransfer.files[0])
-      }}
-      className="flex flex-col gap-2.5 rounded-md border-2 border-dashed border-grey-75 p-3"
-    >
+    <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-2.5 sm:flex-row">
         <Input
           value={judul}
@@ -87,7 +83,7 @@ function TambahOutput({ onTambah }) {
             }
           }}
           aria-label="Judul bukti dukung yang ditargetkan"
-          placeholder="Tulis judul bukti dukung yang ditargetkan"
+          placeholder="Tulis Contoh Judul Bukti Dukung yang Ditargetkan"
           className="sm:flex-3"
         />
         <Select value={jenis} onChange={(e) => setJenis(e.target.value)} aria-label="Jenis file" className="sm:flex-1">
@@ -97,26 +93,48 @@ function TambahOutput({ onTambah }) {
           ))}
         </Select>
       </div>
-      <div className="flex flex-wrap items-center gap-2.5">
-        <button type="button" onClick={() => tambah()} className={buttonClass('primary', 'sm')}>
-          Tambah Output
-        </button>
+
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault()
+          if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0])
+        }}
+        className="flex h-[175px] flex-col items-center justify-center gap-2.5 rounded-md border-2 border-dashed border-grey-75 px-5 text-center text-grey-200"
+      >
+        <img src={uploadIcon} alt="" width={24} height={24} />
+        {file ? (
+          <p className="flex max-w-full items-center gap-2 text-grey-500">
+            <span className="truncate font-semibold">{file.name}</span>
+            <button type="button" onClick={() => setFile(null)} aria-label={`Batalkan file ${file.name}`} className="shrink-0">
+              <img src={removeIcon} alt="" width={20} height={20} className="grayscale" />
+            </button>
+          </p>
+        ) : (
+          <p>
+            <span className="block font-semibold">Unggah File Contoh</span>
+            <span className="block text-small">Unggah atau seret dan lepas ke dalam kotak ini</span>
+          </p>
+        )}
         <input
           ref={fileContoh}
           type="file"
           accept={JENIS_FILE[jenis] ?? JENIS_FILE.Lainnya}
           onChange={(e) => {
-            if (e.target.files[0]) tambah(e.target.files[0])
+            if (e.target.files[0]) setFile(e.target.files[0])
             e.target.value = ''
           }}
           className="hidden"
         />
         <button type="button" onClick={() => fileContoh.current.click()} className={buttonClass('outline', 'sm')}>
-          <img src={uploadIcon} alt="" width={16} height={16} />
-          Tambah dengan File Contoh
+          {file ? 'Ganti File' : 'Pilih File'}
         </button>
-        <span className="text-small text-grey-200">atau seret file ke kotak ini. PDF, Word, Excel, JPG, PNG, maks. 10 MB.</span>
       </div>
+      <p className="text-small text-grey-200">File contoh opsional: PDF, Word, Excel, JPG, atau PNG, maksimal 10 MB.</p>
+
+      <button type="button" onClick={tambah} disabled={!bisaTambah} className={`self-start ${buttonClass()}`}>
+        Tambah Output
+      </button>
     </div>
   )
 }
