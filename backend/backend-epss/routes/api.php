@@ -193,6 +193,12 @@ Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active', RecordUse
         ->whereUuid('dokumenBukti')
         ->name('rencana-kegiatan.dokumen-bukti.unlink');
 
+        Route::put('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti/{dokumenBukti}/indikator',
+        [DokumenBuktiController::class, 'aturIndikator']
+        )->whereUuid('rencanaKegiatan')
+        ->whereUuid('dokumenBukti')
+        ->name('rencana-kegiatan.dokumen-bukti.indikator');
+
         Route::delete('/rencana-kegiatan/{rencanaKegiatan}/dokumen-bukti/{dokumenBukti}',
         [DokumenBuktiController::class, 'destroy']
         )->whereUuid('rencanaKegiatan')

@@ -83,12 +83,14 @@ class AjuanBuktiController extends Controller
             $ajuan->checklist = $validated['checklist'];
 
             if ($validated['ajukan']) {
+                // Verifikator hanya melihat berkas yang tertaut ke indikator ini, jadi syaratnya per indikator
                 abort_unless(
                     $rencanaKegiatan->dokumenBukti()
                         ->where('is_current', true)
+                        ->whereHas('indikator', fn ($query) => $query->whereKey($indikator->id))
                         ->exists(),
                     422,
-                    'Unggah minimal satu berkas bukti dukung sebelum mengajukan verifikasi.'
+                    "Unggah minimal satu berkas bukti dukung untuk Indikator {$indikator->kode} sebelum mengajukan verifikasi."
                 );
 
                 $ajuan->status = StatusAjuanBukti::MENUNGGU;

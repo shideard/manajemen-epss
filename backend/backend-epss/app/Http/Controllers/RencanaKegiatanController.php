@@ -155,6 +155,12 @@ class RencanaKegiatanController extends Controller
                     ->outputDiharapkan()
                     ->whereIn('indikator_id', $indikatorUntukDihapus)
                     ->update(['indikator_id' => null]);
+
+                // Berkas tetap ada, hanya tautannya ke indikator yang dilepas yang dihapus
+                DB::table('dokumen_bukti_indikator')
+                    ->whereIn('indikator_id', $indikatorUntukDihapus)
+                    ->whereIn('dokumen_id', $rencanaKegiatan->dokumenBukti()->select('id'))
+                    ->delete();
             }
 
             $indikatorUntukDitambahkan = array_diff(

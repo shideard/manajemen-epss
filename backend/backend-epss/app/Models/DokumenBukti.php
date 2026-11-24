@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DokumenBukti extends Model
@@ -51,5 +52,17 @@ class DokumenBukti extends Model
     public function dokumenTurunan(): HasMany
     {
         return $this->hasMany(self::class, 'parent_document_id');
+    }
+
+    // Indikator yang didukung berkas ini; kosong = berkas umum yang belum ditautkan (mis. pintasan dari kegiatan lain)
+    public function indikator(): BelongsToMany
+    {
+        return $this->belongsToMany(IndikatorEpss::class, 'dokumen_bukti_indikator', 'dokumen_id', 'indikator_id');
+    }
+
+    // Output yang ditargetkan tempat berkas ini diunggah; null = berkas umum
+    public function output(): BelongsTo
+    {
+        return $this->belongsTo(RencanaKegiatanOutput::class, 'output_id');
     }
 }
