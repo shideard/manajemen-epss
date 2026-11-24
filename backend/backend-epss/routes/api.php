@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserPasswordResetController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RecoveryEmailController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\PreferensiNotifikasiController;
 use App\Http\Middleware\EnforceSessionAge;
 
@@ -37,6 +38,14 @@ use App\Http\Controllers\EksporBuktiController;
 Route::get('/email/verify/{id}/{hash}', [RecoveryEmailController::class, 'verify'])
     ->middleware(['signed:relative', 'throttle:6,1'])
     ->name('verification.verify');
+
+Route::post('/password/forgot', [PasswordResetController::class, 'requestLink'])
+    ->middleware('throttle:3,10')
+    ->name('password.email');
+
+Route::post('/password/reset', [PasswordResetController::class, 'reset'])
+    ->middleware('throttle:5,10')
+    ->name('password.update');
 
 Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active'])->group(function () {
     Route::get('/user', function(Request $request){
