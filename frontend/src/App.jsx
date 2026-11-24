@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Login from './pages/Login'
 import GantiPassword from './pages/GantiPassword'
+import VerifikasiEmail from './pages/VerifikasiEmail'
 import PilihPeriode from './pages/PilihPeriode'
 import Notifikasi from './pages/Notifikasi'
 import PedomanIndikator from './pages/PedomanIndikator'
@@ -24,6 +25,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/ganti-password" element={<GantiPassword />} />
+      <Route path="/verifikasi-email" element={<VerifikasiEmail />} />
       <Route element={<AppLayout bare />}>
         <Route path="/pilih-periode" element={<PilihPeriode />} />
       </Route>

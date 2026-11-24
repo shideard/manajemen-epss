@@ -35,7 +35,7 @@ use App\Http\Controllers\AjuanBuktiController;
 use App\Http\Controllers\EksporBuktiController;
 
 Route::get('/email/verify/{id}/{hash}', [RecoveryEmailController::class, 'verify'])
-    ->middleware(['signed', 'throttle:6,1'])
+    ->middleware(['signed:relative', 'throttle:6,1'])
     ->name('verification.verify');
 
 Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active'])->group(function () {
@@ -51,7 +51,7 @@ Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active'])->group(f
         ->middleware('throttle:3,10')
         ->name('user.recovery-email.update');
 
-    Route::middleware('password.current')->group(function () {
+    Route::middleware(['verified', 'password.current'])->group(function () {
         Route::get('/user/notifikasi', [PreferensiNotifikasiController::class, 'show'])
             ->name('user.notifikasi.show');
 

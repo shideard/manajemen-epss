@@ -152,12 +152,13 @@ function Users() {
           <p className="text-small text-white">Menampilkan akun yang dibuat dari browser ini.</p>
         </div>
         <div className="overflow-x-auto rounded-md bg-white px-2 py-5">
-          <table className="w-full min-w-[900px] text-center text-body text-grey-500">
+          <table className="w-full min-w-[1080px] text-center text-body text-grey-500">
             <thead>
               <tr className="border-b border-grey-75 font-semibold">
                 <th className="pb-3">Nama</th>
                 <th className="pb-3">Username</th>
                 <th className="pb-3">Email</th>
+                <th className="pb-3">Verifikasi Email</th>
                 <th className="pb-3">Peran</th>
                 <th className="pb-3">Status</th>
                 <th className="w-[160px] pb-3">Aksi</th>
@@ -166,7 +167,7 @@ function Users() {
             <tbody className="font-medium">
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-10 text-grey-200">
+                  <td colSpan={7}className="py-10 text-grey-200">
                     Belum ada akun.
                   </td>
                 </tr>
@@ -176,6 +177,11 @@ function Users() {
                   <td className="py-2.5">{u.name}</td>
                   <td className="py-2.5">{u.username}</td>
                   <td className="py-2.5">{u.email ?? '-'}</td>
+                  <td className="px-2 py-2.5">
+                    <Badge tone={u.email_verified_at ? 'green' : 'red'} className="w-full font-normal">
+                      {u.email_verified_at ? 'Terverifikasi' : 'Belum terverifikasi'}
+                    </Badge>
+                  </td>
                   <td className="py-2.5">
                     <Badge tone={TONE[u.role]} className="w-full font-normal">
                       {ROLE_LABELS[u.role]}
@@ -188,7 +194,10 @@ function Users() {
                   </td>
                   <td className="py-2.5">
                     <div className="flex justify-center gap-2">
-                      <button type="button" onClick={() => resetPassword(u)} className={buttonClass('outline', 'sm')}>Reset password</button>
+                      {/* Backend hanya mengizinkan reset untuk operator/verifikator */}
+                      {PERAN.includes(u.role) && (
+                        <button type="button" onClick={() => resetPassword(u)} className={buttonClass('outline', 'sm')}>Reset password</button>
+                      )}
                       <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
                         {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
                       </button>
