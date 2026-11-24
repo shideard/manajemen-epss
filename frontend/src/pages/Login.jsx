@@ -1,18 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/store'
 import { api } from '../lib/api'
 import background from '../assets/login/login-bg.png'
 import logoLine from '../assets/login/logo-line.svg'
 import logo from '../assets/sidebar/logo-kota-bogor.png'
-import { Field, FormError, Input, Spinner } from '../components/ui'
+import { Field, FormError, Input, PasswordInput, Spinner } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
 function Login() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [mengirim, setMengirim] = useState(false)
   const { login } = useAuth()
   const [turnstileSiteKey, setTurnstileSiteKey] = useState('')
@@ -129,25 +127,7 @@ function Login() {
                 <Input name="username" required autoComplete="username" placeholder="Contoh: operator.dinsos" />
               </Field>
               <Field label="Password">
-                <span className="relative block">
-                  <Input
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    autoComplete="current-password"
-                    placeholder="Masukkan password"
-                    className="pr-12"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((visible) => !visible)}
-                    aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
-                    aria-pressed={showPassword}
-                    className="absolute inset-y-0 right-3 flex items-center justify-center text-grey-300 hover:text-grey-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-500"
-                  >
-                    {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
-                  </button>
-                </span>
+                <PasswordInput name="password" required autoComplete="current-password" placeholder="Masukkan password" />
               </Field>
               <Field label="Verifikasi keamanan">
                 <div ref={turnstileContainer} aria-label="Verifikasi Cloudflare Turnstile" />
