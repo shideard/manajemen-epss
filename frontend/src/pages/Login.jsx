@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/store'
 import { api } from '../lib/api'
 import background from '../assets/login/login-bg.png'
@@ -149,6 +150,9 @@ function Login() {
                   </button>
                 </span>
               </Field>
+              <div className="text-end">
+                <Link to="/lupa-password" className="text-small text-grey-300 underline hover:text-grey-500">Lupa password?</Link>
+              </div>
               <Field label="Verifikasi keamanan">
                 <div ref={turnstileContainer} aria-label="Verifikasi Cloudflare Turnstile" />
               </Field>

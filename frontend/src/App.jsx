@@ -3,6 +3,8 @@ import AppLayout from './components/layout/AppLayout'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Login from './pages/Login'
+import LupaPassword from './pages/LupaPassword'
+import ResetPassword from './pages/ResetPassword'
 import GantiPassword from './pages/GantiPassword'
 import VerifikasiEmail from './pages/VerifikasiEmail'
 import PilihPeriode from './pages/PilihPeriode'
@@ -24,6 +26,8 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/lupa-password" element={<LupaPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/ganti-password" element={<GantiPassword />} />
       <Route path="/verifikasi-email" element={<VerifikasiEmail />} />
       <Route element={<AppLayout bare />}>
