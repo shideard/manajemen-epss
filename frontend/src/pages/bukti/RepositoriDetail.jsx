@@ -9,6 +9,7 @@ import { ChecklistItem, ContohOutput, FormError, Memuat, Notice, PageHeader, Sta
 import { buttonClass } from '../../components/classes'
 import { useConfirm } from '../../components/useConfirm'
 import PedomanModal from '../../components/PedomanModal'
+import PilihIndikatorModal from './PilihIndikatorModal'
 import searchIcon from '../../assets/rencana/search-2-line.svg'
 import arrowUpRight from '../../assets/rencana/arrow-right-up-line.svg'
 import bookIcon from '../../assets/icons/book-mark-fill-sm.svg'
@@ -28,6 +29,38 @@ const IKON_JENIS = [
 ]
 const ikonJenis = (output) => IKON_JENIS.find(([pola]) => pola.test(`${output.jenis ?? ''} ${output.contoh?.nama ?? ''}`.toLowerCase()))?.[1] ?? File
 
+// Satu berkas bukti: nama, info, tombol lihat/hapus; children = keterangan tambahan (mis. indikator tertaut)
+function BerkasBaris({ f, onLihat, onHapus, children }) {
+  return (
+    <div className="flex w-full items-center justify-between gap-4 rounded-sm border border-grey-500 bg-white px-7 py-2">
+      <div className="flex min-w-0 items-center gap-3.5">
+        <span className="relative size-12 shrink-0 overflow-hidden rounded-sm bg-grey-300">
+          <img src={fileText} alt="" width={54} height={54} className="absolute top-[3px] left-[-3px] max-w-none" />
+        </span>
+        <span className="flex min-w-0 flex-col gap-1">
+          <span className="truncate text-small font-medium">{f.nama}</span>
+          <span className="text-caption font-light">
+            {metaBerkas(f)}
+            {f.sumber && ` · Pintasan dari ${f.sumber.kegiatanNama}`}
+          </span>
+          {children}
+        </span>
+      </div>
+      <div className="flex shrink-0 items-center gap-3.5">
+        <img src={checkBadge} alt="Terunggah" width={30} height={30} />
+        <button type="button" onClick={() => onLihat(f)} aria-label={`Lihat ${f.nama}`} className="grid size-[30px] place-items-center rounded-sm bg-lime-200">
+          <img src={eyeIcon} alt="" width={20} height={20} />
+        </button>
+        {onHapus && f.isCurrent && (
+          <button type="button" onClick={() => onHapus(f)} aria-label={`Hapus ${f.nama}`} className="grid size-[30px] place-items-center rounded-sm bg-red-200">
+            <img src={deleteIcon} alt="" width={20} height={20} />
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // Checklist satu indikator, hanya untuk level yang ditargetkan verifikator pada kegiatan ini.
 // Tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
 function IndikatorBukti({ bukti, indikator, level, levelTerverifikasi, jumlahBerkas, readOnly, onSave }) {
@@ -46,7 +79,7 @@ function IndikatorBukti({ bukti, indikator, level, levelTerverifikasi, jumlahBer
   }
 
   function ajukan() {
-    if (jumlahBerkas === 0) return setError('Unggah minimal satu berkas bukti dukung sebelum mengajukan verifikasi.')
+    if (jumlahBerkas === 0) return setError('Unggah minimal satu berkas bukti dukung untuk indikator ini (lewat output atau berkas umum) sebelum mengajukan verifikasi.')
     if (!lengkap) return setError(`Centang seluruh persyaratan Level ${level} sebelum mengajukan verifikasi.`)
     konfirmasi({
       title: 'Ajukan Verifikasi',
@@ -152,6 +185,10 @@ function RepositoriDetail() {
   const [errorBerkas, setErrorBerkas] = useState('')
   const [errorOutput, setErrorOutput] = useState('')
   const fileInput = useRef(null)
+  // Output tujuan unggah dari tombol "Unggah" pada output yang ditargetkan
+  const outputTujuan = useRef(null)
+  // null | { mode: 'unggah' } | { mode: 'atur', berkas }: modal pilih indikator untuk berkas umum
+  const [modalIndikator, setModalIndikator] = useState(null)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
   if (detail.error?.status === 404) return <Navigate to={daftarKegiatanPath} replace />
@@ -166,6 +203,10 @@ function RepositoriDetail() {
   const bolehEdit = pic && bolehUbah(user, 'unggahBukti', aktif)
   // Aturan backend: berkas kegiatan yang sudah punya ajuan terverifikasi tidak boleh dihapus
   const bolehHapus = bolehEdit && !tertaut.some((b) => b.status === 'terverifikasi')
+  // Id indikator di halaman ini = kode; berkas menyimpan id API indikator
+  const idApi = (kode) => k.indikator.find((i) => String(i.kode) === String(kode))?.id
+  const namaIndikator = (id) => k.indikator.find((i) => i.id === id)
+  const berkasUmum = files.filter((f) => !f.outputId)
   const detailKegiatan = [
     [Building2, 'OPD', k.opd],
     [UserRound, 'PIC', k.pic],
@@ -173,18 +214,25 @@ function RepositoriDetail() {
     ...(aktif?.batas ? [[Clock3, 'Deadline Bukti', formatTanggal(aktif.batas)]] : []),
   ]
 
-  async function unggah(event) {
+  // Unggah berkas untuk satu output yang ditargetkan; indikatornya mengikuti output tersebut
+  async function unggahUntukOutput(event) {
     const pilihan = [...event.target.files]
     event.target.value = ''
-    setErrorBerkas('')
+    setErrorOutput('')
     setMengunggah(true)
     try {
-      await dokumen.unggah(pilihan)
+      await dokumen.unggah(pilihan, { outputId: outputTujuan.current })
+      buktiData.muatUlang()
     } catch (error) {
-      setErrorBerkas(Object.values(error.errors ?? {}).flat()[0] ?? error.message)
+      setErrorOutput(Object.values(error.errors ?? {}).flat()[0] ?? error.message)
     } finally {
       setMengunggah(false)
     }
+  }
+
+  function pilihBerkasOutput(output) {
+    outputTujuan.current = output.id
+    fileInput.current.click()
   }
 
   async function lihat(f) {
@@ -289,10 +337,11 @@ function RepositoriDetail() {
           </p>
           <hr className="w-full border-grey-50" />
 
-          {/* Target output diisi verifikator di form Rencana Kegiatan */}
+          {/* Output yang ditargetkan diisi verifikator di form Rencana Kegiatan; berkas diunggah per output */}
           {k.output?.length > 0 && (
             <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
               <h3 className="font-semibold">Output Bukti Dukung yang Ditargetkan :</h3>
+              {bolehEdit && <p className="text-small text-grey-200">Klik "Unggah" pada output untuk mengunggah berkasnya. Berkas otomatis tertaut ke indikator output tersebut.</p>}
               {/* Dikelompokkan per indikator; indikator tanpa output tidak ditampilkan */}
               {kelompokOutput(k.output, k.indikator).filter((g) => g.output.length).map(({ indikator: ind, output: milik }) => (
                 <div key={ind?.id ?? 'tanpa-indikator'} className="flex w-full flex-col gap-2">
@@ -300,80 +349,87 @@ function RepositoriDetail() {
                   <ul className="flex w-full flex-col gap-2">
                     {milik.map((o) => {
                       const Ikon = ikonJenis(o)
+                      const berkasOutput = files.filter((f) => f.outputId === o.id)
                       return (
-                        <li key={o.id} className="flex min-h-[45px] items-center justify-between gap-4 rounded-md bg-lime-300 px-5 py-2">
-                          <div className="flex min-w-0 items-center gap-3.5">
-                            <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-grey-300 text-lime-300">
-                              <Ikon size={28} aria-hidden="true" />
-                            </span>
-                            <span className="flex min-w-0 flex-col justify-center">
-                              <span>
-                                {o.judul}
-                                {o.jenis && <span className="text-small"> ({o.jenis})</span>}
+                        <li key={o.id} className="flex flex-col gap-2 rounded-md bg-lime-300 px-5 py-2">
+                          <div className="flex min-h-[45px] items-center justify-between gap-4">
+                            <div className="flex min-w-0 items-center gap-3.5">
+                              <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-grey-300 text-lime-300">
+                                <Ikon size={28} aria-hidden="true" />
                               </span>
-                              <ContohOutput kegiatanId={k.id} output={o} label="Contoh dari verifikator" />
-                            </span>
+                              <span className="flex min-w-0 flex-col justify-center">
+                                <span>
+                                  {o.judul}
+                                  {o.jenis && <span className="text-small"> ({o.jenis})</span>}
+                                </span>
+                                <ContohOutput kegiatanId={k.id} output={o} label="Contoh dari verifikator" />
+                              </span>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2.5">
+                              {o.contoh?.berkas && (
+                                <button
+                                  type="button"
+                                  onClick={() => bukaBerkas(`/api/rencana-kegiatan/${k.id}/output-diharapkan/${o.id}/contoh`).then(() => setErrorOutput(''), (error) => setErrorOutput(error.message))}
+                                  aria-label={`Pratinjau contoh ${o.judul}`}
+                                  className="grid size-[30px] place-items-center rounded-sm bg-white"
+                                >
+                                  <img src={eyeIcon} alt="" width={20} height={20} />
+                                </button>
+                              )}
+                              {bolehEdit && (
+                                <button type="button" onClick={() => pilihBerkasOutput(o)} disabled={mengunggah} className={buttonClass('primary', 'sm')}>
+                                  {mengunggah ? 'Mengunggah…' : 'Unggah'}
+                                </button>
+                              )}
+                            </div>
                           </div>
-                          {o.contoh?.berkas && (
-                            <button
-                              type="button"
-                              onClick={() => bukaBerkas(`/api/rencana-kegiatan/${k.id}/output-diharapkan/${o.id}/contoh`).then(() => setErrorOutput(''), (error) => setErrorOutput(error.message))}
-                              aria-label={`Pratinjau contoh ${o.judul}`}
-                              className="grid size-[30px] shrink-0 place-items-center rounded-sm bg-white"
-                            >
-                              <img src={eyeIcon} alt="" width={20} height={20} />
-                            </button>
-                          )}
+                          {berkasOutput.map((f) => (
+                            <BerkasBaris key={f.id} f={f} onLihat={lihat} onHapus={bolehHapus ? hapus : null} />
+                          ))}
                         </li>
                       )
                     })}
                   </ul>
                 </div>
               ))}
+              {bolehEdit && <input ref={fileInput} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" onChange={unggahUntukOutput} className="hidden" />}
               <FormError>{errorOutput}</FormError>
             </div>
           )}
 
+          {/* Berkas di luar output: wajib dikaitkan ke satu, beberapa, atau semua indikator tertaut */}
           <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
-            <h3 className="font-semibold">Dokumen Bukti yang Terlampir:</h3>
-            {files.length === 0 && <p className="w-full rounded-sm border border-dashed border-grey-75 px-7 py-5 text-center text-small text-grey-200">Belum ada berkas yang diunggah.</p>}
-            {files.map((f) => (
-              <div key={f.id} className="flex w-full items-center justify-between gap-4 rounded-sm border border-grey-500 px-7 py-2">
-                <div className="flex min-w-0 items-center gap-3.5">
-                  <span className="relative size-12 shrink-0 overflow-hidden rounded-sm bg-grey-300">
-                    <img src={fileText} alt="" width={54} height={54} className="absolute top-[3px] left-[-3px] max-w-none" />
-                  </span>
-                  <span className="flex min-w-0 flex-col gap-1">
-                    <span className="truncate text-small font-medium">{f.nama}</span>
-                    <span className="text-caption font-light">
-                      {metaBerkas(f)}
-                      {f.sumber && ` · Pintasan dari ${f.sumber.kegiatanNama}`}
-                    </span>
-                  </span>
-                </div>
-                <div className="flex shrink-0 items-center gap-3.5">
-                  <img src={checkBadge} alt="Terunggah" width={30} height={30} />
-                  <button type="button" onClick={() => lihat(f)} aria-label={`Lihat ${f.nama}`} className="grid size-[30px] place-items-center rounded-sm bg-lime-200">
-                    <img src={eyeIcon} alt="" width={20} height={20} />
-                  </button>
-                  {bolehHapus && f.isCurrent && (
-                    <button type="button" onClick={() => hapus(f)} aria-label={`Hapus ${f.nama}`} className="grid size-[30px] place-items-center rounded-sm bg-red-200">
-                      <img src={deleteIcon} alt="" width={20} height={20} />
+            <h3 className="font-semibold">Dokumen Bukti Umum:</h3>
+            {berkasUmum.length === 0 && <p className="w-full rounded-sm border border-dashed border-grey-75 px-7 py-5 text-center text-small text-grey-200">Belum ada berkas umum.</p>}
+            {berkasUmum.map((f) => (
+              <BerkasBaris key={f.id} f={f} onLihat={lihat} onHapus={bolehHapus ? hapus : null}>
+                <span className="flex flex-wrap items-center gap-1.5 text-caption">
+                  {f.indikatorIds.length === 0 ? (
+                    <span className="text-red-400">Belum ditautkan ke indikator, belum terlihat oleh verifikator</span>
+                  ) : (
+                    f.indikatorIds.map((id) => (
+                      <span key={id} className="rounded-xs bg-lime-100 px-2 py-0.5">Indikator {namaIndikator(id)?.kode ?? '?'}</span>
+                    ))
+                  )}
+                  {bolehEdit && f.isCurrent && k.indikator.length > 0 && (
+                    <button type="button" onClick={() => setModalIndikator({ mode: 'atur', berkas: f })} className="font-semibold underline">
+                      Atur Indikator
                     </button>
                   )}
-                </div>
-              </div>
+                </span>
+              </BerkasBaris>
             ))}
             {dialogKonfirmasi}
             <FormError>{errorBerkas}</FormError>
             {bolehEdit && (
               <>
-                <input ref={fileInput} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" onChange={unggah} className="hidden" />
-                <button type="button" onClick={() => fileInput.current.click()} disabled={mengunggah} className={buttonClass()}>
+                <button type="button" onClick={() => setModalIndikator({ mode: 'unggah' })} disabled={k.indikator.length === 0} className={buttonClass()}>
                   <img src={addIcon} alt="" width={19} height={19} />
-                  {mengunggah ? 'Mengunggah…' : 'Unggah Berkas Baru'}
+                  Unggah Berkas Umum
                 </button>
-                <p className="text-small text-grey-200">PDF, Word, Excel, JPG, atau PNG, maksimal 10 MB per berkas.</p>
+                <p className="text-small text-grey-200">
+                  {k.indikator.length === 0 ? 'Belum ada indikator tertaut, berkas umum belum dapat diunggah.' : 'Pilih indikator yang didukung berkas, lalu pilih berkasnya. PDF, Word, Excel, JPG, atau PNG, maksimal 10 MB per berkas.'}
+                </p>
               </>
             )}
           </div>
@@ -396,11 +452,27 @@ function RepositoriDetail() {
           indikator={instrumenData.byId[b.indikatorId]}
           level={k.levelTarget[b.indikatorId] ?? 1}
           levelTerverifikasi={levels[b.indikatorId]}
-          jumlahBerkas={files.length}
+          jumlahBerkas={files.filter((f) => f.indikatorIds.includes(idApi(b.indikatorId))).length}
           readOnly={!bolehEdit}
           onSave={(perubahan) => simpanBukti(b.indikatorId, perubahan)}
         />
       ))}
+
+      {modalIndikator && (
+        <PilihIndikatorModal
+          title={modalIndikator.mode === 'unggah' ? 'Unggah Berkas Umum' : `Atur Indikator: ${modalIndikator.berkas.nama}`}
+          indikator={k.indikator}
+          awal={modalIndikator.berkas?.indikatorIds}
+          denganBerkas={modalIndikator.mode === 'unggah'}
+          submitLabel={modalIndikator.mode === 'unggah' ? 'Unggah' : 'Simpan'}
+          onSimpan={async (indikatorIds, pilihan) => {
+            if (modalIndikator.mode === 'unggah') await dokumen.unggah(pilihan, { indikatorIds })
+            else await dokumen.aturIndikator(modalIndikator.berkas, indikatorIds)
+            buktiData.muatUlang()
+          }}
+          onClose={() => setModalIndikator(null)}
+        />
+      )}
     </div>
   )
 }
