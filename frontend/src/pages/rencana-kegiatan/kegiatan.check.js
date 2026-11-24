@@ -1,6 +1,6 @@
 // Jalankan: node src/pages/rencana-kegiatan/kegiatan.check.js
 import assert from 'node:assert/strict'
-import { isOnDate, kartuKanban, levelTerpakai, matches, monthCells, urutkanKegiatan } from './kegiatan.js'
+import { isOnDate, kartuKanban, levelTerpakai, matches, monthCells, urutkanKegiatan, warnaKalender } from './kegiatan.js'
 
 const k = { nama: 'Survei SKM', deskripsi: 'Kepuasan warga', opd: 'DINSOS', pic: 'Deshi', mulai: '2026-09-10', selesai: '2026-09-20' }
 
@@ -77,6 +77,23 @@ assert.deepEqual(urutkanKegiatan([], 'nama'), [])
 assert.deepEqual(urutkanKegiatan([
   { ...untukUrutan[0], id: 'z' }, untukUrutan[0],
 ], 'nama').map((item) => item.id), ['a', 'z'])
+
+// Warna kalender: kegiatan yang beririsan selalu beda warna; yang tidak beririsan boleh memakai ulang warna
+const jadwal = [
+  { id: 'a', mulai: '2026-09-01', selesai: '2026-09-10' },
+  { id: 'b', mulai: '2026-09-05', selesai: '2026-09-06' },
+  { id: 'c', mulai: '2026-09-06', selesai: '2026-09-20' },
+  { id: 'd', mulai: '2026-09-11', selesai: '2026-09-12' }, // a sudah selesai → boleh pakai warna a
+  { id: 'e', mulai: '2026-09-06', selesai: '2026-09-06' },
+]
+const warna = warnaKalender(jadwal)
+for (const x of jadwal) {
+  for (const y of jadwal) {
+    if (x.id !== y.id && x.mulai <= y.selesai && y.mulai <= x.selesai) assert.notEqual(warna[x.id], warna[y.id], `${x.id} & ${y.id} beririsan`)
+  }
+}
+assert.equal(warna.d, warna.a)
+assert.deepEqual(warnaKalender([]), {})
 
 console.log('kegiatan.check: OK')
 const dibuat = [
