@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
-import { Field, FormError, Input, Spinner } from '../components/ui'
+import { Field, FormError, Input, Notice, Spinner } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
 function ResetPassword() {
@@ -34,7 +34,7 @@ function ResetPassword() {
       <form onSubmit={submit} className="flex w-full max-w-[480px] flex-col gap-6 rounded-xl bg-white p-8">
         <h1 className="text-center text-h1">Buat Password Baru</h1>
         {selesai ? (
-          <><p role="status" className="text-green-700">Password berhasil direset. Silakan masuk kembali.</p><Link to="/login" className={`text-center ${buttonClass()}`}>Ke halaman masuk</Link></>
+          <><Notice tone="green">Password berhasil direset. Silakan masuk kembali.</Notice><Link to="/login" className={`text-center ${buttonClass()}`}>Ke halaman masuk</Link></>
         ) : (
           <>
             <Field label="Password baru"><Input type="password" name="password" required minLength={8} autoComplete="new-password" /></Field>
