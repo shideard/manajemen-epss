@@ -221,7 +221,8 @@ function Users() {
                           <KeyRound size={16} aria-hidden="true" />
                         </button>
                       )}
-                      {u.status_aktif ? (
+                      {/* Akun superadmin tidak bisa dinonaktifkan dari sini */}
+                      {u.role !== ROLES.SUPER_ADMIN_BIDANG && (u.status_aktif ? (
                         <button type="button" onClick={() => ubahStatus(u)} title="Nonaktifkan akun" aria-label={`Nonaktifkan akun ${u.username}`} className={`${ikonClass} border-red-400 text-red-400 hover:bg-red-400/10`}>
                           <UserX size={16} aria-hidden="true" />
                         </button>
@@ -229,12 +230,7 @@ function Users() {
                         <button type="button" onClick={() => ubahStatus(u)} title="Aktifkan akun" aria-label={`Aktifkan akun ${u.username}`} className={`${ikonClass} border-green-500 text-green-500 hover:bg-green-500/10`}>
                           <UserCheck size={16} aria-hidden="true" />
                         </button>
-                      )}
-                      {u.role !== 'SUPER_ADMIN_BIDANG' && (
-                        <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
-                          {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
-                        </button>
-                      )}
+                      ))}
                     </div>
                   </td>
                 </tr>
