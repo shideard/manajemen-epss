@@ -4,7 +4,7 @@ import { ROLE_LABELS, ROLES } from '../config/menu'
 import { Badge, Field, FormError, Input, Memuat, Modal, ModalActions, Notice, PageHeader, PasswordInput, Select, SyaratPassword } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { useConfirm } from '../components/useConfirm'
-import { KeyRound, MailCheck, MailX, UserCheck, UserX } from 'lucide-react'
+import { CircleCheck, CircleX, KeyRound, MailCheck, MailX, UserCheck, UserX } from 'lucide-react'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
 
 // Tombol aksi berupa ikon; keterangannya muncul saat hover lewat title
@@ -166,7 +166,7 @@ function Users() {
                 <th className="pb-3">Email</th>
                 <th className="w-[120px] pb-3">Verifikasi Email</th>
                 <th className="pb-3">Peran</th>
-                <th className="pb-3">Status</th>
+                <th className="w-[120px] pb-3">Status</th>
                 <th className="w-[120px] pb-3">Aksi</th>
               </tr>
             </thead>
@@ -202,9 +202,17 @@ function Users() {
                     </Badge>
                   </td>
                   <td className="px-2 py-2.5">
-                    <Badge tone={u.status_aktif ? 'green' : 'red'} className="w-full font-normal">
-                      {u.status_aktif ? 'Aktif' : 'Nonaktif'}
-                    </Badge>
+                    {u.status_aktif ? (
+                      <span title="Akun aktif" className="inline-flex text-green-500">
+                        <CircleCheck size={20} aria-hidden="true" />
+                        <span className="sr-only">Aktif</span>
+                      </span>
+                    ) : (
+                      <span title="Akun nonaktif" className="inline-flex text-red-400">
+                        <CircleX size={20} aria-hidden="true" />
+                        <span className="sr-only">Nonaktif</span>
+                      </span>
+                    )}
                   </td>
                   <td className="py-2.5">
                     <div className="flex justify-center gap-2">
