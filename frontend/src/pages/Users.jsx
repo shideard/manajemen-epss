@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { useUsers } from '../lib/store'
 import { ROLE_LABELS, ROLES } from '../config/menu'
-import { Badge, Field, FormError, Input, Memuat, Modal, ModalActions, Notice, PageHeader, PasswordInput, Select, SyaratPassword } from '../components/ui'
+import { Badge, Field, FormError, Input, Memuat, Modal, ModalActions, Notice, PageHeader, PasswordBaru, PasswordInput, Select } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { useConfirm } from '../components/useConfirm'
+import { CircleCheck, CircleX, KeyRound, MailCheck, MailX, UserCheck, UserX } from 'lucide-react'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
+
+// Tombol aksi berupa ikon; keterangannya muncul saat hover lewat title
+const ikonClass = 'inline-flex size-8 items-center justify-center rounded-sm border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-500'
 
 const PERAN = [ROLES.OPERATOR, ROLES.VERIFIKATOR]
 const TONE = { [ROLES.OPERATOR]: 'blue', [ROLES.VERIFIKATOR]: 'green' }
@@ -15,7 +19,6 @@ const pesanError = (err) => (err.errors ? Object.values(err.errors).flat().join(
 function AkunForm({ onSave, onClose }) {
   const [error, setError] = useState('')
   const [mengirim, setMengirim] = useState(false)
-  const [password, setPassword] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -35,46 +38,46 @@ function AkunForm({ onSave, onClose }) {
       <form onSubmit={handleSubmit} className="px-9 pt-7 pb-8">
         {/* fieldset disabled = semua input & tombol terkunci selama dikirim */}
         <fieldset disabled={mengirim} aria-busy={mengirim} className="flex flex-col gap-5.5">
-          <Field label="Nama">
-            <Input name="name" required maxLength={255} placeholder="Contoh: Ani Lestari" />
-          </Field>
-          <Field label="Username">
-            <Input
-              name="username"
-              required
-              minLength={3}
-              maxLength={50}
-              pattern="[a-z0-9._\-]+"
-              title="Huruf kecil, angka, titik, garis bawah, atau tanda hubung"
-              autoComplete="off"
-              placeholder="Contoh: ani.dinsos"
-            />
-          </Field>
-          <Field label="Email">
-            <Input type="email" name="email" required placeholder="Contoh: ani@kotabogor.go.id" />
-          </Field>
-          <Field label="Password">
-            <PasswordInput name="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          </Field>
-          <SyaratPassword password={password} />
+          {/* Dua kolom: Nama | Username, lalu Email | Peran; satu kolom di layar kecil */}
+          <div className="grid gap-5.5 sm:grid-cols-2">
+            <Field label="Nama">
+              <Input name="name" required maxLength={255} placeholder="Contoh: Ani Lestari" />
+            </Field>
+            <Field label="Username">
+              <Input
+                name="username"
+                required
+                minLength={3}
+                maxLength={50}
+                pattern="[a-z0-9._\-]+"
+                title="Huruf kecil, angka, titik, garis bawah, atau tanda hubung"
+                autoComplete="off"
+                placeholder="Contoh: ani.dinsos"
+              />
+            </Field>
+            <Field label="Email">
+              <Input type="email" name="email" required placeholder="Contoh: ani@kotabogor.go.id" />
+            </Field>
+            <Field label="Peran">
+              <Select name="role" required defaultValue="">
+                <option value="" disabled>
+                  Pilih peran
+                </option>
+                {PERAN.map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+          <PasswordBaru label="Password" />
           <Field label="Ulangi password">
             <PasswordInput name="password_confirmation" required minLength={8} autoComplete="new-password" />
           </Field>
           <p className="text-small text-grey-300">
             Pengguna diminta menggantinya saat pertama kali masuk.
           </p>
-          <Field label="Peran" className="w-[245px]">
-            <Select name="role" required defaultValue="">
-              <option value="" disabled>
-                Pilih peran
-              </option>
-              {PERAN.map((role) => (
-                <option key={role} value={role}>
-                  {ROLE_LABELS[role]}
-                </option>
-              ))}
-            </Select>
-          </Field>
           <FormError>{error}</FormError>
           <ModalActions onCancel={onClose} submitLabel={mengirim ? 'Menyimpan...' : 'Simpan'} />
         </fieldset>
@@ -160,10 +163,10 @@ function Users() {
                 <th className="pb-3">Nama</th>
                 <th className="pb-3">Username</th>
                 <th className="pb-3">Email</th>
-                <th className="pb-3">Verifikasi Email</th>
+                <th className="w-[120px] pb-3">Verifikasi Email</th>
                 <th className="pb-3">Peran</th>
-                <th className="pb-3">Status</th>
-                <th className="w-[160px] pb-3">Aksi</th>
+                <th className="w-[120px] pb-3">Status</th>
+                <th className="w-[120px] pb-3">Aksi</th>
               </tr>
             </thead>
             <tbody className="font-medium">
@@ -180,9 +183,17 @@ function Users() {
                   <td className="py-2.5">{u.username}</td>
                   <td className="py-2.5">{u.email ?? '-'}</td>
                   <td className="px-2 py-2.5">
-                    <Badge tone={u.email_verified_at ? 'green' : 'red'} className="w-full font-normal">
-                      {u.email_verified_at ? 'Terverifikasi' : 'Belum terverifikasi'}
-                    </Badge>
+                    {u.email_verified_at ? (
+                      <span title="Email terverifikasi" className="inline-flex text-green-500">
+                        <MailCheck size={20} aria-hidden="true" />
+                        <span className="sr-only">Terverifikasi</span>
+                      </span>
+                    ) : (
+                      <span title="Email belum terverifikasi" className="inline-flex text-red-400">
+                        <MailX size={20} aria-hidden="true" />
+                        <span className="sr-only">Belum terverifikasi</span>
+                      </span>
+                    )}
                   </td>
                   <td className="py-2.5">
                     <Badge tone={TONE[u.role]} className="w-full font-normal">
@@ -190,15 +201,34 @@ function Users() {
                     </Badge>
                   </td>
                   <td className="px-2 py-2.5">
-                    <Badge tone={u.status_aktif ? 'green' : 'red'} className="w-full font-normal">
-                      {u.status_aktif ? 'Aktif' : 'Nonaktif'}
-                    </Badge>
+                    {u.status_aktif ? (
+                      <span title="Akun aktif" className="inline-flex text-green-500">
+                        <CircleCheck size={20} aria-hidden="true" />
+                        <span className="sr-only">Aktif</span>
+                      </span>
+                    ) : (
+                      <span title="Akun nonaktif" className="inline-flex text-red-400">
+                        <CircleX size={20} aria-hidden="true" />
+                        <span className="sr-only">Nonaktif</span>
+                      </span>
+                    )}
                   </td>
                   <td className="py-2.5">
                     <div className="flex justify-center gap-2">
                       {/* Backend hanya mengizinkan reset untuk operator/verifikator */}
                       {PERAN.includes(u.role) && (
-                        <button type="button" onClick={() => resetPassword(u)} className={buttonClass('outline', 'sm')}>Reset password</button>
+                        <button type="button" onClick={() => resetPassword(u)} title="Reset password" aria-label={`Reset password ${u.username}`} className={`${ikonClass} border-grey-500 text-grey-500 hover:bg-grey-500/5`}>
+                          <KeyRound size={16} aria-hidden="true" />
+                        </button>
+                      )}
+                      {u.status_aktif ? (
+                        <button type="button" onClick={() => ubahStatus(u)} title="Nonaktifkan akun" aria-label={`Nonaktifkan akun ${u.username}`} className={`${ikonClass} border-red-400 text-red-400 hover:bg-red-400/10`}>
+                          <UserX size={16} aria-hidden="true" />
+                        </button>
+                      ) : (
+                        <button type="button" onClick={() => ubahStatus(u)} title="Aktifkan akun" aria-label={`Aktifkan akun ${u.username}`} className={`${ikonClass} border-green-500 text-green-500 hover:bg-green-500/10`}>
+                          <UserCheck size={16} aria-hidden="true" />
+                        </button>
                       )}
                       {u.role !== 'SUPER_ADMIN_BIDANG' && (
                         <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>

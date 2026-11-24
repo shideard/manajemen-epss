@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
-import { Field, FormError, Notice, PasswordInput, Spinner, SyaratPassword } from '../components/ui'
+import { Field, FormError, Notice, PasswordBaru, PasswordInput, Spinner } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
 function ResetPassword() {
@@ -9,7 +9,6 @@ function ResetPassword() {
   const [error, setError] = useState('')
   const [selesai, setSelesai] = useState(false)
   const [mengirim, setMengirim] = useState(false)
-  const [password, setPassword] = useState('')
   const token = params.get('token')
   const email = params.get('email')
 
@@ -46,10 +45,7 @@ function ResetPassword() {
           ) : (
             <>
               <div className="flex flex-col gap-3.5">
-                <Field label="Password baru">
-                  <PasswordInput name="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                </Field>
-                <SyaratPassword password={password} />
+                <PasswordBaru />
                 <Field label="Ulangi password baru">
                   <PasswordInput name="password_confirmation" required minLength={8} autoComplete="new-password" />
                 </Field>

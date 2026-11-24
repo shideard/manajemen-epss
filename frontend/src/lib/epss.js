@@ -43,11 +43,11 @@ export function wajibGantiPassword(user, now = new Date()) {
 
 // Sama dengan Password::defaults() di backend (AppServiceProvider): min 8, huruf besar+kecil, angka, simbol
 export const SYARAT_PASSWORD = [
-  ['Minimal 8 karakter', (p) => p.length >= 8],
-  ['Huruf besar', (p) => /\p{Lu}/u.test(p)],
-  ['Huruf kecil', (p) => /\p{Ll}/u.test(p)],
-  ['Angka', (p) => /\p{N}/u.test(p)],
-  ['Simbol', (p) => /[\p{P}\p{S}]/u.test(p)],
+  ['Terdiri dari minimal 8 karakter', (p) => p.length >= 8],
+  ['Mengandung huruf besar (A-Z)', (p) => /\p{Lu}/u.test(p)],
+  ['Mengandung huruf kecil (a-z)', (p) => /\p{Ll}/u.test(p)],
+  ['Mengandung angka (0-9)', (p) => /\p{N}/u.test(p)],
+  ['Mengandung simbol (contoh: ! @ # ?)', (p) => /[\p{P}\p{S}]/u.test(p)],
 ]
 export const SEED_PENGINGAT = [1, 7, 14, 30]
 export const EMPTY_OBJECT = {}

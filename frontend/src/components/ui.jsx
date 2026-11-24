@@ -110,21 +110,30 @@ export function PasswordInput({ className = '', ...props }) {
   )
 }
 
-// Daftar syarat password yang diperbarui saat mengetik; hijau = terpenuhi
-export function SyaratPassword({ password }) {
+// Field password baru + daftar syarat yang diperbarui saat mengetik.
+// Abu = belum diisi, merah = belum terpenuhi, hijau = terpenuhi
+export function PasswordBaru({ label = 'Password baru', name = 'password', ...props }) {
+  const [password, setPassword] = useState('')
   return (
-    <ul aria-label="Syarat password" className="flex flex-wrap gap-x-4 gap-y-1 text-small">
-      {SYARAT_PASSWORD.map(([label, cek]) => {
-        const ok = cek(password)
-        return (
-          <li key={label} className={`flex items-center gap-1 ${ok ? 'text-green-500' : 'text-red-400'}`}>
-            {ok ? <Check size={14} aria-hidden="true" /> : <X size={14} aria-hidden="true" />}
-            {label}
-            <span className="sr-only">{ok ? '(terpenuhi)' : '(belum)'}</span>
-          </li>
-        )
-      })}
-    </ul>
+    <div className="flex flex-col gap-2.5">
+      <Field label={label}>
+        <PasswordInput name={name} required minLength={8} autoComplete="new-password" aria-describedby={`${name}-syarat`} value={password} onChange={(e) => setPassword(e.target.value)} {...props} />
+      </Field>
+      <p id={`${name}-syarat-judul`} className="text-small font-medium text-grey-500">Password harus:</p>
+      <ul id={`${name}-syarat`} aria-labelledby={`${name}-syarat-judul`} className="-mt-1.5 flex flex-col gap-1 text-small">
+        {SYARAT_PASSWORD.map(([teks, cek]) => {
+          const ok = cek(password)
+          const warna = ok ? 'text-green-500' : password ? 'text-red-400' : 'text-grey-300'
+          return (
+            <li key={teks} className={`flex items-center gap-1.5 ${warna}`}>
+              {ok ? <Check size={14} aria-hidden="true" /> : <X size={14} aria-hidden="true" />}
+              {teks}
+              <span className="sr-only">{ok ? '(terpenuhi)' : '(belum)'}</span>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 

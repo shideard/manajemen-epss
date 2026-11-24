@@ -47,6 +47,7 @@ function Login() {
       turnstileWidget.current = window.turnstile.render(turnstileContainer.current, {
         sitekey: turnstileSiteKey,
         action: 'login',
+        theme: 'light',
         callback: (token) => {
           setTurnstileToken(token)
           setCaptchaError('')
@@ -132,9 +133,7 @@ function Login() {
               <div className="text-end">
                 <Link to="/lupa-password" className="text-small text-grey-300 underline hover:text-grey-500">Lupa password?</Link>
               </div>
-              <Field label="Verifikasi keamanan">
-                <div ref={turnstileContainer} aria-label="Verifikasi Cloudflare Turnstile" />
-              </Field>
+              <div ref={turnstileContainer} aria-label="Verifikasi Cloudflare Turnstile" className="flex justify-center" />
               {captchaError && (
                 <div className="flex items-center justify-between gap-3 text-small text-red-400">
                   <span>{captchaError}</span>
