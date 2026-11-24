@@ -29,11 +29,14 @@ class SyncRencanaKegiatanOutputRequest extends FormRequest
                 'nullable',
                 'uuid',
             ],
-            // Indikator tempat output ditargetkan; hanya indikator yang dipetakan ke kegiatan ini
-            'output.*.indikator_id' => [
+            // Indikator tempat output ditargetkan (bisa lebih dari satu); hanya indikator yang dipetakan ke kegiatan ini
+            'output.*.indikator_ids' => [
                 'sometimes',
-                'nullable',
+                'array',
+            ],
+            'output.*.indikator_ids.*' => [
                 'uuid',
+                'distinct',
                 Rule::exists('kegiatan_indikator', 'indikator_id')
                     ->where('kegiatan_id', $this->route('rencanaKegiatan')?->id),
             ],

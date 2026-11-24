@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Planning\SyncRencanaKegiatanOutputRequest;
+use App\Models\DokumenBukti;
 use App\Models\RencanaKegiatan;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -43,12 +44,18 @@ class SyncRencanaKegiatanOutputController extends Controller
                 }
 
                 $baris->fill([
-                    'indikator_id' => $output['indikator_id'] ?? null,
                     'judul' => $output['judul'],
                     'jenis' => $output['jenis'] ?? null,
                     'contoh_nama' => $contohNama,
                     'urutan' => $urutan,
                 ])->save();
+                $indikatorIds = $output['indikator_ids'] ?? [];
+                $baris->indikator()->sync($indikatorIds);
+                // Berkas yang diunggah untuk output ini mengikuti indikator output-nya
+                DokumenBukti::query()
+                    ->where('output_id', $baris->id)
+                    ->get()
+                    ->each(fn (DokumenBukti $dokumen) => $dokumen->indikator()->sync($indikatorIds));
                 $dipertahankan[] = $baris->id;
             }
 

@@ -198,12 +198,12 @@ class DokumenBuktiController extends Controller
                     ),
                 ]);
 
-                // Dari output: indikatornya mengikuti output (kosong bila output tanpa indikator); selain itu indikator pilihan
+                // Dari output: tertaut ke semua indikator output itu (kosong bila output tanpa indikator); selain itu indikator pilihan
                 $outputId = $request->validated('output_id');
                 $document->output_id = $outputId;
                 $rencanaKegiatan->dokumenBukti()->save($document);
                 $indikatorIds = $outputId
-                    ? array_filter([$rencanaKegiatan->outputDiharapkan()->whereKey($outputId)->value('indikator_id')])
+                    ? $rencanaKegiatan->outputDiharapkan()->findOrFail($outputId)->indikator()->pluck('indikator_epss.id')->all()
                     : $request->validated('indikator_ids', []);
                 $document->indikator()->sync($indikatorIds);
 
