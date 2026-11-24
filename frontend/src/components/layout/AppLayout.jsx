@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
-import { menuPathsForRole } from '../../config/menu'
+import { menuPathsForRole, ROLES } from '../../config/menu'
 import { useAuth } from '../../lib/store'
 import { wajibGantiPassword } from '../../lib/epss'
 import { Memuat } from '../ui'
@@ -71,7 +71,9 @@ function AppLayout({ bare = false }) {
   if (wajibGantiPassword(user)) return <Navigate to="/ganti-password" replace />
   // Halaman di luar menu role ini → ke menu pertama (mis. superadmin → Kelola Pengguna)
   const menuPaths = menuPathsForRole(user.role)
-  const allowed = [...menuPaths, ...COMMON_PATHS].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))
+  // Superadmin hanya kelola pengguna: tidak bekerja per periode dan tidak menerima pengingat kegiatan
+  const superadmin = user.role === ROLES.SUPER_ADMIN_BIDANG
+  const allowed = [...menuPaths, ...(superadmin ? [] : COMMON_PATHS)].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))
   if (!allowed) return <Navigate to={menuPaths[0]} replace />
 
   if (bare) {
@@ -105,9 +107,11 @@ function AppLayout({ bare = false }) {
           >
             <Menu size={24} />
           </button>
-          <div className="min-w-0 flex-1">
-            <Topbar />
-          </div>
+          {!superadmin && (
+            <div className="min-w-0 flex-1">
+              <Topbar />
+            </div>
+          )}
         </div>
         {/* key berubah tiap pindah halaman, jadi animasinya diputar ulang */}
         <div key={location.pathname} className="stagger relative mt-7">
