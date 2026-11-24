@@ -4,6 +4,7 @@ namespace App\Http\Requests\Planning;
 
 use App\Models\RencanaKegiatan;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SyncRencanaKegiatanOutputRequest extends FormRequest
 {
@@ -27,6 +28,14 @@ class SyncRencanaKegiatanOutputRequest extends FormRequest
                 'sometimes',
                 'nullable',
                 'uuid',
+            ],
+            // Indikator tempat output ditargetkan; hanya indikator yang dipetakan ke kegiatan ini
+            'output.*.indikator_id' => [
+                'sometimes',
+                'nullable',
+                'uuid',
+                Rule::exists('kegiatan_indikator', 'indikator_id')
+                    ->where('kegiatan_id', $this->route('rencanaKegiatan')?->id),
             ],
             'output.*.judul' => [
                 'required',

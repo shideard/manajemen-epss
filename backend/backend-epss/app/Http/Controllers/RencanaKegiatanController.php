@@ -149,6 +149,12 @@ class RencanaKegiatanController extends Controller
                     ->indikatorMappings()
                     ->whereIn('indikator_id', $indikatorUntukDihapus)
                     ->delete();
+
+                // Output indikator yang dilepas tetap disimpan (berikut berkas contohnya) sebagai output tanpa indikator
+                $rencanaKegiatan
+                    ->outputDiharapkan()
+                    ->whereIn('indikator_id', $indikatorUntukDihapus)
+                    ->update(['indikator_id' => null]);
             }
 
             $indikatorUntukDitambahkan = array_diff(

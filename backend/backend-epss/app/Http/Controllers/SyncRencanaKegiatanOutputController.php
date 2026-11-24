@@ -43,6 +43,7 @@ class SyncRencanaKegiatanOutputController extends Controller
                 }
 
                 $baris->fill([
+                    'indikator_id' => $output['indikator_id'] ?? null,
                     'judul' => $output['judul'],
                     'jenis' => $output['jenis'] ?? null,
                     'contoh_nama' => $contohNama,

@@ -43,6 +43,7 @@ class RencanaKegiatanResource extends JsonResource
                 fn () => $this->outputDiharapkan
                     ->map(fn ($output) => [
                         'id' => $output->id,
+                        'indikator_id' => $output->indikator_id,
                         'judul' => $output->judul,
                         'jenis' => $output->jenis,
                         'contoh' => $output->contoh_nama === null

@@ -14,6 +14,7 @@ class RencanaKegiatanOutput extends Model
 
     protected $fillable = [
         'kegiatan_id',
+        'indikator_id',
         'judul',
         'jenis',
         'contoh_nama',
