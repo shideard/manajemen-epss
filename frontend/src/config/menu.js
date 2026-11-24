@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react'
+import { ClipboardList, Users } from 'lucide-react'
 import dashboardIcon from '../assets/sidebar/dashboard-fill.svg'
 import bookIcon from '../assets/sidebar/book-2-fill.svg'
 import calendarIcon from '../assets/sidebar/calendar-fill.svg'
@@ -49,6 +49,7 @@ export const menuSections = [
         ],
       },
       { label: 'Kelola Pengguna', path: '/users', icon: Users, roles: [SUPER_ADMIN_BIDANG] },
+      { label: 'Log Aktivitas', path: '/log-aktivitas', icon: ClipboardList, roles: [SUPER_ADMIN_BIDANG] },
       { label: 'Verifikasi Bukti Dukung', path: '/verifikasi-bukti-dukung', icon: scalesIcon, roles: [VERIFIKATOR] },
     ],
   },
