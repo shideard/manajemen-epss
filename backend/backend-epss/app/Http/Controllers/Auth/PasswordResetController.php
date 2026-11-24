@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -39,7 +39,7 @@ class PasswordResetController extends Controller
 
         $status = Password::reset(
             $data,
-            function (User $user, string $password): void {
+            function (User $user, string $password) use ($request): void {
                 abort_unless($user->hasVerifiedEmail(), 422, 'Email belum terverifikasi.');
 
                 DB::transaction(function () use ($user, $password): void {
@@ -53,6 +53,7 @@ class PasswordResetController extends Controller
                     DB::table('sessions')->where('user_id', $user->id)->delete();
                 });
 
+                AuditLog::record($request, $user, 'password.reset', 200);
                 event(new PasswordReset($user));
             }
         );

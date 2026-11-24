@@ -230,6 +230,11 @@ function Users() {
                           <UserCheck size={16} aria-hidden="true" />
                         </button>
                       )}
+                      {u.role !== 'SUPER_ADMIN_BIDANG' && (
+                        <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
+                          {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

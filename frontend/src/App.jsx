@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
+import LogAktivitas from './pages/LogAktivitas'
 import Login from './pages/Login'
 import LupaPassword from './pages/LupaPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -49,6 +50,7 @@ function App() {
         <Route path="/pengaturan-periode" element={<PengaturanPeriode />} />
         <Route path="/pengaturan-periode/:id" element={<KonfigurasiPeriode />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/log-aktivitas" element={<LogAktivitas />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

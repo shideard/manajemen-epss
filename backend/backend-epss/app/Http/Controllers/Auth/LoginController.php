@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\AuditLog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\JsonResponse;
@@ -63,6 +64,7 @@ class LoginController extends Controller
         RateLimiter::clear($key); // Reset hit count setelah login berhasil
         $request->session()->regenerate();
         $request->session()->put('auth.login_at', now()->timestamp);
+        AuditLog::record($request, $request->user(), 'auth.login', 200);
 
         return response()->json([
             'message' => 'Login berhasil!',
