@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RencanaKegiatanOutput extends Model
 {
@@ -35,6 +36,12 @@ class RencanaKegiatanOutput extends Model
     public function indikator(): BelongsToMany
     {
         return $this->belongsToMany(IndikatorEpss::class, 'rencana_kegiatan_output_indikator', 'output_id', 'indikator_id');
+    }
+
+    // Berkas bukti yang diunggah operator untuk output ini
+    public function dokumen(): HasMany
+    {
+        return $this->hasMany(DokumenBukti::class, 'output_id');
     }
 
     public function kegiatan(): BelongsTo

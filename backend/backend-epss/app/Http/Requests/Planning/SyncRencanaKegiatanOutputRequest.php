@@ -34,9 +34,10 @@ class SyncRencanaKegiatanOutputRequest extends FormRequest
                 'sometimes',
                 'array',
             ],
+            // Tanpa 'distinct': aturan itu membandingkan nilai di semua output sekaligus, padahal beberapa output
+            // memang boleh di indikator yang sama. Duplikat di satu output aman karena disimpan lewat sync()
             'output.*.indikator_ids.*' => [
                 'uuid',
-                'distinct',
                 Rule::exists('kegiatan_indikator', 'indikator_id')
                     ->where('kegiatan_id', $this->route('rencanaKegiatan')?->id),
             ],

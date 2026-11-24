@@ -58,7 +58,8 @@ function BerkasBaris({ f, onLihat, onHapus, children }) {
 
 // Checklist satu indikator, hanya untuk level yang ditargetkan verifikator pada kegiatan ini.
 // Tiap centang langsung tersimpan sebagai draft, jadi tidak hilang saat pindah halaman
-function IndikatorBukti({ bukti, indikator, level, levelTerverifikasi, jumlahBerkas, readOnly, onSave }) {
+// outputBelum = judul output yang ditargetkan untuk indikator ini tetapi belum ada berkasnya; semuanya wajib diunggah sebelum ajukan
+function IndikatorBukti({ bukti, indikator, level, levelTerverifikasi, jumlahBerkas, outputBelum = [], readOnly, onSave }) {
   const checked = bukti.checked ?? {}
   const [pedoman, setPedoman] = useState(false)
   const [error, setError] = useState('')
@@ -75,6 +76,7 @@ function IndikatorBukti({ bukti, indikator, level, levelTerverifikasi, jumlahBer
 
   function ajukan() {
     if (jumlahBerkas === 0) return setError('Unggah minimal satu berkas bukti dukung untuk indikator ini (lewat output atau berkas umum) sebelum mengajukan verifikasi.')
+    if (outputBelum.length) return setError(`Unggah berkas untuk semua output yang ditargetkan sebelum mengajukan verifikasi. Belum diunggah: ${outputBelum.join(', ')}.`)
     if (!lengkap) return setError(`Centang seluruh persyaratan Level ${level} sebelum mengajukan verifikasi.`)
     konfirmasi({
       title: 'Ajukan Verifikasi',
@@ -132,6 +134,11 @@ function IndikatorBukti({ bukti, indikator, level, levelTerverifikasi, jumlahBer
             </button>
         </div>
 
+        {!terkunci && outputBelum.length > 0 && (
+          <Notice tone="yellow" className="text-small">
+            Output yang belum diunggah ({outputBelum.length}): {outputBelum.join(', ')}. Semua output yang ditargetkan harus diunggah sebelum mengajukan verifikasi.
+          </Notice>
+        )}
         <FormError>{error}</FormError>
         {bukti.status === 'menunggu' && (
           <p role="status" className="text-small text-lime-500 text-end py-2">
@@ -474,6 +481,9 @@ function RepositoriDetail() {
           level={k.levelTarget[b.indikatorId] ?? 1}
           levelTerverifikasi={levels[b.indikatorId]}
           jumlahBerkas={files.filter((f) => f.indikatorIds.includes(idApi(b.indikatorId))).length}
+          outputBelum={(k.output ?? [])
+            .filter((o) => o.indikatorIds.includes(idApi(b.indikatorId)) && !files.some((f) => f.outputId === o.id && f.isCurrent))
+            .map((o) => o.judul)}
           readOnly={!bolehEdit}
           onSave={(perubahan) => simpanBukti(b.indikatorId, perubahan)}
         />
