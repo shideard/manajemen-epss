@@ -4,7 +4,7 @@ import { ROLE_LABELS, ROLES } from '../config/menu'
 import { Badge, Field, FormError, Input, Memuat, Modal, ModalActions, Notice, PageHeader, PasswordInput, Select, SyaratPassword } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { useConfirm } from '../components/useConfirm'
-import { KeyRound, UserCheck, UserX } from 'lucide-react'
+import { KeyRound, MailCheck, MailX, UserCheck, UserX } from 'lucide-react'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
 
 // Tombol aksi berupa ikon; keterangannya muncul saat hover lewat title
@@ -164,7 +164,7 @@ function Users() {
                 <th className="pb-3">Nama</th>
                 <th className="pb-3">Username</th>
                 <th className="pb-3">Email</th>
-                <th className="pb-3">Verifikasi Email</th>
+                <th className="w-[120px] pb-3">Verifikasi Email</th>
                 <th className="pb-3">Peran</th>
                 <th className="pb-3">Status</th>
                 <th className="w-[120px] pb-3">Aksi</th>
@@ -184,9 +184,17 @@ function Users() {
                   <td className="py-2.5">{u.username}</td>
                   <td className="py-2.5">{u.email ?? '-'}</td>
                   <td className="px-2 py-2.5">
-                    <Badge tone={u.email_verified_at ? 'green' : 'red'} className="w-full font-normal">
-                      {u.email_verified_at ? 'Terverifikasi' : 'Belum terverifikasi'}
-                    </Badge>
+                    {u.email_verified_at ? (
+                      <span title="Email terverifikasi" className="inline-flex text-green-500">
+                        <MailCheck size={20} aria-hidden="true" />
+                        <span className="sr-only">Terverifikasi</span>
+                      </span>
+                    ) : (
+                      <span title="Email belum terverifikasi" className="inline-flex text-red-400">
+                        <MailX size={20} aria-hidden="true" />
+                        <span className="sr-only">Belum terverifikasi</span>
+                      </span>
+                    )}
                   </td>
                   <td className="py-2.5">
                     <Badge tone={TONE[u.role]} className="w-full font-normal">
