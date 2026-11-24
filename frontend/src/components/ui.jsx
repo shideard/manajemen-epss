@@ -119,7 +119,8 @@ export function PasswordBaru({ label = 'Password baru', name = 'password', ...pr
       <Field label={label}>
         <PasswordInput name={name} required minLength={8} autoComplete="new-password" aria-describedby={`${name}-syarat`} value={password} onChange={(e) => setPassword(e.target.value)} {...props} />
       </Field>
-      <ul id={`${name}-syarat`} aria-label="Syarat password" className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-small sm:grid-cols-3">
+      <p id={`${name}-syarat-judul`} className="text-small font-medium text-grey-500">Password harus:</p>
+      <ul id={`${name}-syarat`} aria-labelledby={`${name}-syarat-judul`} className="-mt-1.5 flex flex-col gap-1 text-small">
         {SYARAT_PASSWORD.map(([teks, cek]) => {
           const ok = cek(password)
           const warna = ok ? 'text-green-500' : password ? 'text-red-400' : 'text-grey-300'
