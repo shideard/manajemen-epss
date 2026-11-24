@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/store'
 import { wajibGantiPassword } from '../lib/epss'
-import { Field, FormError, Memuat, PasswordInput, Spinner, SyaratPassword } from '../components/ui'
+import { Field, FormError, Memuat, PasswordBaru, PasswordInput, Spinner } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
 // Akun baru, akun yang direset, atau password berumur 1 tahun diarahkan ke sini oleh AppLayout:
@@ -12,7 +12,6 @@ function GantiPassword() {
   const auth = useAuth()
   const [error, setError] = useState('')
   const [mengirim, setMengirim] = useState(false)
-  const [password, setPassword] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -49,10 +48,7 @@ function GantiPassword() {
             <Field label="Password saat ini">
               <PasswordInput name="current_password" required autoComplete="current-password" />
             </Field>
-            <Field label="Password baru">
-              <PasswordInput name="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            </Field>
-            <SyaratPassword password={password} />
+            <PasswordBaru />
             <Field label="Ulangi password baru">
               <PasswordInput name="password_confirmation" required autoComplete="new-password" />
             </Field>

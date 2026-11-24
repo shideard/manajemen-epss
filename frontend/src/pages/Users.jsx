@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useUsers } from '../lib/store'
 import { ROLE_LABELS, ROLES } from '../config/menu'
-import { Badge, Field, FormError, Input, Memuat, Modal, ModalActions, Notice, PageHeader, PasswordInput, Select, SyaratPassword } from '../components/ui'
+import { Badge, Field, FormError, Input, Memuat, Modal, ModalActions, Notice, PageHeader, PasswordBaru, PasswordInput, Select } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { useConfirm } from '../components/useConfirm'
 import { CircleCheck, CircleX, KeyRound, MailCheck, MailX, UserCheck, UserX } from 'lucide-react'
@@ -19,7 +19,6 @@ const pesanError = (err) => (err.errors ? Object.values(err.errors).flat().join(
 function AkunForm({ onSave, onClose }) {
   const [error, setError] = useState('')
   const [mengirim, setMengirim] = useState(false)
-  const [password, setPassword] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -57,10 +56,7 @@ function AkunForm({ onSave, onClose }) {
           <Field label="Email">
             <Input type="email" name="email" required placeholder="Contoh: ani@kotabogor.go.id" />
           </Field>
-          <Field label="Password">
-            <PasswordInput name="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          </Field>
-          <SyaratPassword password={password} />
+          <PasswordBaru label="Password" />
           <Field label="Ulangi password">
             <PasswordInput name="password_confirmation" required minLength={8} autoComplete="new-password" />
           </Field>
