@@ -57,7 +57,7 @@ class DokumenBukti extends Model
     // Indikator yang didukung berkas ini; kosong = berkas umum yang belum ditautkan (mis. pintasan dari kegiatan lain)
     public function indikator(): BelongsToMany
     {
-        return $this->belongsToMany(IndikatorEpss::class, 'dokumen_bukti_indikator', 'dokumen_id', 'indikator_id');
+        return $this->belongsToMany(IndikatorEPSS::class, 'dokumen_bukti_indikator', 'dokumen_id', 'indikator_id');
     }
 
     // Output yang ditargetkan tempat berkas ini diunggah; null = berkas umum
