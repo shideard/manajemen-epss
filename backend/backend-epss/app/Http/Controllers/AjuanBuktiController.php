@@ -93,6 +93,18 @@ class AjuanBuktiController extends Controller
                     "Unggah minimal satu berkas bukti dukung untuk Indikator {$indikator->kode} sebelum mengajukan verifikasi."
                 );
 
+                // Setiap output yang ditargetkan untuk indikator ini harus sudah punya berkas versi terbaru
+                $belumDiunggah = $rencanaKegiatan->outputDiharapkan()
+                    ->whereHas('indikator', fn ($query) => $query->whereKey($indikator->id))
+                    ->whereDoesntHave('dokumen', fn ($query) => $query->where('is_current', true))
+                    ->orderBy('urutan')
+                    ->pluck('judul');
+                abort_if(
+                    $belumDiunggah->isNotEmpty(),
+                    422,
+                    "Unggah berkas untuk semua output yang ditargetkan Indikator {$indikator->kode} sebelum mengajukan verifikasi. Belum diunggah: {$belumDiunggah->join(', ')}."
+                );
+
                 $ajuan->status = StatusAjuanBukti::MENUNGGU;
                 $ajuan->diajukan_oleh = $actorId;
                 $ajuan->diajukan_pada = now();
