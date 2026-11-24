@@ -4,7 +4,11 @@ import { ROLE_LABELS, ROLES } from '../config/menu'
 import { Badge, Field, FormError, Input, Memuat, Modal, ModalActions, Notice, PageHeader, PasswordInput, Select, SyaratPassword } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { useConfirm } from '../components/useConfirm'
+import { KeyRound, UserCheck, UserX } from 'lucide-react'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
+
+// Tombol aksi berupa ikon; keterangannya muncul saat hover lewat title
+const ikonClass = 'inline-flex size-8 items-center justify-center rounded-sm border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-500'
 
 const PERAN = [ROLES.OPERATOR, ROLES.VERIFIKATOR]
 const TONE = { [ROLES.OPERATOR]: 'blue', [ROLES.VERIFIKATOR]: 'green' }
@@ -163,7 +167,7 @@ function Users() {
                 <th className="pb-3">Verifikasi Email</th>
                 <th className="pb-3">Peran</th>
                 <th className="pb-3">Status</th>
-                <th className="w-[160px] pb-3">Aksi</th>
+                <th className="w-[120px] pb-3">Aksi</th>
               </tr>
             </thead>
             <tbody className="font-medium">
@@ -198,11 +202,19 @@ function Users() {
                     <div className="flex justify-center gap-2">
                       {/* Backend hanya mengizinkan reset untuk operator/verifikator */}
                       {PERAN.includes(u.role) && (
-                        <button type="button" onClick={() => resetPassword(u)} className={buttonClass('outline', 'sm')}>Reset password</button>
+                        <button type="button" onClick={() => resetPassword(u)} title="Reset password" aria-label={`Reset password ${u.username}`} className={`${ikonClass} border-grey-500 text-grey-500 hover:bg-grey-500/5`}>
+                          <KeyRound size={16} aria-hidden="true" />
+                        </button>
                       )}
-                      <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
-                        {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
-                      </button>
+                      {u.status_aktif ? (
+                        <button type="button" onClick={() => ubahStatus(u)} title="Nonaktifkan akun" aria-label={`Nonaktifkan akun ${u.username}`} className={`${ikonClass} border-red-400 text-red-400 hover:bg-red-400/10`}>
+                          <UserX size={16} aria-hidden="true" />
+                        </button>
+                      ) : (
+                        <button type="button" onClick={() => ubahStatus(u)} title="Aktifkan akun" aria-label={`Aktifkan akun ${u.username}`} className={`${ikonClass} border-green-500 text-green-500 hover:bg-green-500/10`}>
+                          <UserCheck size={16} aria-hidden="true" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
