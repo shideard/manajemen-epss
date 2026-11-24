@@ -200,9 +200,11 @@ function Users() {
                       {PERAN.includes(u.role) && (
                         <button type="button" onClick={() => resetPassword(u)} className={buttonClass('outline', 'sm')}>Reset password</button>
                       )}
-                      <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
-                        {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
-                      </button>
+                      {u.role !== 'SUPER_ADMIN_BIDANG' && (
+                        <button type="button" onClick={() => ubahStatus(u)} aria-pressed={!u.status_aktif} className={buttonClass('outline', 'sm')}>
+                          {u.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,6 +36,7 @@ class RecoveryEmailController extends Controller
 
         if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
+            AuditLog::record(request(), $user, 'email.verify', 200);
         }
 
         return response()->json(['message' => 'Email berhasil diverifikasi. Silakan masuk kembali ke aplikasi.']);

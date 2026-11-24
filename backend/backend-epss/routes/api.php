@@ -7,11 +7,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserStatusController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserPasswordResetController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RecoveryEmailController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\PreferensiNotifikasiController;
 use App\Http\Middleware\EnforceSessionAge;
+use App\Http\Middleware\RecordUserActivity;
 
 // versi isntrumen + periode evaluasi
 use App\Http\Controllers\PeriodeEvaluasiController;
@@ -47,7 +49,7 @@ Route::post('/password/reset', [PasswordResetController::class, 'reset'])
     ->middleware('throttle:5,10')
     ->name('password.update');
 
-Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active'])->group(function () {
+Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active', RecordUserActivity::class])->group(function () {
     Route::get('/user', function(Request $request){
         return $request->user();
     });
@@ -61,6 +63,9 @@ Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active'])->group(f
         ->name('user.recovery-email.update');
 
     Route::middleware(['verified', 'password.current'])->group(function () {
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])
+            ->name('audit-logs.index');
+
         Route::get('/user/notifikasi', [PreferensiNotifikasiController::class, 'show'])
             ->name('user.notifikasi.show');
 
