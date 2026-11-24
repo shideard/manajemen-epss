@@ -96,6 +96,7 @@ function Dashboard() {
   } 
 
   const ips = hitungIps(indikatorList, levels)
+  const terdekat = agendaTerdekat(kegiatan, today)
   const sebelumnya = periode.filter((p) => p.actual != null && p.tahun2 < aktif.tahun1).sort((a, b) => b.tahun2.localeCompare(a.tahun2))[0]
   const terverifikasi = indikatorList.filter((i) => levels[i.id]).length
   const daftarBukti = Object.values(bukti)
@@ -253,7 +254,7 @@ function Dashboard() {
             </thead>
             {/* Baris putih membulat seperti kartu di desain */}
             <tbody className="bg-white text-grey-500 [&>tr:first-child>td:first-child]:rounded-tl-md [&>tr:first-child>td:last-child]:rounded-tr-md [&>tr:last-child>td:first-child]:rounded-bl-md [&>tr:last-child>td:last-child]:rounded-br-md">
-              {agendaTerdekat(kegiatan, today).map((k) => {
+              {terdekat.map((k) => {
                 const status = statusOf(k, today)
                 return (
                   <tr key={k.id} className="border-b border-grey-75 last:border-0">
@@ -268,10 +269,10 @@ function Dashboard() {
                   </tr>
                 )
               })}
-              {kegiatan.length === 0 && (
+              {terdekat.length === 0 && (
                 <tr>
                   <td colSpan={4} className="rounded-md px-5 py-10 text-center text-grey-200">
-                    Belum ada rencana kegiatan.
+                    {kegiatan.length === 0 ? 'Belum ada rencana kegiatan.' : 'Tidak ada kegiatan terdekat.'}
                   </td>
                 </tr>
               )}
