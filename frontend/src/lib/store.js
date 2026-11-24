@@ -849,6 +849,8 @@ export function useAuth() {
       await api('/api/user/password', { method: 'PATCH', body: data })
       await muatSesi()
     },
+    // Simpan email pemulihan (jika berubah) lalu kirim tautan verifikasi; dibatasi backend 3x per 10 menit
+    kirimVerifikasi: (email) => api('/api/user/recovery-email', { method: 'PUT', body: { email } }),
   }
 }
 

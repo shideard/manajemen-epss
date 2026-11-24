@@ -65,6 +65,8 @@ function AppLayout({ bare = false }) {
 
   // Belum login, atau akunnya dinonaktifkan → ke halaman login
   if (!user || user.status_aktif === false) return <Navigate to="/login" replace />
+  // Email pemulihan harus terverifikasi dulu, baru alur ganti password
+  if (!user.email_verified_at) return <Navigate to="/verifikasi-email" replace />
   // Backend menolak semua menu sampai password diganti
   if (wajibGantiPassword(user)) return <Navigate to="/ganti-password" replace />
   // Halaman di luar menu role ini → ke menu pertama (mis. superadmin → Kelola Pengguna)

@@ -32,6 +32,7 @@ function GantiPassword() {
   }
 
   if (!auth.user) return auth.loading || auth.error ? <Memuat dari={[auth]} layar /> : <Navigate to="/login" replace />
+  if (!auth.user.email_verified_at) return <Navigate to="/verifikasi-email" replace />
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-grey2-100 p-4 font-sans">
