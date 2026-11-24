@@ -7,7 +7,7 @@ import { bolehUbah, ROLES } from '../../config/menu'
 import { buttonClass } from '../../components/classes'
 import editIcon from '../../assets/rencana/edit-2-fill.svg'
 import { usePeriode, useRencanaKegiatan } from '../../lib/store'
-import { formatTanggal, LEVELS, statusOf } from '../../lib/epss'
+import { formatTanggal, kelompokOutput, LEVELS, statusOf } from '../../lib/epss'
 import { Badge, ContohOutput, Memuat, PageHeader } from '../../components/ui'
 
 function RencanaKegiatanDetailVerifikator() {
@@ -88,32 +88,32 @@ function RencanaKegiatanDetailVerifikator() {
           </div>
         </div>
 
+        {/* Output ditargetkan per indikator tertaut; output lama/dari indikator yang dilepas di grup terakhir */}
         <section className="flex flex-col gap-3 rounded-lg bg-white p-6 md:p-8">
-          <h3 className="font-semibold">Output Bukti Dukung yang Ditargetkan</h3>
-          {k.output?.length ? (
-            <ul className="flex flex-col gap-2">
-              {k.output.map((output) => (
-                <li key={output.id} className="flex min-h-11 flex-col justify-center rounded-md bg-lime-300 px-5 py-2">
-                  <span>{output.judul}{output.jenis && <span className="text-small"> ({output.jenis})</span>}</span>
-                  <ContohOutput kegiatanId={k.id} output={output} />
-                </li>
-              ))}
-            </ul>
-          ) : <p className="text-small text-grey-200">Belum ada output bukti dukung yang ditargetkan.</p>}
-        </section>
-
-        <section className="flex flex-col gap-3 rounded-lg bg-white p-6 md:p-8">
-          <h3 className="font-semibold">Indikator Tertaut ({indikator.length})</h3>
-          {indikator.length ? (
-            <ul className="flex flex-col gap-2">
-              {indikator.map((item) => (
-                <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-grey2-75 px-5 py-3 text-small">
-                  Indikator {item.kode}: {item.nama}
-                  <Badge tone="blue">Target Level {item.level ?? 1} ({LEVELS[(item.level ?? 1) - 1]})</Badge>
-                </li>
-              ))}
-            </ul>
-          ) : <p className="text-small text-grey-200">Belum ada indikator yang dipetakan ke kegiatan ini.</p>}
+          <h3 className="font-semibold">Indikator Tertaut & Output Bukti Dukung ({indikator.length})</h3>
+          {!indikator.length && !k.output?.length && <p className="text-small text-grey-200">Belum ada indikator yang dipetakan ke kegiatan ini.</p>}
+          {kelompokOutput(k.output ?? [], indikator).map(({ indikator: item, output: milik }) => (
+            <div key={item?.id ?? 'tanpa-indikator'} className="overflow-hidden rounded-md border border-grey-75">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-grey2-75 px-5 py-3 text-small">
+                {item ? (
+                  <>
+                    <span className="font-medium">Indikator {item.kode}: {item.nama}</span>
+                    <Badge tone="blue">Target Level {item.level ?? 1} ({LEVELS[(item.level ?? 1) - 1]})</Badge>
+                  </>
+                ) : <span className="font-medium">Output tanpa indikator</span>}
+              </div>
+              {milik.length ? (
+                <ul className="flex flex-col gap-2 px-5 py-4">
+                  {milik.map((output) => (
+                    <li key={output.id} className="flex min-h-11 flex-col justify-center rounded-md bg-lime-300 px-5 py-2">
+                      <span>{output.judul}{output.jenis && <span className="text-small"> ({output.jenis})</span>}</span>
+                      <ContohOutput kegiatanId={k.id} output={output} />
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="px-5 py-4 text-small text-grey-200">Belum ada output bukti dukung yang ditargetkan.</p>}
+            </div>
+          ))}
         </section>
       </section>
 
