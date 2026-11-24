@@ -851,6 +851,11 @@ export function useAuth() {
     },
     // Simpan email pemulihan (jika berubah) lalu kirim tautan verifikasi; dibatasi backend 3x per 10 menit
     kirimVerifikasi: (email) => api('/api/user/recovery-email', { method: 'PUT', body: { email } }),
+    // path = tautan bertanda tangan dari email (/api/email/verify/...); sesi dimuat ulang agar email_verified_at terbaru
+    async verifikasiTautan(path) {
+      await api(path)
+      await muatSesi()
+    },
   }
 }
 

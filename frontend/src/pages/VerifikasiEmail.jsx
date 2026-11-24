@@ -1,14 +1,71 @@
-import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../lib/store'
 import { wajibGantiPassword } from '../lib/epss'
 import { Field, FormError, Input, Memuat, Notice, Spinner } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
-// AppLayout mengarahkan ke sini selama email pemulihan belum terverifikasi, sebelum alur Ganti Password.
-// Tautan di email dibuka di backend; setelah itu pengguna kembali ke sini dan menekan "Saya sudah verifikasi".
-// ponytail: status berhasil/kedaluwarsa tautan belum tampil di sini, tunggu backend mengarahkan tautan ke frontend
+const JALUR_VERIFIKASI = '/api/email/verify/'
+
+function Kartu({ judul, children }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-grey2-100 p-4 font-sans">
+      <div className="flex w-full max-w-[694px] justify-center rounded-xl bg-white px-6 py-16 motion-safe:animate-rise">
+        <div className="flex w-full max-w-[414px] flex-col gap-10">
+          <h1 className="text-center text-h1">{judul}</h1>
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Dibuka dari tautan di email: /verifikasi-email?url=/api/email/verify/... (bisa tanpa login, mis. di perangkat lain)
+function HasilTautan({ tautan }) {
+  const navigate = useNavigate()
+  const auth = useAuth()
+  // Hanya jalur verifikasi yang dipanggil, supaya parameter url tidak bisa diarahkan ke endpoint lain
+  const sah = tautan.startsWith(JALUR_VERIFIKASI)
+  const [hasil, setHasil] = useState(sah ? null : 'gagal')
+
+  useEffect(() => {
+    if (!sah) return
+    auth.verifikasiTautan(tautan).then(
+      () => setHasil('berhasil'),
+      () => setHasil('gagal'),
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cukup sekali per tautan
+  }, [tautan, sah])
+
+  if (!hasil) return <Memuat dari={[{ loading: true }]} layar />
+
+  // Sudah login → /verifikasi-email meneruskan ke langkah berikutnya; belum login → masuk dulu
+  const lanjut = () => navigate(auth.user ? '/verifikasi-email' : '/login', { replace: true })
+
+  return (
+    <Kartu judul="Verifikasi Email">
+      {hasil === 'berhasil' ? (
+        <Notice tone="green">Email berhasil diverifikasi. Silakan masuk kembali untuk melanjutkan.</Notice>
+      ) : (
+        <Notice tone="red" role="alert">
+          Tautan verifikasi tidak valid atau sudah kedaluwarsa. Masuk lalu kirim ulang tautan verifikasi.
+        </Notice>
+      )}
+      <button type="button" onClick={lanjut} className={`w-full font-semibold ${buttonClass()}`}>
+        {auth.user ? 'Lanjutkan' : 'Masuk'}
+      </button>
+    </Kartu>
+  )
+}
+
+// AppLayout mengarahkan ke sini selama email pemulihan belum terverifikasi, sebelum alur Ganti Password
 function VerifikasiEmail() {
+  const [params] = useSearchParams()
+  const tautan = params.get('url')
+  return tautan ? <HasilTautan key={tautan} tautan={tautan} /> : <KirimTautan />
+}
+
+function KirimTautan() {
   const navigate = useNavigate()
   const auth = useAuth()
   const [terkirim, setTerkirim] = useState('')
