@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { Building2, CalendarDays, Clock3, File, FileImage, FileSpreadsheet, FileText, FileType, UserRound } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useBukti, useDetailKegiatan, useDokumenBukti, useInstrumen, usePeriode, useRencanaKegiatan, useSemuaKegiatan, useSkor } from '../../lib/store'
-import { buktiKey, formatTanggal, LEVELS, metaBerkas } from '../../lib/epss'
+import { buktiKey, formatTanggal, kelompokOutput, LEVELS, metaBerkas } from '../../lib/epss'
 import { bukaBerkas } from '../../lib/api'
 import { bolehUbah } from '../../config/menu'
 import { ChecklistItem, ContohOutput, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
@@ -293,37 +293,43 @@ function RepositoriDetail() {
           {k.output?.length > 0 && (
             <div className="flex w-full flex-col items-start gap-3.5 md:px-10">
               <h3 className="font-semibold">Output Bukti Dukung yang Ditargetkan :</h3>
-              <ul className="flex w-full flex-col gap-2">
-                {k.output.map((o) => {
-                  const Ikon = ikonJenis(o)
-                  return (
-                    <li key={o.id} className="flex min-h-[45px] items-center justify-between gap-4 rounded-md bg-lime-300 px-5 py-2">
-                      <div className="flex min-w-0 items-center gap-3.5">
-                        <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-grey-300 text-lime-300">
-                          <Ikon size={28} aria-hidden="true" />
-                        </span>
-                        <span className="flex min-w-0 flex-col justify-center">
-                          <span>
-                            {o.judul}
-                            {o.jenis && <span className="text-small"> ({o.jenis})</span>}
-                          </span>
-                          <ContohOutput kegiatanId={k.id} output={o} label="Contoh dari verifikator" />
-                        </span>
-                      </div>
-                      {o.contoh?.berkas && (
-                        <button
-                          type="button"
-                          onClick={() => bukaBerkas(`/api/rencana-kegiatan/${k.id}/output-diharapkan/${o.id}/contoh`).then(() => setErrorOutput(''), (error) => setErrorOutput(error.message))}
-                          aria-label={`Pratinjau contoh ${o.judul}`}
-                          className="grid size-[30px] shrink-0 place-items-center rounded-sm bg-white"
-                        >
-                          <img src={eyeIcon} alt="" width={20} height={20} />
-                        </button>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
+              {/* Dikelompokkan per indikator; indikator tanpa output tidak ditampilkan */}
+              {kelompokOutput(k.output, k.indikator).filter((g) => g.output.length).map(({ indikator: ind, output: milik }) => (
+                <div key={ind?.id ?? 'tanpa-indikator'} className="flex w-full flex-col gap-2">
+                  <p className="text-small font-semibold text-grey-300">{ind ? `Indikator ${ind.kode}: ${ind.nama}` : 'Output tanpa indikator'}</p>
+                  <ul className="flex w-full flex-col gap-2">
+                    {milik.map((o) => {
+                      const Ikon = ikonJenis(o)
+                      return (
+                        <li key={o.id} className="flex min-h-[45px] items-center justify-between gap-4 rounded-md bg-lime-300 px-5 py-2">
+                          <div className="flex min-w-0 items-center gap-3.5">
+                            <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-grey-300 text-lime-300">
+                              <Ikon size={28} aria-hidden="true" />
+                            </span>
+                            <span className="flex min-w-0 flex-col justify-center">
+                              <span>
+                                {o.judul}
+                                {o.jenis && <span className="text-small"> ({o.jenis})</span>}
+                              </span>
+                              <ContohOutput kegiatanId={k.id} output={o} label="Contoh dari verifikator" />
+                            </span>
+                          </div>
+                          {o.contoh?.berkas && (
+                            <button
+                              type="button"
+                              onClick={() => bukaBerkas(`/api/rencana-kegiatan/${k.id}/output-diharapkan/${o.id}/contoh`).then(() => setErrorOutput(''), (error) => setErrorOutput(error.message))}
+                              aria-label={`Pratinjau contoh ${o.judul}`}
+                              className="grid size-[30px] shrink-0 place-items-center rounded-sm bg-white"
+                            >
+                              <img src={eyeIcon} alt="" width={20} height={20} />
+                            </button>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              ))}
               <FormError>{errorOutput}</FormError>
             </div>
           )}
