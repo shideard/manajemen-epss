@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useUsers } from '../lib/store'
 import { ROLE_LABELS, ROLES } from '../config/menu'
-import { Badge, Field, FormError, Input, Memuat, Modal, ModalActions, Notice, PageHeader, Select } from '../components/ui'
+import { Badge, Field, FormError, Input, Memuat, Modal, ModalActions, Notice, PageHeader, PasswordInput, Select, SyaratPassword } from '../components/ui'
 import { buttonClass } from '../components/classes'
 import { useConfirm } from '../components/useConfirm'
 import addIcon from '../assets/rencana/add-circle-fill.svg'
@@ -15,6 +15,7 @@ const pesanError = (err) => (err.errors ? Object.values(err.errors).flat().join(
 function AkunForm({ onSave, onClose }) {
   const [error, setError] = useState('')
   const [mengirim, setMengirim] = useState(false)
+  const [password, setPassword] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -53,13 +54,14 @@ function AkunForm({ onSave, onClose }) {
             <Input type="email" name="email" required placeholder="Contoh: ani@kotabogor.go.id" />
           </Field>
           <Field label="Password">
-            <Input type="password" name="password" required minLength={8} autoComplete="new-password" />
+            <PasswordInput name="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </Field>
+          <SyaratPassword password={password} />
           <Field label="Ulangi password">
-            <Input type="password" name="password_confirmation" required minLength={8} autoComplete="new-password" />
+            <PasswordInput name="password_confirmation" required minLength={8} autoComplete="new-password" />
           </Field>
           <p className="text-small text-grey-300">
-            Password minimal 8 karakter, berisi huruf besar, huruf kecil, angka, dan simbol. Pengguna diminta menggantinya saat pertama kali masuk.
+            Pengguna diminta menggantinya saat pertama kali masuk.
           </p>
           <Field label="Peran" className="w-[245px]">
             <Select name="role" required defaultValue="">

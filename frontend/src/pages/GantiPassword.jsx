@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/store'
 import { wajibGantiPassword } from '../lib/epss'
-import { Field, FormError, Input, Memuat, Spinner } from '../components/ui'
+import { Field, FormError, Memuat, PasswordInput, Spinner, SyaratPassword } from '../components/ui'
 import { buttonClass } from '../components/classes'
 
 // Akun baru, akun yang direset, atau password berumur 1 tahun diarahkan ke sini oleh AppLayout:
@@ -12,6 +12,7 @@ function GantiPassword() {
   const auth = useAuth()
   const [error, setError] = useState('')
   const [mengirim, setMengirim] = useState(false)
+  const [password, setPassword] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -46,15 +47,15 @@ function GantiPassword() {
           </div>
           <div className="flex flex-col gap-3.5">
             <Field label="Password saat ini">
-              <Input name="current_password" type="password" required autoComplete="current-password" />
+              <PasswordInput name="current_password" required autoComplete="current-password" />
             </Field>
             <Field label="Password baru">
-              <Input name="password" type="password" required autoComplete="new-password" />
+              <PasswordInput name="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </Field>
+            <SyaratPassword password={password} />
             <Field label="Ulangi password baru">
-              <Input name="password_confirmation" type="password" required autoComplete="new-password" />
+              <PasswordInput name="password_confirmation" required autoComplete="new-password" />
             </Field>
-            <p className="text-small text-grey-300">Minimal 8 karakter, berisi huruf besar, huruf kecil, angka, dan simbol.</p>
             <FormError>{error}</FormError>
           </div>
           <div className="flex flex-col gap-3">

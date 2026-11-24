@@ -40,6 +40,15 @@ export function wajibGantiPassword(user, now = new Date()) {
   kedaluwarsa.setFullYear(kedaluwarsa.getFullYear() + 1)
   return now >= kedaluwarsa
 }
+
+// Sama dengan Password::defaults() di backend (AppServiceProvider): min 8, huruf besar+kecil, angka, simbol
+export const SYARAT_PASSWORD = [
+  ['Minimal 8 karakter', (p) => p.length >= 8],
+  ['Huruf besar', (p) => /\p{Lu}/u.test(p)],
+  ['Huruf kecil', (p) => /\p{Ll}/u.test(p)],
+  ['Angka', (p) => /\p{N}/u.test(p)],
+  ['Simbol', (p) => /[\p{P}\p{S}]/u.test(p)],
+]
 export const SEED_PENGINGAT = [1, 7, 14, 30]
 export const EMPTY_OBJECT = {}
 export const EMPTY_LIST = []
