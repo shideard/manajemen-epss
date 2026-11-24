@@ -35,7 +35,7 @@ class RencanaKegiatanOutput extends Model
     // Indikator tertaut tempat output ini ditargetkan; satu output bisa dipakai beberapa indikator
     public function indikator(): BelongsToMany
     {
-        return $this->belongsToMany(IndikatorEpss::class, 'rencana_kegiatan_output_indikator', 'output_id', 'indikator_id');
+        return $this->belongsToMany(IndikatorEPSS::class, 'rencana_kegiatan_output_indikator', 'output_id', 'indikator_id');
     }
 
     // Berkas bukti yang diunggah operator untuk output ini
