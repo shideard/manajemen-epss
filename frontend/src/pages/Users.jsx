@@ -38,24 +38,39 @@ function AkunForm({ onSave, onClose }) {
       <form onSubmit={handleSubmit} className="px-9 pt-7 pb-8">
         {/* fieldset disabled = semua input & tombol terkunci selama dikirim */}
         <fieldset disabled={mengirim} aria-busy={mengirim} className="flex flex-col gap-5.5">
-          <Field label="Nama">
-            <Input name="name" required maxLength={255} placeholder="Contoh: Ani Lestari" />
-          </Field>
-          <Field label="Username">
-            <Input
-              name="username"
-              required
-              minLength={3}
-              maxLength={50}
-              pattern="[a-z0-9._\-]+"
-              title="Huruf kecil, angka, titik, garis bawah, atau tanda hubung"
-              autoComplete="off"
-              placeholder="Contoh: ani.dinsos"
-            />
-          </Field>
-          <Field label="Email">
-            <Input type="email" name="email" required placeholder="Contoh: ani@kotabogor.go.id" />
-          </Field>
+          {/* Dua kolom: Nama | Username, lalu Email | Peran; satu kolom di layar kecil */}
+          <div className="grid gap-5.5 sm:grid-cols-2">
+            <Field label="Nama">
+              <Input name="name" required maxLength={255} placeholder="Contoh: Ani Lestari" />
+            </Field>
+            <Field label="Username">
+              <Input
+                name="username"
+                required
+                minLength={3}
+                maxLength={50}
+                pattern="[a-z0-9._\-]+"
+                title="Huruf kecil, angka, titik, garis bawah, atau tanda hubung"
+                autoComplete="off"
+                placeholder="Contoh: ani.dinsos"
+              />
+            </Field>
+            <Field label="Email">
+              <Input type="email" name="email" required placeholder="Contoh: ani@kotabogor.go.id" />
+            </Field>
+            <Field label="Peran">
+              <Select name="role" required defaultValue="">
+                <option value="" disabled>
+                  Pilih peran
+                </option>
+                {PERAN.map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
           <PasswordBaru label="Password" />
           <Field label="Ulangi password">
             <PasswordInput name="password_confirmation" required minLength={8} autoComplete="new-password" />
@@ -63,18 +78,6 @@ function AkunForm({ onSave, onClose }) {
           <p className="text-small text-grey-300">
             Pengguna diminta menggantinya saat pertama kali masuk.
           </p>
-          <Field label="Peran" className="w-[245px]">
-            <Select name="role" required defaultValue="">
-              <option value="" disabled>
-                Pilih peran
-              </option>
-              {PERAN.map((role) => (
-                <option key={role} value={role}>
-                  {ROLE_LABELS[role]}
-                </option>
-              ))}
-            </Select>
-          </Field>
           <FormError>{error}</FormError>
           <ModalActions onCancel={onClose} submitLabel={mengirim ? 'Menyimpan...' : 'Simpan'} />
         </fieldset>
