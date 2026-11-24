@@ -107,6 +107,11 @@ function RencanaKegiatanDetailVerifikator() {
                   {milik.map((output) => (
                     <li key={output.id} className="flex min-h-11 flex-col justify-center rounded-md bg-lime-300 px-5 py-2">
                       <span>{output.judul}{output.jenis && <span className="text-small"> ({output.jenis})</span>}</span>
+                      {item && output.indikatorIds.length > 1 && (
+                        <span className="text-small text-grey-200">
+                          Juga untuk {output.indikatorIds.filter((id) => id !== item.id).map((id) => `Indikator ${indikator.find((i) => i.id === id)?.kode ?? '?'}`).join(', ')}
+                        </span>
+                      )}
                       <ContohOutput kegiatanId={k.id} output={output} />
                     </li>
                   ))}

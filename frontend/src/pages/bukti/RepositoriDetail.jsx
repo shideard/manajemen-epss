@@ -361,6 +361,12 @@ function RepositoriDetail() {
                                 <span className="text-small text-grey-200">
                                   {o.jenis || 'Jenis file bebas'} · {berkasOutput.length ? `${berkasOutput.length} berkas terunggah` : 'belum ada berkas'}
                                 </span>
+                                {/* Output bersama: berkas yang diunggah di sini juga berlaku untuk indikator lain */}
+                                {ind && o.indikatorIds.length > 1 && (
+                                  <span className="text-small text-grey-200">
+                                    Juga untuk {o.indikatorIds.filter((id) => id !== ind.id).map((id) => `Indikator ${namaIndikator(id)?.kode ?? '?'}`).join(', ')}
+                                  </span>
+                                )}
                                 <ContohOutput kegiatanId={k.id} output={o} label="Contoh dari verifikator" />
                               </span>
                             </div>

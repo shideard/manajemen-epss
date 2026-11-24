@@ -78,8 +78,8 @@ const mapRencanaKegiatan = (item) => ({
   indikatorIds: (item.indikator ?? []).map((i) => String(i.kode)),
   // Level yang ditargetkan verifikator per indikator (kode indikator → level)
   levelTarget: Object.fromEntries((item.indikator ?? []).map((i) => [String(i.kode), i.level ?? 1])),
-  // Output ditargetkan per indikator (id API indikator); null = output lama/indikatornya dilepas
-  output: (item.output ?? []).map((o) => ({ ...o, indikatorId: o.indikator_id ?? null })),
+  // Output ditargetkan per indikator (id API indikator, bisa lebih dari satu); kosong = output lama/indikatornya dilepas
+  output: (item.output ?? []).map((o) => ({ ...o, indikatorIds: o.indikator_ids ?? [] })),
 })
 
 // Simpan daftar output yang ditargetkan (id dikirim supaya baris & berkas contohnya dipertahankan),
@@ -89,9 +89,9 @@ async function simpanOutputKegiatan(kegiatanId, output) {
   await api(`${base}/output-diharapkan`, {
     method: 'PUT',
     body: {
-      output: output.map(({ id, indikatorId, judul, jenis, contoh }) => ({
+      output: output.map(({ id, indikatorIds = [], judul, jenis, contoh }) => ({
         id: id ?? null,
-        indikator_id: indikatorId ?? null,
+        indikator_ids: indikatorIds,
         judul,
         jenis: jenis || null,
         contoh: contoh ? { nama: contoh } : null,

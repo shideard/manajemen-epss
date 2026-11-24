@@ -55,18 +55,21 @@ function DaftarIndikator({ indikatorPilihan = [], onClose }) {
 
 // Input satu target output di bawah satu indikator: isi judul, jenis, dan (opsional) file contoh,
 // lalu output baru ditambahkan lewat tombol "Tambah Output". Memilih file tidak langsung menambah output.
-function TambahOutput({ onTambah }) {
+// lainnya = indikator tertaut lain ({ id, label }) yang bisa ikut memakai output ini
+function TambahOutput({ onTambah, lainnya = [] }) {
   const [judul, setJudul] = useState('')
   const [jenis, setJenis] = useState('')
   const [file, setFile] = useState(null)
+  const [juga, setJuga] = useState(() => new Set())
   const fileContoh = useRef(null)
   const bisaTambah = Boolean(judul.trim() || file)
 
   function tambah() {
     if (!bisaTambah) return
-    onTambah({ judul: judul.trim() || file.name, jenis, contoh: file?.name ?? '', file: file ?? undefined })
+    onTambah({ judul: judul.trim() || file.name, jenis, contoh: file?.name ?? '', file: file ?? undefined }, [...juga].filter((id) => lainnya.some((i) => i.id === id)))
     setJudul('')
     setFile(null)
+    setJuga(new Set())
   }
 
   return (
@@ -132,6 +135,32 @@ function TambahOutput({ onTambah }) {
       </div>
       <p className="text-small text-grey-200">File contoh opsional: PDF, Word, Excel, JPG, atau PNG, maksimal 10 MB.</p>
 
+      {/* Output yang sama untuk indikator lain: cukup dibuat sekali, operator cukup unggah sekali */}
+      {lainnya.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-small font-semibold">Berlaku juga untuk:</span>
+          {lainnya.map((i) => {
+            const aktif = juga.has(i.id)
+            return (
+              <label key={i.id} className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-small ${aktif ? 'border-grey-500 bg-lime-300' : 'border-grey-75 hover:bg-grey2-75'}`}>
+                <input
+                  type="checkbox"
+                  checked={aktif}
+                  onChange={(e) => setJuga((set) => {
+                    const baru = new Set(set)
+                    if (e.target.checked) baru.add(i.id)
+                    else baru.delete(i.id)
+                    return baru
+                  })}
+                  className="size-3.5 accent-grey-300"
+                />
+                {i.label}
+              </label>
+            )
+          })}
+        </div>
+      )}
+
       <button type="button" onClick={tambah} disabled={!bisaTambah} className={`self-start ${buttonClass()}`}>
         Tambah Output
       </button>
@@ -139,7 +168,8 @@ function TambahOutput({ onTambah }) {
   )
 }
 
-function DaftarOutput({ items, onHapus }) {
+// keterangan(o) = teks tambahan per output, mis. "Juga untuk Indikator 3"
+function DaftarOutput({ items, onHapus, keterangan = () => null }) {
   if (!items.length) return null
   return (
     <ul className="flex flex-col gap-2">
@@ -149,6 +179,7 @@ function DaftarOutput({ items, onHapus }) {
             {o.judul}
             {o.jenis && <span className="text-small"> ({o.jenis})</span>}
             {o.contoh && <span className="block truncate text-small text-grey-200">Contoh: {o.contoh}</span>}
+            {keterangan(o) && <span className="block text-small text-grey-200">{keterangan(o)}</span>}
           </span>
           <button type="button" onClick={() => onHapus(o.index)} aria-label={`Hapus output ${o.judul}`} className="shrink-0">
             <img src={removeIcon} alt="" width={24} height={24} className="grayscale" />
@@ -178,11 +209,15 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
     const i = indikatorPilihan.find((x) => x.id === id) ?? indikator.find((x) => x.id === id)
     return i ? `Indikator ${i.nomor ?? i.kode}: ${i.nama}` : id
   }
+  const kodeIndikator = (id) => {
+    const i = indikatorPilihan.find((x) => x.id === id) ?? indikator.find((x) => x.id === id)
+    return `Indikator ${i ? (i.nomor ?? i.kode) : '?'}`
+  }
   // id = output yang sudah tersimpan (berkas contohnya dipertahankan); file = berkas contoh baru yang diunggah saat simpan
-  // indikatorId = indikator tempat output ditargetkan; null = output lama atau indikatornya sudah dilepas
+  // indikatorIds = indikator tempat output ditargetkan (bisa beberapa); kosong = output lama atau indikatornya sudah dilepas
   const [output, setOutput] = useState(() => (kegiatan.output ?? []).map((item) => ({
     id: item.id,
-    indikatorId: item.indikatorId ?? null,
+    indikatorIds: item.indikatorIds ?? [],
     judul: item.judul ?? '',
     jenis: item.jenis ?? '',
     contoh: item.contoh?.nama ?? '',
@@ -190,17 +225,17 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
   const [daftarIndikator, setDaftarIndikator] = useState(false)
   const [konfirmasi, dialogKonfirmasi] = useConfirm()
 
-  // Melepas indikator tidak menghapus output-nya: output pindah ke grup "Output tanpa indikator"
+  // Melepas indikator tidak menghapus output-nya. Output yang tidak punya indikator lain pindah ke "Output tanpa indikator"
   function lepas(id) {
     const lepaskan = () => {
       setDipetakan((list) => list.filter((d) => d.id !== id))
-      setOutput((list) => list.map((o) => (o.indikatorId === id ? { ...o, indikatorId: null } : o)))
+      setOutput((list) => list.map((o) => ({ ...o, indikatorIds: o.indikatorIds.filter((x) => x !== id) })))
     }
-    const jumlah = output.filter((o) => o.indikatorId === id).length
+    const jumlah = output.filter((o) => o.indikatorIds.length === 1 && o.indikatorIds[0] === id).length
     if (!jumlah) return lepaskan()
     konfirmasi({
       title: 'Lepas Indikator',
-      message: `${namaIndikator(id)} punya ${jumlah} output bukti dukung. Output tidak dihapus, tetapi dipindah ke "Output tanpa indikator".`,
+      message: `${namaIndikator(id)} punya ${jumlah} output bukti dukung yang tidak dipakai indikator lain. Output tidak dihapus, tetapi dipindah ke "Output tanpa indikator".`,
       confirmLabel: 'Lepas',
       onConfirm: lepaskan,
     })
@@ -347,8 +382,25 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                 )}
                 <div className="flex flex-col gap-2.5 px-5 py-4">
                   {d && <p className="text-small font-semibold">Output bukti dukung yang ditargetkan</p>}
-                  <DaftarOutput items={milik} onHapus={(index) => setOutput((list) => list.filter((_, i) => i !== index))} />
-                  {d && <TambahOutput onTambah={(o) => setOutput((list) => [...list, { ...o, indikatorId: d.id }])} />}
+                  <DaftarOutput
+                    items={milik}
+                    keterangan={(o) => {
+                      const lain = d ? o.indikatorIds.filter((id) => id !== d.id) : []
+                      return lain.length ? `Juga untuk ${lain.map(kodeIndikator).join(', ')}` : null
+                    }}
+                    // Di kartu indikator: lepas output dari indikator ini saja; dihapus bila tidak dipakai indikator lain
+                    onHapus={(index) => setOutput((list) => list.flatMap((o, i) => {
+                      if (i !== index) return [o]
+                      const sisa = d ? o.indikatorIds.filter((id) => id !== d.id) : []
+                      return sisa.length ? [{ ...o, indikatorIds: sisa }] : []
+                    }))}
+                  />
+                  {d && (
+                    <TambahOutput
+                      lainnya={dipetakan.filter((x) => x.id !== d.id).map((x) => ({ id: x.id, label: kodeIndikator(x.id) }))}
+                      onTambah={(o, juga) => setOutput((list) => [...list, { ...o, indikatorIds: [d.id, ...juga] }])}
+                    />
+                  )}
                 </div>
               </section>
             ))}
