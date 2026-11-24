@@ -26,19 +26,30 @@ function LupaPassword() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-grey2-100 p-4 font-sans">
-      <form onSubmit={submit} className="flex w-full max-w-[480px] flex-col gap-6 rounded-xl bg-white p-8">
-        <h1 className="text-center text-h1">Lupa Password</h1>
-        <p className="text-grey-300">Masukkan email terverifikasi pada akun Anda. Jika cocok, kami akan mengirim tautan reset yang berlaku 60 menit.</p>
-        <Field label="Email"><Input type="email" name="email" required autoComplete="email" /></Field>
-        {pesan && <Notice tone="green" role="status">{pesan}</Notice>}
-        <FormError>{error}</FormError>
-        <button type="submit" disabled={mengirim} className={`w-full ${buttonClass()}`}>
-          {mengirim && <Spinner />}{mengirim ? 'Mengirim...' : 'Kirim Tautan Reset'}
-        </button>
-        <Link to="/login" className="text-center text-small underline">Kembali ke halaman masuk</Link>
-      </form>
-    </main>
+    <div className="flex min-h-screen items-center justify-center bg-grey2-100 p-4 font-sans">
+      <div className="flex w-full max-w-[694px] justify-center rounded-xl bg-white px-6 py-16 motion-safe:animate-rise">
+        <form onSubmit={submit} className="flex w-full max-w-[414px] flex-col gap-10">
+          <div className="flex flex-col gap-3 text-center">
+            <h1 className="text-h1">Lupa Password</h1>
+            <p className="text-grey-300">Masukkan email terverifikasi pada akun Anda. Jika cocok, kami akan mengirim tautan reset yang berlaku 60 menit.</p>
+          </div>
+          <div className="flex flex-col gap-3.5">
+            <Field label="Email">
+              <Input type="email" name="email" required autoComplete="email" placeholder="nama@contoh.com" />
+            </Field>
+            {pesan && <Notice tone="green">{pesan}</Notice>}
+            <FormError>{error}</FormError>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button type="submit" disabled={mengirim} aria-busy={mengirim} className={`w-full font-semibold ${buttonClass()}`}>
+              {mengirim && <Spinner />}
+              {mengirim ? 'Mengirim...' : 'Kirim Tautan Reset'}
+            </button>
+            <Link to="/login" className={`w-full ${buttonClass('outline')}`}>Kembali ke Halaman Masuk</Link>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
 
