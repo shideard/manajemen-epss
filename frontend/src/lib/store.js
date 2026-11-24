@@ -78,6 +78,8 @@ const mapRencanaKegiatan = (item) => ({
   indikatorIds: (item.indikator ?? []).map((i) => String(i.kode)),
   // Level yang ditargetkan verifikator per indikator (kode indikator → level)
   levelTarget: Object.fromEntries((item.indikator ?? []).map((i) => [String(i.kode), i.level ?? 1])),
+  // Output ditargetkan per indikator (id API indikator, bisa lebih dari satu); kosong = output lama/indikatornya dilepas
+  output: (item.output ?? []).map((o) => ({ ...o, indikatorIds: o.indikator_ids ?? [] })),
 })
 
 // Simpan daftar output yang ditargetkan (id dikirim supaya baris & berkas contohnya dipertahankan),
@@ -87,8 +89,9 @@ async function simpanOutputKegiatan(kegiatanId, output) {
   await api(`${base}/output-diharapkan`, {
     method: 'PUT',
     body: {
-      output: output.map(({ id, judul, jenis, contoh }) => ({
+      output: output.map(({ id, indikatorIds = [], judul, jenis, contoh }) => ({
         id: id ?? null,
+        indikator_ids: indikatorIds,
         judul,
         jenis: jenis || null,
         contoh: contoh ? { nama: contoh } : null,
@@ -459,6 +462,9 @@ const mapDokumen = (d) => ({
   mime: d.mime_type,
   uploadedBy: d.uploaded_by,
   isCurrent: d.is_current,
+  // Output tempat berkas diunggah (null = berkas umum) dan id API indikator yang didukungnya
+  outputId: d.output_id ?? null,
+  indikatorIds: d.indikator_ids ?? [],
   sumber: d.sumber ? { id: d.sumber.dokumen_id, kegiatanId: d.sumber.kegiatan_id, kegiatanNama: d.sumber.nama_kegiatan } : null,
 })
 
@@ -537,15 +543,26 @@ export function useDokumenBukti(kegiatanId) {
     dokumen: state.kegiatanId === kegiatanId ? state.dokumen : EMPTY_LIST,
     loading: Boolean(kegiatanId) && state.kegiatanId !== kegiatanId,
     error: state.kegiatanId === kegiatanId ? state.error : null,
-    // Satu request per berkas (endpoint menerima satu file); tanggal bukti = hari ini
-    async unggah(files) {
+    // Satu request per berkas (endpoint menerima satu file); tanggal bukti = hari ini.
+    // outputId = unggah untuk satu output (indikatornya mengikuti output); selain itu indikatorIds wajib (id API)
+    async unggah(files, { outputId, indikatorIds = [] } = {}) {
       try {
         for (const file of files) {
           const body = new FormData()
           body.append('file', file)
           body.append('evidence_date', toISODate(new Date()))
+          if (outputId) body.append('output_id', outputId)
+          else for (const id of indikatorIds) body.append('indikator_ids[]', id)
           await api(base, { method: 'POST', body })
         }
+      } finally {
+        await muat()
+      }
+    },
+    // Atur indikator berkas umum (mis. pintasan dari kegiatan lain yang belum ditautkan)
+    async aturIndikator(dokumen, indikatorIds) {
+      try {
+        await api(`${base}/${dokumen.id}/indikator`, { method: 'PUT', body: { indikator_ids: indikatorIds } })
       } finally {
         await muat()
       }

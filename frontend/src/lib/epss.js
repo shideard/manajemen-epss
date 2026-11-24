@@ -49,6 +49,21 @@ export const SYARAT_PASSWORD = [
   ['Mengandung angka (0-9)', (p) => /\p{N}/u.test(p)],
   ['Mengandung simbol (contoh: ! @ # ?)', (p) => /[\p{P}\p{S}]/u.test(p)],
 ]
+
+// Output yang ditargetkan dikelompokkan per indikator tertaut (urutan indikator dipertahankan).
+// Satu output bisa berlaku untuk beberapa indikator (o.indikatorIds), jadi muncul di setiap grupnya.
+// Output yang tidak punya satu pun indikator tertaut masuk grup terakhir { indikator: null }, yang hanya muncul bila ada isinya.
+// Indeks asli disimpan supaya form bisa mengubah/menghapus item yang tepat.
+export function kelompokOutput(output, indikator) {
+  const grup = indikator.map((i) => ({ indikator: i, output: [] }))
+  const byId = new Map(grup.map((g) => [g.indikator.id, g]))
+  const lepas = []
+  output.forEach((o, index) => {
+    const milik = (o.indikatorIds ?? []).map((id) => byId.get(id)).filter(Boolean)
+    for (const g of milik.length ? milik : [{ output: lepas }]) g.output.push({ ...o, index })
+  })
+  return lepas.length ? [...grup, { indikator: null, output: lepas }] : grup
+}
 export const SEED_PENGINGAT = [1, 7, 14, 30]
 export const EMPTY_OBJECT = {}
 export const EMPTY_LIST = []

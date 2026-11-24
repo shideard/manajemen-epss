@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use RuntimeException;
 use Throwable;
 
@@ -28,6 +29,7 @@ class DokumenBuktiController extends Controller
 
         $documents = $rencanaKegiatan
             ->dokumenBukti()
+            ->with('indikator:id')
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
@@ -58,6 +60,8 @@ class DokumenBuktiController extends Controller
                 'sumber' => $sumberDari($document),
                 'id' => $document->id,
                 'kegiatan_id' => $document->kegiatan_id,
+                'output_id' => $document->output_id,
+                'indikator_ids' => $document->indikator->pluck('id'),
                 'uploaded_by' => $document->uploaded_by,
                 'parent_document_id' => $document->parent_document_id,
                 'version_number' => $document->version_number,
@@ -194,7 +198,14 @@ class DokumenBuktiController extends Controller
                     ),
                 ]);
 
+                // Dari output: tertaut ke semua indikator output itu (kosong bila output tanpa indikator); selain itu indikator pilihan
+                $outputId = $request->validated('output_id');
+                $document->output_id = $outputId;
                 $rencanaKegiatan->dokumenBukti()->save($document);
+                $indikatorIds = $outputId
+                    ? $rencanaKegiatan->outputDiharapkan()->findOrFail($outputId)->indikator()->pluck('indikator_epss.id')->all()
+                    : $request->validated('indikator_ids', []);
+                $document->indikator()->sync($indikatorIds);
 
                 return $document->refresh();
             });
@@ -208,6 +219,8 @@ class DokumenBuktiController extends Controller
             'data' => [
                 'id' => $document->id,
                 'kegiatan_id' => $document->kegiatan_id,
+                'output_id' => $document->output_id,
+                'indikator_ids' => $document->indikator()->pluck('indikator_epss.id'),
                 'uploaded_by' => $document->uploaded_by,
                 'evidence_date' => $document->evidence_date->toDateString(),
                 'nama_file' => $document->nama_file,
@@ -265,6 +278,48 @@ class DokumenBuktiController extends Controller
         $this->bersihkanStorage($kunciStorage);
 
         return response()->noContent();
+    }
+
+    // Atur indikator berkas umum (mis. pintasan yang belum ditautkan). Berkas dari output mengikuti indikator output-nya.
+    public function aturIndikator(
+        Request $request,
+        RencanaKegiatan $rencanaKegiatan,
+        DokumenBukti $dokumenBukti
+    ): JsonResponse {
+        Gate::forUser($request->user())->authorize('uploadEvidence', $rencanaKegiatan);
+
+        $indikatorIds = $request->validate([
+            'indikator_ids' => ['present', 'array'],
+            'indikator_ids.*' => [
+                'uuid',
+                'distinct',
+                Rule::exists('kegiatan_indikator', 'indikator_id')->where('kegiatan_id', $rencanaKegiatan->id),
+            ],
+        ])['indikator_ids'];
+
+        $tersimpan = DB::transaction(function () use ($rencanaKegiatan, $dokumenBukti, $indikatorIds): array {
+            $document = $rencanaKegiatan->dokumenBukti()->lockForUpdate()->findOrFail($dokumenBukti->id);
+            abort_unless($document->is_current, 409, 'Hanya berkas versi terbaru yang dapat diatur indikatornya.');
+            abort_if($document->output_id !== null, 409, 'Indikator berkas dari output mengikuti indikator output tersebut.');
+
+            // Bukti untuk ajuan yang sedang/sudah diverifikasi tidak boleh berubah (sama dengan aturan pemetaan indikator)
+            $saatIni = $document->indikator()->pluck('indikator_epss.id')->all();
+            $berubah = array_merge(array_diff($saatIni, $indikatorIds), array_diff($indikatorIds, $saatIni));
+            abort_if(
+                $berubah !== [] && $rencanaKegiatan->ajuanBukti()
+                    ->whereIn('indikator_id', $berubah)
+                    ->whereIn('status', [StatusAjuanBukti::MENUNGGU->value, StatusAjuanBukti::TERVERIFIKASI->value])
+                    ->exists(),
+                409,
+                'Indikator dengan ajuan yang menunggu verifikasi atau sudah terverifikasi tidak dapat ditambah atau dilepas dari berkas.'
+            );
+
+            $document->indikator()->sync($indikatorIds);
+
+            return $document->indikator()->pluck('indikator_epss.id')->all();
+        });
+
+        return response()->json(['data' => ['id' => $dokumenBukti->id, 'indikator_ids' => $tersimpan]]);
     }
 
     // Hapus berkas: semua salinan tautan berkas yang sama di kegiatan lain ikut terhapus.
@@ -387,6 +442,8 @@ class DokumenBuktiController extends Controller
                 $document = new DokumenBukti();
                 $document->forceFill([
                     'uploaded_by' => $request->user()->id,
+                    // Revisi tetap untuk output & indikator yang sama dengan versi sebelumnya
+                    'output_id' => $previous->output_id,
                     'parent_document_id' => $previous->id,
                     'version_number' => $previous->version_number + 1,
                     'is_current' => true,
@@ -402,6 +459,7 @@ class DokumenBuktiController extends Controller
                 ]);
 
                 $rencanaKegiatan->dokumenBukti()->save($document);
+                $document->indikator()->sync($previous->indikator()->pluck('indikator_epss.id'));
 
                 return $document->refresh();
             });

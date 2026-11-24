@@ -41,7 +41,7 @@ class RencanaKegiatanController extends Controller
             'opd:id,nama',
             'pic:id,name',
             'indikatorMappings.indikator:id,kode,nama',
-            'outputDiharapkan',
+            'outputDiharapkan.indikator:id',
         ]);
 
         return new RencanaKegiatanResource(
@@ -148,6 +148,19 @@ class RencanaKegiatanController extends Controller
                 $rencanaKegiatan
                     ->indikatorMappings()
                     ->whereIn('indikator_id', $indikatorUntukDihapus)
+                    ->delete();
+
+                // Output tetap disimpan (berikut berkas contohnya); hanya tautannya ke indikator yang dilepas yang dihapus.
+                // Output yang tidak punya indikator lagi tampil sebagai output tanpa indikator
+                DB::table('rencana_kegiatan_output_indikator')
+                    ->whereIn('indikator_id', $indikatorUntukDihapus)
+                    ->whereIn('output_id', $rencanaKegiatan->outputDiharapkan()->select('id'))
+                    ->delete();
+
+                // Berkas tetap ada, hanya tautannya ke indikator yang dilepas yang dihapus
+                DB::table('dokumen_bukti_indikator')
+                    ->whereIn('indikator_id', $indikatorUntukDihapus)
+                    ->whereIn('dokumen_id', $rencanaKegiatan->dokumenBukti()->select('id'))
                     ->delete();
             }
 

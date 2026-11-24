@@ -26,6 +26,7 @@ class EksporBuktiController extends Controller
                 'indikator.aspek.domain:id,kode,nama',
                 'kegiatan:id,nama_kegiatan',
                 'kegiatan.dokumenBukti' => fn ($query) => $query->where('is_current', true),
+                'kegiatan.dokumenBukti.indikator:id',
             ])
             ->get();
 
@@ -49,7 +50,8 @@ class EksporBuktiController extends Controller
             ]);
 
             foreach ($map->kegiatan->dokumenBukti as $dokumen) {
-                if (! $disk->exists($dokumen->storage_key)) {
+                // Folder indikator hanya berisi berkas yang tertaut ke indikator itu
+                if (! $dokumen->indikator->contains('id', $indikator->id) || ! $disk->exists($dokumen->storage_key)) {
                     continue;
                 }
 

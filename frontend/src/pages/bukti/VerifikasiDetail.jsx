@@ -36,8 +36,10 @@ function VerifikasiDetail() {
   const key = buktiKey(kegiatanId, indikatorId)
   const bukti = semuaBukti[key]
   const indikator = instrumenData.byId[indikatorId]
+  // Hanya berkas yang tertaut ke indikator ajuan ini (id API indikator dicari dari kode di URL).
   // Pengunggah berkas = PIC kegiatan (hanya PIC yang bisa mengunggah)
-  const files = dokumen.dokumen.map((f) => ({ ...f, oleh: k?.pic }))
+  const indikatorApiId = k?.indikator.find((i) => String(i.kode) === String(indikatorId))?.id
+  const files = dokumen.dokumen.filter((f) => f.indikatorIds.includes(indikatorApiId)).map((f) => ({ ...f, oleh: k?.pic }))
   const file = files[dipilih]
 
   // Isi berkas terpilih diunduh dari API → object URL untuk iframe; dicabut saat ganti berkas / keluar halaman
@@ -141,8 +143,8 @@ function VerifikasiDetail() {
           <hr className="border-grey-75" />
 
           <section className="flex flex-col gap-3">
-            <h3 className="font-semibold">Bukti dukung yang dilampirkan</h3>
-            {files.length === 0 && <p className="text-small text-grey-200">Belum ada berkas.</p>}
+            <h3 className="font-semibold">Bukti dukung untuk indikator ini</h3>
+            {files.length === 0 && <p className="text-small text-grey-200">Belum ada berkas yang tertaut ke indikator ini.</p>}
             {files.map((f, i) => (
               <button
                 key={f.id}

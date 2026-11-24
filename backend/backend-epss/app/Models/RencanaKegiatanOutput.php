@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class RencanaKegiatanOutput extends Model
 {
@@ -28,6 +29,12 @@ class RencanaKegiatanOutput extends Model
         return [
             'urutan' => 'integer',
         ];
+    }
+
+    // Indikator tertaut tempat output ini ditargetkan; satu output bisa dipakai beberapa indikator
+    public function indikator(): BelongsToMany
+    {
+        return $this->belongsToMany(IndikatorEpss::class, 'rencana_kegiatan_output_indikator', 'output_id', 'indikator_id');
     }
 
     public function kegiatan(): BelongsTo

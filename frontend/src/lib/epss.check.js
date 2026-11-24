@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelIndikator, riwayatIps, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword, SYARAT_PASSWORD } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelIndikator, riwayatIps, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword, SYARAT_PASSWORD, kelompokOutput } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -173,3 +173,25 @@ assert.deepEqual(lolos(''), [false, false, false, false, false])
 assert.deepEqual(lolos('abcdefgh'), [true, false, true, false, false])
 assert.deepEqual(lolos('Abcdef1!'), [true, true, true, true, true])
 assert.deepEqual(lolos('Abc1+'), [false, true, true, true, true]) // + = simbol (\p{S})
+
+// Output per indikator: satu output bisa di beberapa grup; output tanpa indikator tertaut masuk grup null di akhir
+const indA = { id: 'A' }
+const indB = { id: 'B' }
+const grupOutput = kelompokOutput(
+  [
+    { judul: 'a1', indikatorIds: ['A'] },
+    { judul: 'lama', indikatorIds: [] },
+    { judul: 'bersama', indikatorIds: ['A', 'B'] },
+    { judul: 'dilepas', indikatorIds: ['X'] },
+    { judul: 'sebagian', indikatorIds: ['X', 'B'] },
+  ],
+  [indA, indB],
+)
+assert.deepEqual(grupOutput.map((g) => [g.indikator?.id ?? null, g.output.map((o) => `${o.judul}@${o.index}`)]), [
+  ['A', ['a1@0', 'bersama@2']],
+  ['B', ['bersama@2', 'sebagian@4']],
+  [null, ['lama@1', 'dilepas@3']],
+])
+assert.deepEqual(kelompokOutput([], [indA]), [{ indikator: indA, output: [] }]) // indikator tanpa output tetap tampil, tanpa grup null
+assert.deepEqual(kelompokOutput([], []), [])
+console.log('epss.check (output): OK')
