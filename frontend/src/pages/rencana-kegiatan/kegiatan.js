@@ -57,6 +57,27 @@ export function levelTerpakai(kegiatan, kecualiId) {
 
 export const isOnDate = (kegiatan, date) => kegiatan.mulai <= date && date <= kegiatan.selesai
 
+// Palet kalender; 4 pertama = WARNA lama supaya tampilan yang sudah dikenal tetap sama
+export const WARNA_KALENDER = ['#b57fd4', '#d47f81', '#7fa7d4', '#eef281', '#7fd4a9', '#d4a77f', '#d47fbe', '#9fd4e0']
+
+// Warna per kegiatan: kegiatan yang jadwalnya beririsan (ada di hari yang sama) tidak pernah berwarna sama.
+// Greedy urut tanggal mulai = pewarnaan optimal untuk interval, jadi warna yang dipakai = tumpukan terbanyak.
+// Hasil: { [id]: indeks WARNA_KALENDER }
+export function warnaKalender(kegiatan) {
+  const urut = kegiatan.slice().sort((a, b) => a.mulai.localeCompare(b.mulai) || a.selesai.localeCompare(b.selesai) || String(a.id).localeCompare(String(b.id)))
+  const hasil = {}
+  const sudah = []
+  for (const k of urut) {
+    const terpakai = new Set(sudah.filter((o) => o.mulai <= k.selesai && k.mulai <= o.selesai).map((o) => hasil[o.id]))
+    let warna = 0
+    while (terpakai.has(warna)) warna++
+    // ponytail: lebih dari 8 kegiatan bertumpuk di satu hari → warna berulang; tambah palet kalau itu terjadi
+    hasil[k.id] = warna % WARNA_KALENDER.length
+    sudah.push(k)
+  }
+  return hasil
+}
+
 export function matches(kegiatan, query) {
   const q = query.trim().toLowerCase()
   return !q || [kegiatan.nama, kegiatan.deskripsi, kegiatan.opd, kegiatan.pic].some((v) => v?.toLowerCase().includes(q))

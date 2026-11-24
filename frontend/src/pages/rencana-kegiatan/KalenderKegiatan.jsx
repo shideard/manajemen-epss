@@ -1,15 +1,12 @@
-import { useState } from 'react'
-import { isOnDate, monthCells } from './kegiatan'
-import { agendaTerdekat, toISODate, WARNA } from '../../lib/epss'
+import { useMemo, useState } from 'react'
+import { CalendarDays } from 'lucide-react'
+import { isOnDate, monthCells, WARNA_KALENDER, warnaKalender } from './kegiatan'
+import { agendaTerdekat, toISODate } from '../../lib/epss'
 import arrowFill from '../../assets/rencana/arrow-down-s-fill.svg'
 import arrowRightUp from '../../assets/rencana/arrow-right-up-line.svg'
 import calendarHeader from '../../assets/rencana/calendar-2-fill-header.svg'
-import calendar1 from '../../assets/rencana/calendar-2-fill-1.svg'
-import calendar2 from '../../assets/rencana/calendar-2-fill-2.svg'
-import calendar3 from '../../assets/rencana/calendar-2-fill-3.svg'
-import calendar4 from '../../assets/rencana/calendar-2-fill-4.svg'
 
-const IKON_WARNA = [calendar1, calendar2, calendar3, calendar4]
+const MAKS_PER_HARI = 3
 const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 
 const tanggalPendek = (iso) =>
@@ -22,6 +19,9 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
   const month = cursor.getMonth()
   const shift = (n) => setCursor(new Date(year, month + n, 1))
   const agenda = agendaTerdekat(kegiatan, today)
+  // Satu warna per kegiatan, dipakai sama di kotak kalender dan daftar agenda
+  const warna = useMemo(() => warnaKalender(kegiatan), [kegiatan])
+  const warnaOf = (k) => WARNA_KALENDER[warna[k.id]]
 
   return (
     <div className="flex flex-col items-start gap-3.5 lg:flex-row">
@@ -61,19 +61,28 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
                   {day}
                 </span>
                 {hariIni && <span className="text-caption font-semibold text-grey-300">Hari ini</span>}
-                {/* ponytail: maksimal 3 bar per hari; tambahkan penanda "+N" jika kegiatan sering bertumpuk */}
+                {/* Nama kegiatan tampil di bar; nama lengkap + jadwal muncul saat hover */}
                 <div className="mt-auto flex flex-col gap-0.5">
-                  {events.slice(0, 3).map((k) => (
+                  {events.slice(0, MAKS_PER_HARI).map((k) => (
                     <button
                       key={k.id}
                       type="button"
                       onClick={() => onOpen(k)}
-                      title={k.nama}
-                      aria-label={k.nama}
-                      className="h-3.5 w-full rounded-xs"
-                      style={{ backgroundColor: WARNA[k.warna] }}
-                    />
+                      title={`${k.nama} (${tanggalPendek(k.mulai)} - ${tanggalPendek(k.selesai)})`}
+                      className="w-full truncate rounded-xs px-1.5 py-0.5 text-left text-caption font-medium text-grey-500 hover:brightness-95 focus-visible:outline-2 focus-visible:outline-grey-500"
+                      style={{ backgroundColor: warnaOf(k) }}
+                    >
+                      {k.nama}
+                    </button>
                   ))}
+                  {events.length > MAKS_PER_HARI && (
+                    <span
+                      title={events.slice(MAKS_PER_HARI).map((k) => k.nama).join('\n')}
+                      className="px-1.5 text-caption font-medium text-grey-300"
+                    >
+                      +{events.length - MAKS_PER_HARI} lainnya
+                    </span>
+                  )}
                 </div>
               </div>
             )
@@ -95,7 +104,9 @@ function KalenderKegiatan({ kegiatan, onOpen }) {
             className="flex flex-col gap-1.5 rounded-lg bg-grey2-300 px-7 py-4 text-left text-grey-200 hover:bg-grey2-200"
           >
             <span className="flex w-full items-center justify-between">
-              <img src={IKON_WARNA[k.warna]} alt="" width={39} height={39} />
+              <span className="grid size-[39px] place-items-center rounded-xs text-grey-500" style={{ backgroundColor: warnaOf(k) }}>
+                <CalendarDays size={22} aria-hidden="true" />
+              </span>
               <img src={arrowRightUp} alt="" width={39} height={39} />
             </span>
             <span className="font-semibold">

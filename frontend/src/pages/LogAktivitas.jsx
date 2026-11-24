@@ -25,13 +25,18 @@ function LogAktivitas() {
 
   useEffect(() => {
     let hidup = true
-    setState((current) => ({ ...current, loading: true, error: '' }))
     api(`/api/audit-logs?page=${page}`).then(
       (result) => hidup && setState({ loading: false, error: '', logs: result.data ?? [], meta: result.meta }),
       (error) => hidup && setState({ loading: false, error: error.message, logs: [], meta: null }),
     )
     return () => { hidup = false }
   }, [page])
+
+  // Status memuat diset saat pindah halaman, bukan di dalam effect
+  function pindah(halaman) {
+    setState((current) => ({ ...current, loading: true, error: '' }))
+    setPage(halaman)
+  }
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -63,9 +68,9 @@ function LogAktivitas() {
           <div className="mt-5 flex items-center justify-between gap-3">
             <span className="text-small text-grey-200">Total {state.meta?.total ?? 0} aktivitas</span>
             <div className="flex gap-2">
-              <button type="button" disabled={page <= 1} onClick={() => setPage((value) => value - 1)} className={buttonClass('outline', 'sm')}>Sebelumnya</button>
+              <button type="button" disabled={page <= 1} onClick={() => pindah(page - 1)} className={buttonClass('outline', 'sm')}>Sebelumnya</button>
               <span className="self-center text-small">{page} / {state.meta?.last_page ?? 1}</span>
-              <button type="button" disabled={page >= (state.meta?.last_page ?? 1)} onClick={() => setPage((value) => value + 1)} className={buttonClass('outline', 'sm')}>Berikutnya</button>
+              <button type="button" disabled={page >= (state.meta?.last_page ?? 1)} onClick={() => pindah(page + 1)} className={buttonClass('outline', 'sm')}>Berikutnya</button>
             </div>
           </div>
         </section>
