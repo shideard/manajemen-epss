@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
-import { getMenuForRole, ROLE_LABELS } from '../../config/menu'
+import { getMenuForRole, ROLE_LABELS, ROLES } from '../../config/menu'
 import logo from '../../assets/sidebar/logo-kota-bogor.png'
 import logoLine from '../../assets/sidebar/logo-line.svg'
 import divider from '../../assets/sidebar/divider.svg'
@@ -207,24 +207,37 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
           ))}
         </nav>
 
-        {/* Profil user; klik untuk membuka tombol Keluar */}
+        {/* Profil user; klik untuk membuka aksi akun */}
         <div
           ref={akunRef}
           className={`relative mt-auto mb-8.5 ml-5 w-[196px] transition-[margin] duration-300 ease-out-quint ${rk('lg:ml-2.5')}`}
         >
           <AnimatePresence>
             {menuOpen && (
-              <motion.button
-                type="button"
-                onClick={onLogout}
+              <motion.div
                 initial={{ opacity: 0, y: 6, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 6, scale: 0.96 }}
                 transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute bottom-full mb-2 w-full origin-bottom rounded-sm bg-grey-75/50 px-3.5 py-3 text-left text-small font-semibold text-grey-50"
+                className="absolute bottom-full mb-2 flex w-full origin-bottom flex-col gap-1 rounded-sm bg-grey-300 p-1 shadow-lg"
               >
-                Keluar
-              </motion.button>
+                {[ROLES.OPERATOR, ROLES.VERIFIKATOR].includes(user.role) && (
+                  <NavLink
+                    to="/ganti-password"
+                    onClick={() => { setMenuOpen(false); onClose() }}
+                    className="rounded-sm px-3.5 py-3 text-left text-small font-semibold text-grey-50 hover:bg-grey-75/50 hover:text-white"
+                  >
+                    Ganti Password
+                  </NavLink>
+                )}
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="rounded-sm px-3.5 py-3 text-left text-small font-semibold text-grey-50 hover:bg-grey-75/50 hover:text-white"
+                >
+                  Keluar
+                </button>
+              </motion.div>
             )}
           </AnimatePresence>
           <button
