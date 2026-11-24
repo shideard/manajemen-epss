@@ -1,9 +1,10 @@
 // Komponen kecil yang dipakai ulang di banyak halaman. Aturan pemakaiannya ada di frontend/DESIGN.md
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Check, Eye, EyeOff, X } from 'lucide-react'
 import { animate, AnimatePresence, motion } from 'motion/react'
 import { unduhBerkas } from '../lib/api'
+import { SYARAT_PASSWORD } from '../lib/epss'
 import closeIcon from '../assets/rencana/close-line.svg'
 import triangle from '../assets/rencana/dropdown-triangle.svg'
 import arrowDown from '../assets/rencana/arrow-down-s-line.svg'
@@ -88,6 +89,43 @@ export function Field({ label, aside, children, className = '' }) {
 
 export function Input({ className = '', ...props }) {
   return <input className={`h-[45px] ${fieldClass} ${className}`} {...props} />
+}
+
+// Input password dengan tombol mata untuk menampilkan/menyembunyikan isinya
+export function PasswordInput({ className = '', ...props }) {
+  const [tampil, setTampil] = useState(false)
+  return (
+    <span className={`relative block ${className}`}>
+      <Input {...props} type={tampil ? 'text' : 'password'} className="pr-12" />
+      <button
+        type="button"
+        onClick={() => setTampil((v) => !v)}
+        aria-label={tampil ? 'Sembunyikan password' : 'Tampilkan password'}
+        aria-pressed={tampil}
+        className="absolute inset-y-0 right-3 flex items-center justify-center text-grey-300 hover:text-grey-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-500"
+      >
+        {tampil ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+      </button>
+    </span>
+  )
+}
+
+// Daftar syarat password yang diperbarui saat mengetik; hijau = terpenuhi
+export function SyaratPassword({ password }) {
+  return (
+    <ul aria-label="Syarat password" className="flex flex-wrap gap-x-4 gap-y-1 text-small">
+      {SYARAT_PASSWORD.map(([label, cek]) => {
+        const ok = cek(password)
+        return (
+          <li key={label} className={`flex items-center gap-1 ${ok ? 'text-green-500' : 'text-red-400'}`}>
+            {ok ? <Check size={14} aria-hidden="true" /> : <X size={14} aria-hidden="true" />}
+            {label}
+            <span className="sr-only">{ok ? '(terpenuhi)' : '(belum)'}</span>
+          </li>
+        )
+      })}
+    </ul>
+  )
 }
 
 // Opsi kosong yang terpilih tampil seperti placeholder

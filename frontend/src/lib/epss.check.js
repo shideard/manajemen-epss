@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelIndikator, riwayatIps, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelIndikator, riwayatIps, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword, SYARAT_PASSWORD } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -166,3 +166,10 @@ assert.equal(gantiSaat({ must_change_password: false, password_changed_at: '2026
 assert.equal(gantiSaat({ must_change_password: false, password_changed_at: '2026-10-01T00:00:00Z' }, '2027-10-01T00:00:00Z'), true)
 
 console.log('epss.check (akses): OK')
+
+// Syarat password: urutan panjang, besar, kecil, angka, simbol
+const lolos = (p) => SYARAT_PASSWORD.map(([, cek]) => cek(p))
+assert.deepEqual(lolos(''), [false, false, false, false, false])
+assert.deepEqual(lolos('abcdefgh'), [true, false, true, false, false])
+assert.deepEqual(lolos('Abcdef1!'), [true, true, true, true, true])
+assert.deepEqual(lolos('Abc1+'), [false, true, true, true, true]) // + = simbol (\p{S})
