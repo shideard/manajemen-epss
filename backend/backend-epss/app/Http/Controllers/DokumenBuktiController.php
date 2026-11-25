@@ -200,11 +200,16 @@ class DokumenBuktiController extends Controller
 
                 // Dari output: tertaut ke semua indikator output itu (kosong bila output tanpa indikator); selain itu indikator pilihan
                 $outputId = $request->validated('output_id');
-                $document->output_id = $outputId;
-                $rencanaKegiatan->dokumenBukti()->save($document);
                 $indikatorIds = $outputId
                     ? $rencanaKegiatan->outputDiharapkan()->findOrFail($outputId)->indikator()->pluck('indikator_epss.id')->all()
                     : $request->validated('indikator_ids', []);
+                $this->pastikanIndikatorTerbuka(
+                    $rencanaKegiatan,
+                    $indikatorIds,
+                    'Indikator dengan ajuan yang menunggu verifikasi atau sudah terverifikasi tidak dapat ditambah berkas.'
+                );
+                $document->output_id = $outputId;
+                $rencanaKegiatan->dokumenBukti()->save($document);
                 $document->indikator()->sync($indikatorIds);
 
                 return $document->refresh();
@@ -302,15 +307,11 @@ class DokumenBuktiController extends Controller
             abort_unless($document->is_current, 409, 'Hanya berkas versi terbaru yang dapat diatur indikatornya.');
             abort_if($document->output_id !== null, 409, 'Indikator berkas dari output mengikuti indikator output tersebut.');
 
-            // Bukti untuk ajuan yang sedang/sudah diverifikasi tidak boleh berubah (sama dengan aturan pemetaan indikator)
             $saatIni = $document->indikator()->pluck('indikator_epss.id')->all();
             $berubah = array_merge(array_diff($saatIni, $indikatorIds), array_diff($indikatorIds, $saatIni));
-            abort_if(
-                $berubah !== [] && $rencanaKegiatan->ajuanBukti()
-                    ->whereIn('indikator_id', $berubah)
-                    ->whereIn('status', [StatusAjuanBukti::MENUNGGU->value, StatusAjuanBukti::TERVERIFIKASI->value])
-                    ->exists(),
-                409,
+            $this->pastikanIndikatorTerbuka(
+                $rencanaKegiatan,
+                $berubah,
                 'Indikator dengan ajuan yang menunggu verifikasi atau sudah terverifikasi tidak dapat ditambah atau dilepas dari berkas.'
             );
 
@@ -347,6 +348,19 @@ class DokumenBuktiController extends Controller
         $this->bersihkanStorage($kunciStorage);
 
         return response()->noContent();
+    }
+
+    // Bukti untuk ajuan yang sedang/sudah diverifikasi tidak boleh berubah (sama dengan aturan pemetaan indikator)
+    private function pastikanIndikatorTerbuka(RencanaKegiatan $kegiatan, array $indikatorIds, string $pesan): void
+    {
+        abort_if(
+            $indikatorIds !== [] && $kegiatan->ajuanBukti()
+                ->whereIn('indikator_id', $indikatorIds)
+                ->whereIn('status', [StatusAjuanBukti::MENUNGGU->value, StatusAjuanBukti::TERVERIFIKASI->value])
+                ->exists(),
+            409,
+            $pesan
+        );
     }
 
     private function pastikanBolehHapus(Request $request, RencanaKegiatan $kegiatan): void
@@ -432,6 +446,13 @@ class DokumenBuktiController extends Controller
                     'Versi dokumen ini sudah digantikan.'
                 );
 
+                $indikatorIds = $previous->indikator()->pluck('indikator_epss.id')->all();
+                $this->pastikanIndikatorTerbuka(
+                    $rencanaKegiatan,
+                    $indikatorIds,
+                    'Indikator dengan ajuan yang menunggu verifikasi atau sudah terverifikasi tidak dapat direvisi berkasnya.'
+                );
+
                 $previous->is_current = false;
                 $previous->save();
 
@@ -459,7 +480,7 @@ class DokumenBuktiController extends Controller
                 ]);
 
                 $rencanaKegiatan->dokumenBukti()->save($document);
-                $document->indikator()->sync($previous->indikator()->pluck('indikator_epss.id'));
+                $document->indikator()->sync($indikatorIds);
 
                 return $document->refresh();
             });
