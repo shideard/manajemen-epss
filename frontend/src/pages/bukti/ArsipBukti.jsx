@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft, Files, FolderTree, Link2 } from 'lucide-react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useBukti, useDokumenBukti, usePeriode, useSemuaDokumen, useSemuaKegiatan } from '../../lib/store'
-import { formatTanggal, formatUkuran, includesText, isPic } from '../../lib/epss'
+import { ajuanBerkas, formatTanggal, formatUkuran, includesText, isPic } from '../../lib/epss'
 import { bolehUbah } from '../../config/menu'
 import { Badge, DialogHeader, Dropdown, Memuat, Notice, PageHeader, SearchBox } from '../../components/ui'
 import { buttonClass } from '../../components/classes'
@@ -448,7 +448,7 @@ function ArsipBukti() {
             user={user}
             aktif={aktif}
             kegiatan={kegiatan}
-            terverifikasi={Object.values(bukti).some((b) => b.kegiatanId === dipilih.kegiatan[0].id && b.status === 'terverifikasi')}
+            terverifikasi={ajuanBerkas(dipilih, dipilih.kegiatan[0], bukti).some((b) => b.status === 'terverifikasi')}
             onClose={() => setDipilihId(null)}
             onHapus={(semua) =>
               konfirmasi({

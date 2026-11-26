@@ -328,6 +328,14 @@ export function levelIndikator(ajuan) {
 
 export const buktiKey = (kegiatanId, indikatorId) => `${kegiatanId}:${indikatorId}`
 
+// Ajuan indikator yang didukung satu berkas (f.indikatorIds = id API; kunci ajuan = kode indikator)
+export const ajuanBerkas = (f, kegiatan, bukti) =>
+  (f.indikatorIds ?? [])
+    .map((id) => kegiatan.indikator?.find((i) => i.id === id)?.kode)
+    .filter((kode) => kode != null)
+    .map((kode) => bukti[buktiKey(kegiatan.id, String(kode))])
+    .filter(Boolean)
+
 export function statusKegiatan(kegiatan, bukti, jumlahBerkas, today) {
   if (bukti.length > 0 && bukti.every((b) => b.status === 'terverifikasi')) return 'Terverifikasi'
   if (jumlahBerkas > 0) return 'Bukti dukung diunggah'

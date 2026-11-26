@@ -340,7 +340,7 @@ class DokumenBuktiController extends Controller
 
             // Cek semua kegiatan dulu supaya tidak ada yang terhapus separuh
             foreach ($salinan as $item) {
-                $this->pastikanBolehHapus($request, $item->kegiatan);
+                $this->pastikanBolehHapus($request, $item);
             }
 
             return $salinan->flatMap(fn (DokumenBukti $item) => $this->hapusDariKegiatan($request, $item))->all();
@@ -363,17 +363,22 @@ class DokumenBuktiController extends Controller
         );
     }
 
-    private function pastikanBolehHapus(Request $request, RencanaKegiatan $kegiatan): void
+    // Hanya ajuan indikator yang didukung berkas ini yang menghalangi; berkas umum tanpa indikator selalu boleh dihapus
+    private function pastikanBolehHapus(Request $request, DokumenBukti $document): void
     {
+        $kegiatan = $document->kegiatan;
         abort_if(
             $kegiatan->periode()->where('status', StatusPeriode::TERKUNCI->value)->exists(),
             409,
             'Periode sudah dikunci, berkas tidak dapat dihapus.'
         );
         abort_if(
-            $kegiatan->ajuanBukti()->where('status', StatusAjuanBukti::TERVERIFIKASI->value)->exists(),
+            $kegiatan->ajuanBukti()
+                ->whereIn('indikator_id', $document->indikator()->pluck('indikator_epss.id'))
+                ->where('status', StatusAjuanBukti::TERVERIFIKASI->value)
+                ->exists(),
             409,
-            "Bukti dukung \"{$kegiatan->nama_kegiatan}\" sudah diverifikasi, berkas tidak dapat dihapus."
+            "Bukti dukung \"{$kegiatan->nama_kegiatan}\" untuk indikator berkas ini sudah diverifikasi, berkas tidak dapat dihapus."
         );
         Gate::forUser($request->user())->authorize('uploadEvidence', $kegiatan);
     }
@@ -382,10 +387,11 @@ class DokumenBuktiController extends Controller
     private function hapusDariKegiatan(Request $request, DokumenBukti $document): array
     {
         abort_unless($document->is_current, 409, 'Hanya berkas versi terbaru yang dapat dihapus.');
-        $this->pastikanBolehHapus($request, $document->kegiatan);
+        $this->pastikanBolehHapus($request, $document);
 
-        // Berkas yang sedang diverifikasi berubah: ajuan yang menunggu ditarik kembali ke draft
+        // Berkas yang sedang diverifikasi berubah: ajuan menunggu untuk indikator berkas ini ditarik kembali ke draft
         $document->kegiatan->ajuanBukti()
+            ->whereIn('indikator_id', $document->indikator()->pluck('indikator_epss.id'))
             ->where('status', StatusAjuanBukti::MENUNGGU->value)
             ->update([
                 'status' => StatusAjuanBukti::DRAFT->value,

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { Building2, CalendarDays, Clock3, File, FileImage, FileSpreadsheet, FileText, FileType, UserRound } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useBukti, useDetailKegiatan, useDokumenBukti, useInstrumen, usePeriode, useRencanaKegiatan, useSemuaKegiatan, useSkor } from '../../lib/store'
-import { buktiKey, formatTanggal, kelompokOutput, LEVELS, metaBerkas } from '../../lib/epss'
+import { ajuanBerkas, buktiKey, formatTanggal, kelompokOutput, LEVELS, metaBerkas } from '../../lib/epss'
 import { bukaBerkas } from '../../lib/api'
 import { bolehUbah } from '../../config/menu'
 import { Badge, ChecklistItem, ContohOutput, FormError, Memuat, Notice, PageHeader, StatusBukti } from '../../components/ui'
@@ -203,8 +203,8 @@ function RepositoriDetail() {
   // Operator lain boleh melihat sebagai referensi; hanya PIC yang bisa mengunggah, dan tidak saat periode dikunci
   const pic = k.pic_user_id === user.id
   const bolehEdit = pic && bolehUbah(user, 'unggahBukti', aktif)
-  // Aturan backend: berkas kegiatan yang sudah punya ajuan terverifikasi tidak boleh dihapus
-  const bolehHapus = bolehEdit && !tertaut.some((b) => b.status === 'terverifikasi')
+  // Aturan backend: berkas yang indikatornya sudah punya ajuan terverifikasi tidak boleh dihapus
+  const bolehHapus = (f) => bolehEdit && !ajuanBerkas(f, k, semuaBukti).some((b) => b.status === 'terverifikasi')
   // Id indikator di halaman ini = kode; berkas menyimpan id API indikator
   const idApi = (kode) => k.indikator.find((i) => String(i.kode) === String(kode))?.id
   const namaIndikator = (id) => k.indikator.find((i) => i.id === id)
@@ -251,7 +251,7 @@ function RepositoriDetail() {
     konfirmasi({
       title: 'Hapus Berkas',
       message: `Hapus "${f.nama}" dari kegiatan ini? Kegiatan lain yang memakai berkas yang sama tidak terpengaruh.${
-        tertaut.some((b) => b.status === 'menunggu') ? ' Ajuan yang sedang menunggu verifikasi akan ditarik kembali ke draft.' : ''
+        ajuanBerkas(f, k, semuaBukti).some((b) => b.status === 'menunggu') ?' Ajuan yang sedang menunggu verifikasi akan ditarik kembali ke draft.' : ''
       }`,
       confirmLabel: 'Hapus',
       danger: true,
@@ -399,7 +399,7 @@ function RepositoriDetail() {
                           {berkasOutput.length > 0 && (
                             <ul className="flex flex-col gap-2 sm:pl-13.5">
                               {berkasOutput.map((f) => (
-                                <BerkasBaris key={f.id} f={f} onLihat={lihat} onHapus={bolehHapus ? hapus : null} />
+                                <BerkasBaris key={f.id} f={f} onLihat={lihat} onHapus={bolehHapus(f) ? hapus : null} />
                               ))}
                             </ul>
                           )}
@@ -436,7 +436,7 @@ function RepositoriDetail() {
               ) : (
                 <ul className="flex flex-col gap-2">
                   {berkasUmum.map((f) => (
-                    <BerkasBaris key={f.id} f={f} onLihat={lihat} onHapus={bolehHapus ? hapus : null}>
+                    <BerkasBaris key={f.id} f={f} onLihat={lihat} onHapus={bolehHapus(f) ? hapus : null}>
                       <span className="flex flex-wrap items-center gap-1.5">
                         {f.indikatorIds.length === 0 ? (
                           <Badge tone="red" className="px-3! py-0.5! text-caption">Belum ditautkan, belum terlihat oleh verifikator</Badge>
