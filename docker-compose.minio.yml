@@ -1,18 +1,17 @@
-# MinIO Community RELEASE.2025-10-15T17-29-55Z untuk berkas bukti EPSS (dibangun dari docker/minio).
+# MinIO Community RELEASE.2025-10-15T17-29-55Z untuk berkas bukti EPSS
+# (pola mengikuti compose SIMDATA; image dibangun sendiri dari source di docker/minio).
 #
-#   docker compose -f docker-compose.minio.yml up -d --build
+#   docker compose --env-file .env.minio -f docker-compose.minio.yml up -d --build
 #
-# .env.minio (di root repo, tidak di-commit) berisi akun root, hanya untuk admin:
-#   MINIO_ROOT_USER=...
-#   MINIO_ROOT_PASSWORD=...        (acak, minimal 16 karakter)
+# .env.minio (root repo, tidak di-commit). Buat nilai acak sendiri, berbeda untuk tiap server:
+#   MINIO_ROOT_USER=...        akun admin, hanya untuk admin & minio-init
+#   MINIO_ROOT_PASSWORD=...    acak, minimal 16 karakter
+#   MINIO_ACCESS_KEY=...       akun aplikasi (dibuat minio-init), harus beda dari MINIO_ROOT_USER
+#   MINIO_SECRET_KEY=...       acak, minimal 16 karakter
+# Laravel memakai akun aplikasi: AWS_ACCESS_KEY_ID=MINIO_ACCESS_KEY, AWS_SECRET_ACCESS_KEY=MINIO_SECRET_KEY.
 #
-# Variabel opsional (shell atau file .env di folder yang sama):
-#   MINIO_BIND_ADDRESS   default 127.0.0.1: API & console hanya dari server ini
-#                        (reverse proxy HTTPS / Laravel di host yang sama). Jangan 0.0.0.0.
-#   MINIO_DATA           default volume bernama; isi path host (mis. /srv/epss/minio)
-#                        agar data berada di disk yang ikut di-backup. Path harus milik uid 1000.
-#
-# Setelah pertama kali jalan, buat bucket + user aplikasi (lihat docker/minio/setup-epss.sh).
+# Opsional: MINIO_BROWSER_REDIRECT_URL (alamat console di balik reverse proxy),
+#           MINIO_DATA (path host untuk data, milik uid 1000; default volume bernama).
 
 services:
   minio:
@@ -22,16 +21,19 @@ services:
     container_name: epss-minio
     restart: unless-stopped
     stop_grace_period: 30s
-    env_file:
-      - .env.minio
+    command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
     environment:
-      # Browser yang membuka port API (9000) tidak dialihkan ke console; console hanya di 9001
-      MINIO_BROWSER_REDIRECT: "off"
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in .env.minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env.minio}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL:-}
     volumes:
-      - ${MINIO_DATA:-minio_data}:/data
+      - ${MINIO_DATA:-epss-minio-data}:/data
     ports:
-      - "${MINIO_BIND_ADDRESS:-127.0.0.1}:9000:9000"
-      - "${MINIO_BIND_ADDRESS:-127.0.0.1}:9001:9001"
+      # Reverse proxy / SSH tunnel di host; container aplikasi terhubung lewat epss-network
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:19001:9001"
+    networks:
+      - epss-network
     # Server jalan sebagai user minio (non-root) dan tidak butuh capability apa pun
     cap_drop:
       - ALL
@@ -47,6 +49,58 @@ services:
         max-size: "10m"
         max-file: "5"
 
+  minio-init:
+    # Image yang sama sudah berisi mc (Alpine, jalan juga di CPU x86-64 lama)
+    image: epss-minio:RELEASE.2025-10-15T17-29-55Z
+    container_name: epss-minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in .env.minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env.minio}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?Set MINIO_ACCESS_KEY in .env.minio}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?Set MINIO_SECRET_KEY in .env.minio}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        if [ "$${MINIO_ROOT_USER}" = "$${MINIO_ACCESS_KEY}" ]; then
+          echo "MINIO_ACCESS_KEY must differ from MINIO_ROOT_USER" >&2
+          exit 1
+        fi
+        retries=0
+        until mc alias set epss http://epss-minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" >/dev/null 2>&1; do
+          retries=$$((retries + 1))
+          if [ "$$retries" -ge 30 ]; then
+            echo "MinIO did not become ready within 60 seconds" >&2
+            exit 1
+          fi
+          sleep 2
+        done
+        mc mb --ignore-existing epss/epss-bukti
+        mc anonymous set none epss/epss-bukti
+        mc admin policy create epss epss-bukti /config/epss-bukti-policy.json
+        mc admin user add epss "$${MINIO_ACCESS_KEY}" "$${MINIO_SECRET_KEY}"
+        # attach gagal bila policy sudah terpasang; aman diabaikan saat compose dijalankan ulang
+        mc admin policy attach epss epss-bukti --user "$${MINIO_ACCESS_KEY}" || true
+        mc admin policy entities epss --user "$${MINIO_ACCESS_KEY}" | grep -q epss-bukti
+        echo "Siap: bucket epss-bukti dan user aplikasi $${MINIO_ACCESS_KEY}."
+    volumes:
+      - ./docker/minio/epss-bukti-policy.json:/config/epss-bukti-policy.json:ro
+    networks:
+      - epss-network
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
 volumes:
-  minio_data:
+  epss-minio-data:
     name: manajemen-epss_minio_data
+
+networks:
+  # Nama tetap supaya container Laravel (compose lain) bisa bergabung sebagai network external
+  epss-network:
+    name: epss-network
