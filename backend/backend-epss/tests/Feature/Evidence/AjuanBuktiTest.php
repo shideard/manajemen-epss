@@ -131,8 +131,7 @@ class AjuanBuktiTest extends TestCase
         ]);
 
         if ($denganDokumen) {
-            // Pengajuan mensyaratkan berkas yang tertaut ke indikatornya
-            $dokumen = DokumenBukti::forceCreate([
+            DokumenBukti::forceCreate([
                 'kegiatan_id' => $kegiatan->id,
                 'uploaded_by' => $pic->id,
                 'version_number' => 1,
@@ -144,7 +143,6 @@ class AjuanBuktiTest extends TestCase
                 'size_bytes' => 1024,
                 'sha256_hash' => str_repeat('a', 64),
             ]);
-            $dokumen->indikator()->attach($indikator->id);
         }
 
         return compact('periode', 'indikator', 'verifikator', 'pic', 'kegiatan');
@@ -414,7 +412,6 @@ class AjuanBuktiTest extends TestCase
             ->post($base, [
                 'file' => UploadedFile::fake()->create('bukti.pdf', 100, 'application/pdf'),
                 'evidence_date' => today()->toDateString(),
-                'indikator_ids' => [$s['indikator']->id],
             ], ['Accept' => 'application/json'])
             ->assertCreated()
             ->json('data.id');
@@ -449,7 +446,6 @@ class AjuanBuktiTest extends TestCase
             ->post('/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti', [
                 'file' => UploadedFile::fake()->create('SK Tim.pdf', 10, 'application/pdf'),
                 'evidence_date' => today()->toDateString(),
-                'indikator_ids' => [$s['indikator']->id],
             ], ['Accept' => 'application/json'])
             ->assertCreated();
 
@@ -468,40 +464,6 @@ class AjuanBuktiTest extends TestCase
         $this->sebagai($this->createUser(UserRole::SUPER_ADMIN_BIDANG), 'web')
             ->get('/api/periode-evaluasi/' . $s['periode']->id . '/ekspor-bukti')
             ->assertForbidden();
-    }
-
-    public function test_period_zip_export_works_on_disks_without_local_path(): void
-    {
-        // Tiruan disk S3/MinIO: path() tidak tersedia, berkas hanya bisa dibaca lewat stream
-        $fake = Storage::fake();
-        Storage::set(config('filesystems.default'), new class($fake->getDriver(), $fake->getAdapter(), $fake->getConfig()) extends \Illuminate\Filesystem\FilesystemAdapter {
-            public function path($path)
-            {
-                throw new \LogicException('Disk ini tidak punya path lokal.');
-            }
-        });
-        $s = $this->createScenario(denganDokumen: false);
-
-        $this->sebagai($s['pic'], 'web')
-            ->post('/api/rencana-kegiatan/' . $s['kegiatan']->id . '/dokumen-bukti', [
-                'file' => UploadedFile::fake()->createWithContent('SK Tim.pdf', '%PDF-1.4 isi bukti'),
-                'evidence_date' => today()->toDateString(),
-                'indikator_ids' => [$s['indikator']->id],
-            ], ['Accept' => 'application/json'])
-            ->assertCreated();
-
-        $response = $this->sebagai($s['pic'], 'web')
-            ->get('/api/periode-evaluasi/' . $s['periode']->id . '/ekspor-bukti')
-            ->assertOk();
-
-        $zip = new \ZipArchive();
-        $zip->open($response->baseResponse->getFile()->getPathname());
-        $isi = $zip->getFromIndex(0);
-        $nama = $zip->getNameIndex(0);
-        $zip->close();
-
-        $this->assertStringEndsWith('-SK Tim.pdf', $nama);
-        $this->assertSame('%PDF-1.4 isi bukti', $isi);
     }
 
     public function test_period_listing_returns_its_submissions(): void

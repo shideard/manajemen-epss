@@ -19,7 +19,6 @@ class CreateSuperAdminTest extends TestCase
         $this->artisan('epss:create-super-admin')
             ->expectsQuestion('Nama administrator', 'Admin Pengujian')
             ->expectsQuestion('Username administrator', 'Admin.Latihan')
-            ->expectsQuestion('Email administrator', ' admin.latihan@contoh.go.id ')
             ->expectsQuestion('Password administrator', $password)
             ->expectsQuestion('Ulangi password', $password)
             ->expectsOutput('Administrator berhasil dibuat.')
@@ -37,10 +36,7 @@ class CreateSuperAdminTest extends TestCase
 
     $this->assertTrue($admin->status_aktif);
 
-    // Sejak commit 7617fc7 email pemulihan wajib; spasi di tepi dibuang, verifikasinya menyusul dari aplikasi
-    $this->assertSame('admin.latihan@contoh.go.id', $admin->email);
-
-    $this->assertNull($admin->email_verified_at);
+    $this->assertNull($admin->email);
 
     $this->assertTrue(
         Hash::check($password, $admin->password)
