@@ -1,28 +1,52 @@
+# MinIO Community RELEASE.2025-10-15T17-29-55Z untuk berkas bukti EPSS (dibangun dari docker/minio).
+#
+#   docker compose -f docker-compose.minio.yml up -d --build
+#
+# .env.minio (di root repo, tidak di-commit) berisi akun root, hanya untuk admin:
+#   MINIO_ROOT_USER=...
+#   MINIO_ROOT_PASSWORD=...        (acak, minimal 16 karakter)
+#
+# Variabel opsional (shell atau file .env di folder yang sama):
+#   MINIO_BIND_ADDRESS   default 127.0.0.1: API & console hanya dari server ini
+#                        (reverse proxy HTTPS / Laravel di host yang sama). Jangan 0.0.0.0.
+#   MINIO_DATA           default volume bernama; isi path host (mis. /srv/epss/minio)
+#                        agar data berada di disk yang ikut di-backup. Path harus milik uid 1000.
+#
+# Setelah pertama kali jalan, buat bucket + user aplikasi (lihat docker/minio/setup-epss.sh).
+
 services:
   minio:
-    image: quay.io/minio/aistor/minio:latest
-    container_name: epss-aistor
+    build:
+      context: ./docker/minio
+    image: epss-minio:RELEASE.2025-10-15T17-29-55Z
+    container_name: epss-minio
     restart: unless-stopped
     stop_grace_period: 30s
-    command:
-      - server
-      - /mnt/data
-      - --license
-      - /minio.license
-      - --address
-      - ":9000"
-      - --console-address
-      - ":9001"
     env_file:
       - .env.minio
+    environment:
+      # Browser yang membuka port API (9000) tidak dialihkan ke console; console hanya di 9001
+      MINIO_BROWSER_REDIRECT: "off"
     volumes:
-      - minio_data:/mnt/data
-      - ./minio.license:/minio.license:ro
+      - ${MINIO_DATA:-minio_data}:/data
     ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
+      - "${MINIO_BIND_ADDRESS:-127.0.0.1}:9000:9000"
+      - "${MINIO_BIND_ADDRESS:-127.0.0.1}:9001:9001"
+    # Server jalan sebagai user minio (non-root) dan tidak butuh capability apa pun
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
 volumes:
   minio_data:
     name: manajemen-epss_minio_data
-    driver: local

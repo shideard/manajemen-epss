@@ -7,6 +7,7 @@ use App\Enums\StatusVersiInstrumen;
 use App\Models\VersiInstrumenEPSS;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -124,16 +125,24 @@ class DomainEPSSTest extends TestCase
     {
         $versi = $this->createVersion('UJI-C');
 
-        $versi->domains()->create([
+        $domain = $versi->domains()->create([
             'kode' => '1',
             'nama' => 'Domain 1',
             'bobot' => 20.00,
         ]);
 
-        $this->expectException(QueryException::class);
-        $this->expectExceptionMessage('SQLSTATE[23503]'); // foreign key violation
+        try {
+            // Savepoint: tanpa ini PostgreSQL membatalkan seluruh transaksi RefreshDatabase setelah error
+            DB::transaction(fn () => $versi->delete());
+            $this->fail('Versi yang masih punya domain seharusnya tidak bisa dihapus.');
+        } catch (QueryException $e) {
+            // FK memakai restrictOnDelete(): PostgreSQL melapor 23001 (restrict_violation),
+            // sedangkan FK NO ACTION / driver lain melapor 23503 (foreign_key_violation)
+            $this->assertContains($e->getCode(), ['23001', '23503']);
+        }
 
-        $versi->delete();
+        $this->assertModelExists($versi);
+        $this->assertModelExists($domain);
     }
 
     public function test_domain_weight_cannot_be_negative(): void

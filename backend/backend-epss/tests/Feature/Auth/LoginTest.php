@@ -5,11 +5,38 @@ namespace Tests\Feature\Auth;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
 {
     use RefreshDatabase;
+
+    private const TOKEN_TURNSTILE = 'token-turnstile-uji';
+
+    private bool $turnstileSukses = true;
+
+    // Login memverifikasi Turnstile ke Cloudflare; di tes respons siteverify dipalsukan supaya tidak ada request keluar
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['services.turnstile.secret_key' => 'rahasia-turnstile-uji']);
+        // Stub Http::fake pertama yang cocok selalu menang, jadi jawabannya dibaca dari properti, bukan didaftarkan ulang
+        Http::fake([
+            'challenges.cloudflare.com/*' => fn () => Http::response(
+                $this->turnstileSukses
+                    ? ['success' => true, 'action' => 'login']
+                    : ['success' => false, 'error-codes' => ['invalid-input-response']]
+            ),
+        ]);
+    }
+
+    private function turnstileMenjawab(bool $sukses): void
+    {
+        $this->turnstileSukses = $sukses;
+    }
 
     public function test_active_user_can_login_with_correct_credentials(): void {
         $password = 'PasswordTesting-2026!';
@@ -24,6 +51,7 @@ class LoginTest extends TestCase
         ]);
 
         $response = $this->postJson('/login', [
+            'turnstile_token' => self::TOKEN_TURNSTILE,
             'username' => $user->username,
             'password' => $password,
         ]);
@@ -42,6 +70,7 @@ class LoginTest extends TestCase
             ]);
 
         $response = $this->postJson('/login', [
+            'turnstile_token' => self::TOKEN_TURNSTILE,
             'username' => $user->username,
             'password' => 'PasswordSalah-2026!',
         ]);
@@ -64,6 +93,7 @@ class LoginTest extends TestCase
         ]);
         
         $response = $this->postJson('/login', [
+            'turnstile_token' => self::TOKEN_TURNSTILE,
             'username' => $user->username,
             'password' => $password,
         ]);
@@ -94,6 +124,7 @@ class LoginTest extends TestCase
         );
 
         $response = $this->postJson('/login', [
+            'turnstile_token' => self::TOKEN_TURNSTILE,
             'username' => 'OPERATOR.LATIHAN',
             'password' => $password,
         ]);
@@ -116,6 +147,7 @@ class LoginTest extends TestCase
         ]);
 
         $response = $this->postJson('/login', [
+            'turnstile_token' => self::TOKEN_TURNSTILE,
             'email' => $user->email,
             'password' => $password,
         ]);
@@ -125,5 +157,30 @@ class LoginTest extends TestCase
         $response->assertJsonValidationErrors(['username']);
 
         $this->assertGuest('web');
+    }
+
+    public function test_login_is_rejected_when_turnstile_verification_fails(): void
+    {
+        $this->turnstileMenjawab(false);
+        $password = 'PasswordTesting-2026!';
+
+        $user = User::factory()->create([
+            'username' => 'operator.latihan',
+            'password' => $password,
+            'role' => UserRole::OPERATOR,
+            'status_aktif' => true,
+        ]);
+
+        $this->postJson('/login', [
+            'username' => $user->username,
+            'password' => $password,
+            'turnstile_token' => self::TOKEN_TURNSTILE,
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('turnstile_token');
+
+        $this->assertGuest('web');
+        Http::assertSent(fn (Request $request) => $request['response'] === self::TOKEN_TURNSTILE
+            && $request['secret'] === 'rahasia-turnstile-uji');
     }
 }
