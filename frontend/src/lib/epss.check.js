@@ -1,6 +1,6 @@
 // Jalankan: node src/lib/epss.check.js
 import assert from 'node:assert/strict'
-import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelIndikator, riwayatIps, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword, SYARAT_PASSWORD, kelompokOutput } from './epss.js'
+import { agendaTerdekat, statusOf, geserHari, hitungIps, INDIKATOR, levelIndikator, riwayatIps, notifikasi, paginate, halamanTerlihat, predikat, selisihHari, statusKegiatan, validasiPeriode, lkeCsv, isPic, sinkronPemetaan, petaRelasi, PETA, DOMAINS, terhubung, contohKegiatan, pilihTingkat, arsipBerkas, formatUkuran, SEED_PERIODE, wajibGantiPassword, SYARAT_PASSWORD, kelompokOutput, ajuanBerkas } from './epss.js'
 
 const dua = [
   { id: 'a', bobot: 1 },
@@ -195,3 +195,13 @@ assert.deepEqual(grupOutput.map((g) => [g.indikator?.id ?? null, g.output.map((o
 assert.deepEqual(kelompokOutput([], [indA]), [{ indikator: indA, output: [] }]) // indikator tanpa output tetap tampil, tanpa grup null
 assert.deepEqual(kelompokOutput([], []), [])
 console.log('epss.check (output): OK')
+
+// Berkas hanya terkait ajuan indikator yang ditautkannya
+{
+  const k = { id: 'k1', indikator: [{ id: 'uA', kode: 1 }, { id: 'uB', kode: 2 }] }
+  const bukti = { 'k1:1': { status: 'terverifikasi' }, 'k1:2': { status: 'menunggu' } }
+  assert.deepEqual(ajuanBerkas({ indikatorIds: ['uA'] }, k, bukti), [{ status: 'terverifikasi' }])
+  assert.deepEqual(ajuanBerkas({ indikatorIds: ['uB', 'lepas'] }, k, bukti), [{ status: 'menunggu' }])
+  assert.deepEqual(ajuanBerkas({ indikatorIds: [] }, k, bukti), []) // berkas umum
+  console.log('epss.check (ajuanBerkas): OK')
+}
