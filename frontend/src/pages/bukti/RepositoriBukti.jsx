@@ -34,8 +34,9 @@ function RepositoriBukti() {
   const baris = kegiatan
     .filter((k) => semua || k.pic_user_id === user.id)
     .flatMap((k) => {
-      const daftar = k.indikatorIds.map((id) => ({ kegiatan: k, indikator: indikatorById[id], bukti: bukti[buktiKey(k.id, id)] ?? { status: 'draft' } }))
-      return daftar.length ? daftar : [{ kegiatan: k, indikator: null, bukti: { status: 'draft' } }]
+      // indikatorId (kode) selalu ada; indikator (nama dll.) baru ada setelah instrumen selesai dimuat
+      const daftar = k.indikatorIds.map((id) => ({ kegiatan: k, indikatorId: id, indikator: indikatorById[id], bukti: bukti[buktiKey(k.id, id)] ?? { status: 'draft' } }))
+      return daftar.length ? daftar : [{ kegiatan: k, indikatorId: null, indikator: null, bukti: { status: 'draft' } }]
     })
   const filtered = baris.filter(
     ({ kegiatan: k, indikator, bukti: b }) => (!filter || b.status === filter) && includesText([k.nama, k.pic, indikator?.nama], query),
@@ -101,10 +102,12 @@ function RepositoriBukti() {
                 : 'Tidak ada kegiatan dengan Anda sebagai PIC yang cocok.'}
           </p>
         )}
-        {rows.map(({ kegiatan: k, indikator, bukti: b }) => {
+        {rows.map(({ kegiatan: k, indikatorId, indikator, bukti: b }) => {
           return (
             <Link
-              key={`${k.id}:${indikator?.id}`}
+              // Key dari kode milik kegiatan, bukan dari indikator yang mungkin belum dimuat: key kembar
+              // (`id:undefined`) membuat React meninggalkan baris lama yang tidak ikut terfilter
+              key={`${k.id}:${indikatorId ?? 'tanpa-indikator'}`}
               to={`/repositori-bukti-dukung/${k.id}`}
               className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-white px-7 py-4 transition duration-300 ease-out-quint hover:-translate-y-0.5 hover:shadow-md"
             >
@@ -118,8 +121,8 @@ function RepositoriBukti() {
                     |
                   </span>
                   <span>
-                    {indikator ? `Indikator ${indikator.nomor} : ` : 'Indikator : '}
-                    <span className="font-medium">{indikator?.nama ?? 'Belum dipetakan'}</span>
+                    {indikator ? `Indikator ${indikator.nomor} : ` : indikatorId ? `Indikator ${indikatorId}` : 'Indikator : '}
+                    {(indikator || !indikatorId) && <span className="font-medium">{indikator?.nama ?? 'Belum dipetakan'}</span>}
                   </span>
                 </span>
               </span>
