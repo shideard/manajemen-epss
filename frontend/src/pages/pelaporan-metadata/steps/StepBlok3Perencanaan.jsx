@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
 import { JADWAL_GRUP, buatBarisJadwal, opsiTahun } from '../metadataData'
+import BantuanNarasi from '../components/BantuanNarasi'
 
 const OPSI_BULAN = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -202,10 +203,16 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
       </div>
 
       <div className="rounded-2xl border border-grey-50 bg-white p-7 shadow-xs flex flex-col gap-6">
-        <div>
-          <label className="block text-[14px] font-bold text-grey-300 mb-1.5">
+        <div className="flex flex-col gap-3">
+          <label className="block text-[14px] font-bold text-grey-300">
             3.1. Latar Belakang Kegiatan <span className="text-red-500">*</span>
           </label>
+          <BantuanNarasi
+            bidang="3.1"
+            formData={formData}
+            nilai={data.latarBelakang}
+            onGanti={(teks) => updateBlok3('latarBelakang', teks)}
+          />
           <textarea
             rows={3}
             placeholder="Tuliskan latar belakang kegiatan statistik"
@@ -215,10 +222,16 @@ function StepBlok3Perencanaan({ formData, updateBlok3 }) {
           />
         </div>
 
-        <div>
-          <label className="block text-[14px] font-bold text-grey-300 mb-1.5">
+        <div className="flex flex-col gap-3">
+          <label className="block text-[14px] font-bold text-grey-300">
             3.2. Tujuan Kegiatan <span className="text-red-500">*</span>
           </label>
+          <BantuanNarasi
+            bidang="3.2"
+            formData={formData}
+            nilai={data.tujuan}
+            onGanti={(teks) => updateBlok3('tujuan', teks)}
+          />
           <textarea
             rows={2}
             placeholder="Tuliskan tujuan kegiatan statistik"
