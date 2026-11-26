@@ -1,4 +1,0 @@
-# Skrip dan berkas Docker dijalankan di Linux: CRLF dari checkout Windows membuat sh gagal
-*.sh            text eol=lf
-Dockerfile      text eol=lf
-docker-compose*.yml text eol=lf

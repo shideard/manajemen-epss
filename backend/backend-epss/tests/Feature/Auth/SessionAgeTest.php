@@ -71,9 +71,7 @@ class SessionAgeTest extends TestCase
 
     public function test_authenticated_session_without_login_timestamp_is_rejected(): void
     {
-        // actingAs() di TestCase mengisi auth.login_at; kosongkan untuk meniru session tanpa cap waktu login
-        $this->actingAs($this->user(), 'web')
-            ->withSession(['auth.login_at' => null]);
+        $this->actingAs($this->user(), 'web');
 
         $this->getJson('/api/user')
             ->assertUnauthorized()

@@ -87,41 +87,6 @@ class StoreRencanaKegiatanTest extends TestCase
         ];
     }
 
-    // Unggah bukti baru wajib menautkan minimal satu indikator yang sudah dipetakan ke kegiatannya
-    private function petakanIndikator(array $scenario, User $pembuat, string ...$activityIds): string
-    {
-        $domain = DomainEPSS::create([
-            'versi_instrumen_id' => $scenario['periode']->versi_instrumen_id,
-            'kode' => '9',
-            'nama' => 'Domain Unggah',
-            'bobot' => '10.0000',
-        ]);
-        $aspek = AspekEPSS::create([
-            'domain_id' => $domain->id,
-            'kode' => '901',
-            'nama' => 'Aspek Unggah',
-            'bobot' => '10.0000',
-        ]);
-        $indikator = IndikatorEPSS::create([
-            'aspek_id' => $aspek->id,
-            'kode' => '90101',
-            'nama' => 'Indikator Unggah',
-            'deskripsi' => 'Indikator untuk pengujian unggah bukti.',
-            'bobot' => '10.0000',
-        ]);
-
-        foreach ($activityIds as $activityId) {
-            KegiatanIndikator::create([
-                'kegiatan_id' => $activityId,
-                'indikator_id' => $indikator->id,
-                'level' => 1,
-                'created_by' => $pembuat->id,
-            ]);
-        }
-
-        return $indikator->id;
-    }
-
     public function test_verifikator_can_create_activity_and_server_sets_creator_and_year(): void
     {
         $verifikator = $this->createUser(UserRole::VERIFIKATOR);
@@ -1066,7 +1031,6 @@ class StoreRencanaKegiatanTest extends TestCase
         )->assertCreated();
 
         $activityId = $createResponse->json('data.id');
-        $indikatorId = $this->petakanIndikator($scenario, $verifikator, $activityId);
 
         // Route memakai auth:sanctum yang membaca guard web.
         // Reset guard agar request berikutnya memakai PIC, bukan user sebelumnya.
@@ -1079,7 +1043,6 @@ class StoreRencanaKegiatanTest extends TestCase
                 "/api/rencana-kegiatan/{$activityId}/dokumen-bukti",
                 [
                     'evidence_date' => today()->toDateString(),
-                    'indikator_ids' => [$indikatorId],
                     'file' => UploadedFile::fake()->create(
                         'bukti.pdf',
                         1,
@@ -1357,7 +1320,6 @@ class StoreRencanaKegiatanTest extends TestCase
         )->assertCreated();
 
         $activityId = $createResponse->json('data.id');
-        $indikatorId = $this->petakanIndikator($scenario, $verifikator, $activityId);
 
         $this->app['auth']->forgetGuards();
 
@@ -1367,7 +1329,6 @@ class StoreRencanaKegiatanTest extends TestCase
                 "/api/rencana-kegiatan/{$activityId}/dokumen-bukti",
                 [
                     'evidence_date' => today()->toDateString(),
-                    'indikator_ids' => [$indikatorId],
                     'file' => UploadedFile::fake()->create(
                         'bukti-versi-1.pdf',
                         1,
@@ -1436,7 +1397,6 @@ class StoreRencanaKegiatanTest extends TestCase
         )->assertCreated();
 
         $activityId = $createResponse->json('data.id');
-        $indikatorId = $this->petakanIndikator($scenario, $verifikator, $activityId);
 
         $this->app['auth']->forgetGuards();
 
@@ -1446,7 +1406,6 @@ class StoreRencanaKegiatanTest extends TestCase
                 "/api/rencana-kegiatan/{$activityId}/dokumen-bukti",
                 [
                     'evidence_date' => today()->toDateString(),
-                    'indikator_ids' => [$indikatorId],
                     'file' => UploadedFile::fake()->create(
                         'bukti-versi-1.pdf',
                         1,
@@ -1528,7 +1487,6 @@ class StoreRencanaKegiatanTest extends TestCase
         )->assertCreated();
 
         $activityBId = $activityBResponse->json('data.id');
-        $indikatorId = $this->petakanIndikator($scenario, $verifikator, $activityAId, $activityBId);
 
         $this->app['auth']->forgetGuards();
 
@@ -1538,7 +1496,6 @@ class StoreRencanaKegiatanTest extends TestCase
                 "/api/rencana-kegiatan/{$activityBId}/dokumen-bukti",
                 [
                     'evidence_date' => today()->toDateString(),
-                    'indikator_ids' => [$indikatorId],
                     'file' => UploadedFile::fake()->create(
                         'bukti-kegiatan-b.pdf',
                         1,
@@ -1602,7 +1559,6 @@ class StoreRencanaKegiatanTest extends TestCase
         )->assertCreated();
 
         $activityBId = $activityBResponse->json('data.id');
-        $indikatorId = $this->petakanIndikator($scenario, $verifikator, $activityAId, $activityBId);
 
         $this->app['auth']->forgetGuards();
 
@@ -1612,7 +1568,6 @@ class StoreRencanaKegiatanTest extends TestCase
                 "/api/rencana-kegiatan/{$activityAId}/dokumen-bukti",
                 [
                     'evidence_date' => today()->toDateString(),
-                    'indikator_ids' => [$indikatorId],
                     'file' => UploadedFile::fake()->create(
                         'bukti-versi-1.pdf',
                         1,
@@ -1705,8 +1660,7 @@ class StoreRencanaKegiatanTest extends TestCase
             ->assertForbidden();
     }
 
-    // Sejak commit 23db6b4 kegiatan dan output-nya hanya-baca setelah periode dikunci
-    public function test_verifikator_cannot_sync_expected_outputs_when_period_is_locked(): void
+    public function test_verifikator_can_sync_expected_outputs_even_when_period_is_locked(): void
     {
         $verifikator = $this->createUser(UserRole::VERIFIKATOR);
         $scenario = $this->createScenario();
@@ -1742,9 +1696,23 @@ class StoreRencanaKegiatanTest extends TestCase
                     ],
                 ]
             )
-            ->assertForbidden();
+            ->assertNoContent();
 
-        $this->assertDatabaseCount('rencana_kegiatan_output', 0);
+        $this->actingAs($verifikator, 'web')
+            ->getJson("/api/rencana-kegiatan/{$activityId}")
+            ->assertOk()
+            ->assertJsonCount(2, 'data.output')
+            ->assertJsonPath(
+                'data.output.0.judul',
+                'Laporan statistik sektoral'
+            )
+            ->assertJsonPath('data.output.0.jenis', 'PDF')
+            ->assertJsonPath(
+                'data.output.0.contoh.nama',
+                'Contoh laporan statistik.pdf'
+            )
+            ->assertJsonPath('data.output.1.judul', 'Dataset statistik')
+            ->assertJsonPath('data.output.1.contoh', null);
     }
 
     public function test_expected_output_example_file_is_uploaded_kept_on_resync_and_removed_with_its_output(): void
@@ -1758,12 +1726,11 @@ class StoreRencanaKegiatanTest extends TestCase
         $url = "/api/rencana-kegiatan/{$activityId}";
         $outputs = fn () => $this->getJson($url)->json('data.output');
 
-        $sync = $this->putJson("{$url}/output-diharapkan", ['output' => [
+        $this->putJson("{$url}/output-diharapkan", ['output' => [
             ['judul' => 'Laporan', 'jenis' => 'PDF', 'contoh' => ['nama' => 'contoh.pdf']],
             ['judul' => 'Dataset', 'contoh' => null],
-        ]])->assertOk();
+        ]])->assertNoContent();
         [$laporan, $dataset] = $outputs();
-        $this->assertSame([$laporan['id'], $dataset['id']], $sync->json('data.output_ids'));
         $this->assertFalse($laporan['contoh']['berkas']);
 
         $contohUrl = "{$url}/output-diharapkan/{$laporan['id']}/contoh";
@@ -1776,7 +1743,7 @@ class StoreRencanaKegiatanTest extends TestCase
         $this->putJson("{$url}/output-diharapkan", ['output' => [
             ['id' => $laporan['id'], 'judul' => 'Laporan Akhir', 'jenis' => 'PDF', 'contoh' => ['nama' => 'contoh.pdf']],
             ['id' => $dataset['id'], 'judul' => 'Dataset', 'contoh' => null],
-        ]])->assertOk()->assertJsonPath('data.output_ids', [$laporan['id'], $dataset['id']]);
+        ]])->assertNoContent();
         $this->assertSame($laporan['id'], $outputs()[0]['id']);
         $this->assertTrue($outputs()[0]['contoh']['berkas']);
         $this->assertCount(1, Storage::disk()->allFiles());
@@ -1793,7 +1760,7 @@ class StoreRencanaKegiatanTest extends TestCase
         $this->app['auth']->forgetGuards();
         $this->actingAs($verifikator, 'web')
             ->putJson("{$url}/output-diharapkan", ['output' => [['id' => $dataset['id'], 'judul' => 'Dataset', 'contoh' => null]]])
-            ->assertOk();
+            ->assertNoContent();
         $this->assertCount(0, Storage::disk()->allFiles());
         $this->get($contohUrl)->assertNotFound();
     }

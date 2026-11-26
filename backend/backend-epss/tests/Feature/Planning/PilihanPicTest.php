@@ -55,18 +55,18 @@ class PilihanPicTest extends TestCase
             ->assertJsonMissingPath('data.0.remember_token');
     }
 
-    // Operator butuh daftar ini untuk filter dan form rencana kegiatan (commit 6632140); super admin tidak
-    public function test_operator_can_but_super_admin_cannot_access_pic_options(): void
+    public function test_operator_and_super_admin_cannot_access_pic_options(): void
     {
-        $this->actingAs($this->createActor(UserRole::OPERATOR), 'web')
-            ->getJson('/api/pilihan/pic')
-            ->assertOk();
+        foreach ([
+            UserRole::OPERATOR,
+            UserRole::SUPER_ADMIN_BIDANG,
+        ] as $role) {
+            $actor = $this->createActor($role);
 
-        $this->app['auth']->forgetGuards();
-
-        $this->actingAs($this->createActor(UserRole::SUPER_ADMIN_BIDANG), 'web')
-            ->getJson('/api/pilihan/pic')
-            ->assertForbidden();
+            $this->actingAs($actor, 'web')
+                ->getJson('/api/pilihan/pic')
+                ->assertForbidden();
+        }
     }
 
     public function test_guest_cannot_access_pic_options(): void
