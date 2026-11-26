@@ -1,0 +1,28 @@
+services:
+  minio:
+    image: quay.io/minio/aistor/minio:latest
+    container_name: epss-aistor
+    restart: unless-stopped
+    stop_grace_period: 30s
+    command:
+      - server
+      - /mnt/data
+      - --license
+      - /minio.license
+      - --address
+      - ":9000"
+      - --console-address
+      - ":9001"
+    env_file:
+      - .env.minio
+    volumes:
+      - minio_data:/mnt/data
+      - ./minio.license:/minio.license:ro
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+
+volumes:
+  minio_data:
+    name: manajemen-epss_minio_data
+    driver: local
