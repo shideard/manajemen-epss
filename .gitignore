@@ -3,4 +3,5 @@ node_modules/
 dist/
 .claude/logs/
 /.env.minio
+/.env.minio.community
 /minio.license
