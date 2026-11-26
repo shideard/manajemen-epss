@@ -190,7 +190,7 @@ function DaftarOutput({ items, onHapus, keterangan = () => null }) {
   )
 }
 
-function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikatorPilihan = [], onSave, onClose, outputOnly = false }) {
+function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikatorPilihan = [], onSave, onClose }) {
   const dialogRef = useRef(null)
   const [error, setError] = useState('')
   // [{ id, level }]: indikator tertaut beserta level yang ditargetkan dipenuhi kegiatan ini
@@ -254,7 +254,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
     }
     // Tahun pelaksanaan selalu mengikuti tanggal mulai, jadi tidak bisa berbeda
     try {
-      await onSave(outputOnly ? { output } : { ...data, indikator_ids: dipetakan.map((d) => d.id), levels: Object.fromEntries(dipetakan.map((d) => [d.id, d.level])), output })
+      await onSave({ ...data, indikator_ids: dipetakan.map((d) => d.id), levels: Object.fromEntries(dipetakan.map((d) => [d.id, d.level])), output })
     } catch (err) {
       setError(err.message || 'Gagal menyimpan rencana kegiatan.')
     }
@@ -276,10 +276,9 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
           daftarIndikator ? 'xl:w-[min(833px,calc(100vw-2rem-519px))]' : ''
         }`}
       >
-        <DialogHeader title={outputOnly ? 'Edit Output Kegiatan' : `${kegiatan.id ? 'Edit' : 'Tambah'} Rencana Kegiatan`} onClose={close} className="sticky top-0 z-10" />
+        <DialogHeader title={`${kegiatan.id ? 'Edit' : 'Tambah'} Rencana Kegiatan`} onClose={close} className="sticky top-0 z-10" />
 
         <div className="flex flex-col gap-6 px-8.5 pt-7 pb-8">
-          {outputOnly ? <p className="text-small text-grey-200">Periode terkunci. Hanya output bukti dukung yang dapat diubah.</p> : <>
           <Field label="Nama Kegiatan">
             <Input name="nama" required defaultValue={kegiatan.nama} placeholder="Contoh: Survei Kepuasan Masyarakat 2026" />
           </Field>
@@ -308,7 +307,6 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
           <Field label="Deskripsi Kegiatan">
             <textarea name="deskripsi" defaultValue={kegiatan.deskripsi} placeholder="Isi deskripsi..." className={`${fieldClass} h-[177px] resize-none py-4`} />
           </Field>
-          </>}
 
           {/* Alur: tetapkan indikator + level dulu, lalu output bukti dukung yang ditargetkan diisi di bawah indikator itu */}
           <div className="flex flex-col gap-3">
@@ -316,7 +314,6 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
               <label htmlFor="pilih-indikator" className="font-semibold">
                 Indikator Tertaut & Output Bukti Dukung yang Ditargetkan
               </label>
-              {!outputOnly && (
                 <button
                   type="button"
                   onClick={() => setDaftarIndikator((buka) => !buka)}
@@ -326,9 +323,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                   <img src={bookIcon} alt="" width={15} height={15} />
                   Lihat Pedoman Indikator
                 </button>
-              )}
             </div>
-            {!outputOnly && (
               <>
                 <p className="text-small text-grey-200">Pilih indikator dan levelnya, lalu tambahkan output bukti dukung yang ditargetkan di bawah indikator tersebut.</p>
                 <Select id="pilih-indikator" value="" onChange={(e) => setDipetakan((list) => [...list, { id: e.target.value, level: levelBebas(e.target.value) }])}>
@@ -340,7 +335,6 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                   ))}
                 </Select>
               </>
-            )}
             {dipetakan.length === 0 && (
               <p className="rounded-md border border-dashed border-grey-75 px-5 py-4 text-center text-small text-grey-200">
                 Belum ada indikator tertaut. Pilih indikator untuk mulai menambahkan output bukti dukung.
@@ -352,9 +346,6 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                 {d ? (
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 bg-lime-300 px-5 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)_auto]">
                     <span className="min-w-0 break-words font-medium">{namaIndikator(d.id)}</span>
-                    {outputOnly ? (
-                      <span className="col-span-2 text-small sm:col-span-2 sm:col-start-2 sm:row-start-1">Target Level {d.level} ({LEVELS[d.level - 1]})</span>
-                    ) : (
                       <>
                         <Dropdown
                           value={d.level}
@@ -372,7 +363,6 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
                           <img src={removeIcon} alt="" width={24} height={24} className="grayscale" />
                         </button>
                       </>
-                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-0.5 bg-grey2-75 px-5 py-3">
@@ -407,7 +397,7 @@ function KegiatanForm({ kegiatan, indikator = [], opds = [], pics = [], indikato
           </div>
 
           <FormError>{error}</FormError>
-          <ModalActions onCancel={close} submitLabel={outputOnly ? 'Simpan Output' : 'Simpan'} />
+          <ModalActions onCancel={close} submitLabel="Simpan" />
         </div>
       </form>
       {daftarIndikator && <DaftarIndikator indikatorPilihan={indikatorPilihan} onClose={() => setDaftarIndikator(false)} />}

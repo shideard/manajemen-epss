@@ -45,20 +45,15 @@ function RencanaKegiatanDetailVerifikator() {
     setEditing(false)
   }
 
-  async function saveOutputsOnly({ output }) {
-    const updated = await rencana.simpanOutput(k.id, output)
-    setK(updated)
-    setEditing(false)
-  }
-
   return (
     <div className="flex w-full flex-col gap-8">
       <Memuat dari={muat} bentuk="detail" />
       <PageHeader back="/rencana-kegiatan" title="Detail Rencana Kegiatan" subtitle="Informasi dan pemetaan indikator kegiatan.">
-        {(bolehEdit || user.role === ROLES.VERIFIKATOR) && (
+        {/* Periode terkunci = hanya-baca, termasuk output */}
+        {bolehEdit && (
           <button type="button" onClick={() => setEditing(true)} className={buttonClass()}>
             <span aria-hidden className="size-[19px] bg-current" style={{ mask: `url("${editIcon}") center / contain no-repeat` }} />
-            {bolehEdit ? 'Edit Kegiatan' : 'Edit Output'}
+            Edit Kegiatan
           </button>
         )}
       </PageHeader>
@@ -129,8 +124,7 @@ function RencanaKegiatanDetailVerifikator() {
           opds={rencana.opds}
           pics={rencana.pics}
           indikatorPilihan={rencana.indikator}
-          onSave={bolehEdit ? save : saveOutputsOnly}
-          outputOnly={!bolehEdit}
+          onSave={save}
           onClose={() => setEditing(false)}
         />
       )}
