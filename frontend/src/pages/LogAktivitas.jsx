@@ -5,18 +5,21 @@ import { buttonClass } from '../components/classes'
 
 const fmtTanggal = (value) => new Intl.DateTimeFormat('id-ID', {
   dateStyle: 'medium',
-  timeStyle: 'short',
+  timeStyle: 'medium',
+  timeZone: 'Asia/Jakarta',
 }).format(new Date(value))
 
 const fmtAksi = (log) => {
   const labels = {
-    'auth.login': 'Masuk',
-    'auth.logout': 'Keluar',
-    'password.email': 'Meminta tautan reset password',
-    'password.update': 'Mereset password',
+    auth_login: 'user_login',
+    auth_logout: 'user_logout',
+    auth_login_failed: 'login_failure',
+    auth_login_rate_limited: 'login_rate_limited',
+    auth_login_challenge_failed: 'login_challenge_failed',
+    email_verify: 'email_verified',
+    password_reset: 'password_reset',
   }
-  if (labels[log.action]) return labels[log.action]
-  return `${log.method} ${log.route_uri}`
+  return labels[log.event_type] ?? log.event_type ?? log.action
 }
 
 function LogAktivitas() {
@@ -48,18 +51,19 @@ function LogAktivitas() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-body text-grey-500">
               <thead><tr className="border-b border-grey-75 text-small font-semibold">
-                <th className="px-3 py-3">Waktu</th><th className="px-3 py-3">Pengguna</th><th className="px-3 py-3">Aktivitas</th><th className="px-3 py-3">Target</th><th className="px-3 py-3">Hasil</th><th className="px-3 py-3">IP</th>
+                <th className="px-3 py-3">Waktu (WIB)</th><th className="px-3 py-3">Actor</th><th className="px-3 py-3">Event type</th><th className="px-3 py-3">Objek</th><th className="px-3 py-3">Outcome</th><th className="px-3 py-3">IP sumber</th><th className="px-3 py-3">Konteks</th>
               </tr></thead>
               <tbody>
-                {state.logs.length === 0 && <tr><td colSpan={6} className="py-10 text-center text-grey-200">Belum ada aktivitas tercatat.</td></tr>}
+                {state.logs.length === 0 && <tr><td colSpan={7} className="py-10 text-center text-grey-200">Belum ada aktivitas tercatat.</td></tr>}
                 {state.logs.map((log) => (
                   <tr key={log.id} className="border-b border-grey-75/60 last:border-0">
-                    <td className="whitespace-nowrap px-3 py-3">{fmtTanggal(log.created_at)}</td>
-                    <td className="px-3 py-3">{log.actor_name}<span className="block text-small text-grey-200">{log.actor_username ?? 'tanpa akun'}{log.actor_role ? ` · ${log.actor_role}` : ''}</span></td>
-                    <td className="px-3 py-3">{fmtAksi(log)}</td>
-                    <td className="max-w-[220px] truncate px-3 py-3 text-small">{log.target ? Object.entries(log.target).map(([key, value]) => `${key}: ${typeof value === 'object' ? value.id : value}`).join(', ') : '—'}</td>
-                    <td className="px-3 py-3">{log.response_status ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-3">{fmtTanggal(log.created_at)} WIB</td>
+                    <td className="px-3 py-3">{log.actor_name ?? 'Tidak terautentikasi'}<span className="block text-small text-grey-200">{log.actor_user_id ?? log.actor_username ?? log.context?.login_username ?? '—'}{log.actor_role ? ` · ${log.actor_role}` : ''}</span></td>
+                    <td className="px-3 py-3">{fmtAksi(log)}<span className="block text-small text-grey-200">{log.method} {log.route_uri}</span></td>
+                    <td className="max-w-[200px] truncate px-3 py-3 text-small">{log.object_type ? `${log.object_type}${log.object_id ? ` #${log.object_id}` : ''}` : '—'}</td>
+                    <td className="px-3 py-3">{log.outcome === 'success' ? 'Berhasil' : 'Gagal'} ({log.response_status ?? '—'})</td>
                     <td className="px-3 py-3">{log.ip_address ?? '—'}</td>
+                    <td className="px-3 py-3 text-small"><details><summary className="cursor-pointer">Lihat</summary><pre className="max-w-[300px] whitespace-pre-wrap break-all">{JSON.stringify(log.context ?? {}, null, 2)}</pre></details></td>
                   </tr>
                 ))}
               </tbody>

@@ -23,6 +23,9 @@ class LoginController extends Controller
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $detikTersisa = RateLimiter::availableIn($key);
+            AuditLog::record($request, null, 'auth.login_rate_limited', 429, [
+                'login_username' => $validated['username'],
+            ]);
 
             throw ValidationException::withMessages([
                 'username' => [
@@ -32,6 +35,9 @@ class LoginController extends Controller
         }
 
         if (!$this->turnstileValid($validated['turnstile_token'], $request->ip())) {
+            AuditLog::record($request, null, 'auth.login_challenge_failed', 422, [
+                'login_username' => $validated['username'],
+            ]);
             throw ValidationException::withMessages([
                 'turnstile_token' => ['Verifikasi keamanan gagal. Silakan coba lagi.'],
             ]);
@@ -45,6 +51,9 @@ class LoginController extends Controller
 
         if (!$authenticated) {
             RateLimiter::hit($key, 180); // 180 detik = 3 menit
+            AuditLog::record($request, null, 'auth.login_failed', 422, [
+                'login_username' => $validated['username'],
+            ]);
 
             if (RateLimiter::tooManyAttempts($key, 5)) {
                 throw ValidationException::withMessages([
