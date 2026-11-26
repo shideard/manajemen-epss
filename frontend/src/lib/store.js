@@ -83,10 +83,10 @@ const mapRencanaKegiatan = (item) => ({
 })
 
 // Simpan daftar output yang ditargetkan (id dikirim supaya baris & berkas contohnya dipertahankan),
-// lalu unggah berkas contoh yang baru dipilih ke output pada urutan yang sama
+// lalu unggah berkas contoh yang baru dipilih ke id output yang dikembalikan API (urutan sama dengan kiriman)
 async function simpanOutputKegiatan(kegiatanId, output) {
   const base = `/api/rencana-kegiatan/${kegiatanId}`
-  await api(`${base}/output-diharapkan`, {
+  const res = await api(`${base}/output-diharapkan`, {
     method: 'PUT',
     body: {
       output: output.map(({ id, indikatorIds = [], judul, jenis, contoh }) => ({
@@ -98,13 +98,12 @@ async function simpanOutputKegiatan(kegiatanId, output) {
       })),
     },
   })
-  if (!output.some((o) => o.file)) return
-  const tersimpan = (await api(base)).data.output ?? []
+  const ids = res.data.output_ids
   for (const [i, o] of output.entries()) {
     if (!o.file) continue
     const body = new FormData()
     body.append('file', o.file)
-    await api(`${base}/output-diharapkan/${tersimpan[i].id}/contoh`, { method: 'POST', body })
+    await api(`${base}/output-diharapkan/${ids[i]}/contoh`, { method: 'POST', body })
   }
 }
 

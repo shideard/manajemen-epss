@@ -22,16 +22,11 @@ class LoginController extends Controller
         $key = 'login:'.strtolower($validated['username']).'|'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            $detikTersisa = RateLimiter::availableIn($key);
             AuditLog::record($request, null, 'auth.login_rate_limited', 429, [
                 'login_username' => $validated['username'],
             ]);
 
-            throw ValidationException::withMessages([
-                'username' => [
-                    "Terlalu banyak percobaan login. Coba lagi dalam 3 menit.",
-                ],
-            ])->status(429);
+            throw $this->terlaluBanyakPercobaan($key);
         }
 
         if (!$this->turnstileValid($validated['turnstile_token'], $request->ip())) {
@@ -56,11 +51,7 @@ class LoginController extends Controller
             ]);
 
             if (RateLimiter::tooManyAttempts($key, 5)) {
-                throw ValidationException::withMessages([
-                    'username' => [
-                        'Terlalu banyak percobaan login. Coba lagi dalam 3 menit.',
-                    ],
-                ])->status(429);
+                throw $this->terlaluBanyakPercobaan($key);
             }
 
             throw ValidationException::withMessages([
@@ -78,6 +69,17 @@ class LoginController extends Controller
         return response()->json([
             'message' => 'Login berhasil!',
         ]);
+    }
+
+    // Sisa waktu dihitung dari percobaan gagal pertama (batas 3 menit), jadi bisa kurang dari 3 menit
+    private function terlaluBanyakPercobaan(string $key): ValidationException
+    {
+        $detik = RateLimiter::availableIn($key);
+        $sisa = $detik >= 60 ? (int) ceil($detik / 60).' menit' : max($detik, 1).' detik';
+
+        return ValidationException::withMessages([
+            'username' => ["Terlalu banyak percobaan login. Coba lagi dalam {$sisa}."],
+        ])->status(429);
     }
 
     private function turnstileValid(string $token, ?string $ip): bool
