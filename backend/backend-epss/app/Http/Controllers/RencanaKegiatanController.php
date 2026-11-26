@@ -37,18 +37,12 @@ class RencanaKegiatanController extends Controller
         Gate::authorize('view', $rencanaKegiatan);
         Gate::authorize('view', $rencanaKegiatan->periode);
 
-        $rencanaKegiatan->load([
+        // Hanya kolom yang dipakai RencanaKegiatanResource
+        return new RencanaKegiatanResource($rencanaKegiatan->load([
             'opd:id,nama',
             'pic:id,name',
             'indikatorMappings.indikator:id,kode,nama',
             'outputDiharapkan.indikator:id',
-        ]);
-
-        return new RencanaKegiatanResource(
-        $rencanaKegiatan->load([
-            'opd',
-            'pic',
-            'indikatorMappings.indikator',
         ]));
     }
 

@@ -83,10 +83,10 @@ const mapRencanaKegiatan = (item) => ({
 })
 
 // Simpan daftar output yang ditargetkan (id dikirim supaya baris & berkas contohnya dipertahankan),
-// lalu unggah berkas contoh yang baru dipilih ke output pada urutan yang sama
+// lalu unggah berkas contoh yang baru dipilih ke id output yang dikembalikan API (urutan sama dengan kiriman)
 async function simpanOutputKegiatan(kegiatanId, output) {
   const base = `/api/rencana-kegiatan/${kegiatanId}`
-  await api(`${base}/output-diharapkan`, {
+  const res = await api(`${base}/output-diharapkan`, {
     method: 'PUT',
     body: {
       output: output.map(({ id, indikatorIds = [], judul, jenis, contoh }) => ({
@@ -98,13 +98,12 @@ async function simpanOutputKegiatan(kegiatanId, output) {
       })),
     },
   })
-  if (!output.some((o) => o.file)) return
-  const tersimpan = (await api(base)).data.output ?? []
+  const ids = res.data.output_ids
   for (const [i, o] of output.entries()) {
     if (!o.file) continue
     const body = new FormData()
     body.append('file', o.file)
-    await api(`${base}/output-diharapkan/${tersimpan[i].id}/contoh`, { method: 'POST', body })
+    await api(`${base}/output-diharapkan/${ids[i]}/contoh`, { method: 'POST', body })
   }
 }
 
@@ -155,7 +154,8 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
       if (opd.status === 'fulfilled') setOpds(opd.value)
       if (pic.status === 'fulfilled') setPics(pic.value)
       if (periodeId && ind.status === 'fulfilled') {
-        setIndikator((ind.value.data ?? []).map((item, index) => ({ ...item, nomor: index + 1 })))
+        // Nomor indikator = kode resminya, bukan urutan baris dari API
+        setIndikator((ind.value.data ?? []).map((item) => ({ ...item, nomor: Number(item.kode) })))
       }
       setErrorPilihan([opd, pic, ind].find((r) => r.status === 'rejected')?.reason ?? null)
     })
@@ -363,7 +363,7 @@ function useMuat(key, ambil) {
 
 function mapInstrumen(data) {
   const domainById = new Map()
-  const indikator = (data ?? []).map((item, index) => {
+  const indikator = (data ?? []).map((item) => {
     const domainData = item.domain
     if (!domainById.has(domainData.id)) {
       domainById.set(domainData.id, {
@@ -378,7 +378,8 @@ function mapInstrumen(data) {
       id: String(item.kode),
       apiId: item.id,
       kode: String(item.kode),
-      nomor: index + 1,
+      // Nomor indikator = kode resminya, bukan urutan baris dari API
+      nomor: Number(item.kode),
       nama: item.nama,
       bobot: Number(item.bobot),
       aspek: item.aspek.nama,

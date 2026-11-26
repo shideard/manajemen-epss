@@ -32,7 +32,8 @@ class PeriodeIndikatorController extends Controller
                         'kriteriaPemenuhan' => fn ($items) => $items->orderBy('urutan'),
                     ]),
             ])
-            ->orderBy('kode')
+            // kode bertipe teks: urutkan sebagai angka supaya 2 tidak jatuh setelah 19
+            ->orderByRaw('CAST(kode AS INTEGER)')
             ->orderBy('id')
             ->get();
 

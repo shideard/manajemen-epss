@@ -6,7 +6,7 @@ use App\Enums\StatusAjuanBukti;
 use App\Http\Requests\Planning\SyncRencanaKegiatanOutputRequest;
 use App\Models\DokumenBukti;
 use App\Models\RencanaKegiatan;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,11 +15,11 @@ class SyncRencanaKegiatanOutputController extends Controller
     public function __invoke(
         SyncRencanaKegiatanOutputRequest $request,
         RencanaKegiatan $rencanaKegiatan
-    ): Response {
+    ): JsonResponse {
         $outputs = $request->validated('output');
 
         // Output yang membawa id dipertahankan (berikut berkas contohnya); sisanya dibuat baru atau dihapus
-        $berkasDihapus = DB::transaction(function () use (
+        [$berkasDihapus, $outputIds] = DB::transaction(function () use (
             $rencanaKegiatan,
             $outputs
         ): array {
@@ -68,12 +68,19 @@ class SyncRencanaKegiatanOutputController extends Controller
                 }
 
                 $baris->indikator()->sync($indikatorIds);
-                // Berkas yang diunggah untuk output ini mengikuti indikator output-nya
-                DokumenBukti::query()
-                    ->where('output_id', $baris->id)
-                    ->get()
-                    ->each(fn (DokumenBukti $dokumen) => $dokumen->indikator()->sync($indikatorIds));
-                $dipertahankan[] = $baris->id;
+                // Berkas yang diunggah untuk output ini (semua versi) mengikuti indikator output-nya:
+                // satu delete + satu insert ke pivot, bukan sync() per berkas
+                $dokumenIds = DokumenBukti::query()->where('output_id', $baris->id)->pluck('id');
+                if ($dokumenIds->isNotEmpty()) {
+                    DB::table('dokumen_bukti_indikator')->whereIn('dokumen_id', $dokumenIds)->delete();
+                    DB::table('dokumen_bukti_indikator')->insert(
+                        $dokumenIds->crossJoin(array_values(array_unique($indikatorIds)))
+                            ->map(fn (array $pasangan): array => ['dokumen_id' => $pasangan[0], 'indikator_id' => $pasangan[1]])
+                            ->all()
+                    );
+                }
+                // Dikunci per index kiriman: validated() bisa mengubah urutan iterasi (baris tanpa id dipindah ke belakang)
+                $dipertahankan[$urutan] = $baris->id;
             }
 
             foreach ($tersimpan->except($dipertahankan) as $baris) {
@@ -83,11 +90,14 @@ class SyncRencanaKegiatanOutputController extends Controller
                 $baris->delete();
             }
 
-            return $berkasDihapus;
+            ksort($dipertahankan);
+
+            return [$berkasDihapus, array_values($dipertahankan)];
         });
 
         Storage::disk()->delete($berkasDihapus);
 
-        return response()->noContent();
+        // Id output tersimpan sesuai urutan kiriman, supaya frontend mengunggah berkas contoh ke baris yang tepat
+        return response()->json(['data' => ['output_ids' => $outputIds]]);
     }
 }

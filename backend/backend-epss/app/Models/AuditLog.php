@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -11,6 +13,7 @@ use Illuminate\Support\Str;
 class AuditLog extends Model
 {
     use HasUuids;
+    use MassPrunable;
 
     public $timestamps = false;
 
@@ -26,6 +29,12 @@ class AuditLog extends Model
         return ['target' => 'array', 'context' => 'array', 'created_at' => 'immutable_datetime'];
     }
 
+    // Log disimpan 24 bulan (satu siklus periode EPSS); dihapus oleh `model:prune` yang dijadwalkan harian di routes/console.php
+    public function prunable(): Builder
+    {
+        return static::query()->where('created_at', '<', now()->subMonths(24));
+    }
+
     public static function record(
         Request $request,
         ?User $actor,
@@ -34,11 +43,6 @@ class AuditLog extends Model
         array $extraContext = [],
     ): void
     {
-        // Agar aplikasi tetap berjalan sebelum migrasi audit dijalankan; pencatatan aktif setelah tabel tersedia.
-        if (! Schema::hasTable('audit_logs')) {
-            return;
-        }
-
         $parameters = collect($request->route()?->parameters() ?? []);
         $target = $parameters
             ->mapWithKeys(function ($value, string $key): array {
