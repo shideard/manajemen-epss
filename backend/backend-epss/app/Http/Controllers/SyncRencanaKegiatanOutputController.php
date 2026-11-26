@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\StatusAjuanBukti;
 use App\Http\Requests\Planning\SyncRencanaKegiatanOutputRequest;
 use App\Models\DokumenBukti;
 use App\Models\RencanaKegiatan;
@@ -50,6 +51,22 @@ class SyncRencanaKegiatanOutputController extends Controller
                     'urutan' => $urutan,
                 ])->save();
                 $indikatorIds = $output['indikator_ids'] ?? [];
+
+                // Berkas output ikut indikatornya, jadi tautan berkas untuk ajuan yang sedang/sudah diverifikasi tidak boleh berubah
+                // (aturan yang sama dengan DokumenBuktiController::aturIndikator)
+                if ($baris->exists && $baris->dokumen()->exists()) {
+                    $saatIni = $baris->indikator()->pluck('indikator_epss.id')->all();
+                    $berubah = array_merge(array_diff($saatIni, $indikatorIds), array_diff($indikatorIds, $saatIni));
+                    abort_if(
+                        $berubah !== [] && $rencanaKegiatan->ajuanBukti()
+                            ->whereIn('indikator_id', $berubah)
+                            ->whereIn('status', [StatusAjuanBukti::MENUNGGU->value, StatusAjuanBukti::TERVERIFIKASI->value])
+                            ->exists(),
+                        409,
+                        "Output \"{$baris->judul}\" sudah punya berkas untuk indikator dengan ajuan yang menunggu verifikasi atau sudah terverifikasi, indikatornya tidak dapat ditambah atau dilepas."
+                    );
+                }
+
                 $baris->indikator()->sync($indikatorIds);
                 // Berkas yang diunggah untuk output ini mengikuti indikator output-nya
                 DokumenBukti::query()
