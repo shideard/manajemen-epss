@@ -55,10 +55,12 @@ class EksporBuktiController extends Controller
                     continue;
                 }
 
-                // Awalan id pendek supaya dua berkas bernama sama tidak saling menimpa
-                $zip->addFromString(
-                    $folder . '/' . substr($dokumen->id, -6) . '-' . $this->nama($dokumen->nama_file),
-                    $disk->get($dokumen->storage_key)
+                // Awalan id pendek supaya dua berkas bernama sama tidak saling menimpa.
+                // addFile membaca berkas langsung dari disk saat ZIP ditutup, jadi isinya tidak ditampung di memori PHP
+                // ponytail: $disk->path() hanya untuk disk lokal (FILESYSTEM_DISK=local); pakai stream bila pindah ke S3
+                $zip->addFile(
+                    $disk->path($dokumen->storage_key),
+                    $folder . '/' . substr($dokumen->id, -6) . '-' . $this->nama($dokumen->nama_file)
                 );
                 $jumlah++;
             }
