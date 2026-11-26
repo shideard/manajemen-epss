@@ -68,11 +68,17 @@ class SyncRencanaKegiatanOutputController extends Controller
                 }
 
                 $baris->indikator()->sync($indikatorIds);
-                // Berkas yang diunggah untuk output ini mengikuti indikator output-nya
-                DokumenBukti::query()
-                    ->where('output_id', $baris->id)
-                    ->get()
-                    ->each(fn (DokumenBukti $dokumen) => $dokumen->indikator()->sync($indikatorIds));
+                // Berkas yang diunggah untuk output ini (semua versi) mengikuti indikator output-nya:
+                // satu delete + satu insert ke pivot, bukan sync() per berkas
+                $dokumenIds = DokumenBukti::query()->where('output_id', $baris->id)->pluck('id');
+                if ($dokumenIds->isNotEmpty()) {
+                    DB::table('dokumen_bukti_indikator')->whereIn('dokumen_id', $dokumenIds)->delete();
+                    DB::table('dokumen_bukti_indikator')->insert(
+                        $dokumenIds->crossJoin(array_values(array_unique($indikatorIds)))
+                            ->map(fn (array $pasangan): array => ['dokumen_id' => $pasangan[0], 'indikator_id' => $pasangan[1]])
+                            ->all()
+                    );
+                }
                 $dipertahankan[] = $baris->id;
             }
 
