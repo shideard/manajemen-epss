@@ -8,6 +8,7 @@ use App\Http\Requests\Evidence\StoreDokumenBuktiRequest;
 use App\Models\DokumenBukti;
 use App\Models\RencanaKegiatan;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +35,15 @@ class DokumenBuktiController extends Controller
             ->orderBy('id')
             ->get();
 
+        return response()->json([
+            'data' => self::petakan($documents),
+        ]);
+    }
+
+    // Bentuk JSON dokumen bukti (dokumen wajib sudah memuat relasi indikator:id).
+    // Dipakai juga RencanaKegiatanLengkapController supaya kedua endpoint selalu sama.
+    public static function petakan(Collection $documents): Collection
+    {
         // Tautan berbagi storage_key dengan berkas aslinya: baris tertua (kegiatan belum dihapus) = asli
         $asli = DokumenBukti::query()
             ->whereIn('storage_key', $documents->pluck('storage_key'))
@@ -55,13 +65,13 @@ class DokumenBuktiController extends Controller
             ] : null;
         };
 
-        $documents = $documents
+        return $documents
             ->map(fn (DokumenBukti $document): array => [
                 'sumber' => $sumberDari($document),
                 'id' => $document->id,
                 'kegiatan_id' => $document->kegiatan_id,
                 'output_id' => $document->output_id,
-                'indikator_ids' => $document->indikator->pluck('id'),
+                'indikator_ids' => $document->indikator->pluck('id')->sort()->values(),
                 'uploaded_by' => $document->uploaded_by,
                 'parent_document_id' => $document->parent_document_id,
                 'version_number' => $document->version_number,
@@ -72,10 +82,6 @@ class DokumenBuktiController extends Controller
                 'size_bytes' => $document->size_bytes,
                 'uploaded_at' => $document->created_at?->toIso8601String(),
             ]);
-
-        return response()->json([
-            'data' => $documents,
-        ]);
     }
 
     public function link(
