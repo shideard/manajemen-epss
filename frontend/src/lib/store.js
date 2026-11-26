@@ -251,10 +251,6 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
       await muat()
       return await detail(saved.id)
     },
-    async simpanOutput(id, output) {
-      await simpanOutputKegiatan(id, output)
-      return await detail(id)
-    },
   }
 }
 

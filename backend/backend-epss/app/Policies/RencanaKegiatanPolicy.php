@@ -41,9 +41,10 @@ class RencanaKegiatanPolicy
                 ->exists();
     }
 
+    // Periode terkunci = hanya-baca: hapus kegiatan dan kelola output mengikuti aturan update
     public function delete(User $user, RencanaKegiatan $rencanaKegiatan): bool
     {
-        return $user->role === UserRole::VERIFIKATOR;
+        return $this->update($user, $rencanaKegiatan);
     }
 
     public function uploadEvidence(User $user, RencanaKegiatan $rencanaKegiatan): bool 
@@ -60,7 +61,6 @@ class RencanaKegiatanPolicy
     User $user,
     RencanaKegiatan $rencanaKegiatan
     ): bool {
-        return $user->status_aktif
-            && $user->role === UserRole::VERIFIKATOR;
+        return $this->update($user, $rencanaKegiatan);
     }
 }
