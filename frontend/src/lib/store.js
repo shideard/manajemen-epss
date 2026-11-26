@@ -154,7 +154,8 @@ export function useRencanaKegiatan(periodeId, filters = {}) {
       if (opd.status === 'fulfilled') setOpds(opd.value)
       if (pic.status === 'fulfilled') setPics(pic.value)
       if (periodeId && ind.status === 'fulfilled') {
-        setIndikator((ind.value.data ?? []).map((item, index) => ({ ...item, nomor: index + 1 })))
+        // Nomor indikator = kode resminya, bukan urutan baris dari API
+        setIndikator((ind.value.data ?? []).map((item) => ({ ...item, nomor: Number(item.kode) })))
       }
       setErrorPilihan([opd, pic, ind].find((r) => r.status === 'rejected')?.reason ?? null)
     })
@@ -362,7 +363,7 @@ function useMuat(key, ambil) {
 
 function mapInstrumen(data) {
   const domainById = new Map()
-  const indikator = (data ?? []).map((item, index) => {
+  const indikator = (data ?? []).map((item) => {
     const domainData = item.domain
     if (!domainById.has(domainData.id)) {
       domainById.set(domainData.id, {
@@ -377,7 +378,8 @@ function mapInstrumen(data) {
       id: String(item.kode),
       apiId: item.id,
       kode: String(item.kode),
-      nomor: index + 1,
+      // Nomor indikator = kode resminya, bukan urutan baris dari API
+      nomor: Number(item.kode),
       nama: item.nama,
       bobot: Number(item.bobot),
       aspek: item.aspek.nama,
