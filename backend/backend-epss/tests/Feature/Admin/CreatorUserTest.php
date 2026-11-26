@@ -5,15 +5,20 @@ namespace Tests\Feature\Admin;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class CreatorUserTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_create_operator_and_verifikator_Without_email(): void
+    public function test_admin_can_create_operator_and_verifikator_with_recovery_email(): void
     {
+        // Sejak commit 7617fc7 email pemulihan wajib dan langsung dikirimi tautan verifikasi
+        Notification::fake();
+
         $admin = User::factory()->create([
         'role' => UserRole::SUPER_ADMIN_BIDANG,
         'status_aktif' => true,
@@ -25,12 +30,14 @@ class CreatorUserTest extends TestCase
 
         foreach ([UserRole::OPERATOR, UserRole::VERIFIKATOR] as $role) {
             $username = strtolower($role->value) . '.baru';
+            $email = strtolower($role->value) . '.baru@contoh.go.id';
 
             $response = $this
                 ->actingAs($admin, 'web')
                 ->postJson('/api/users', [
                     'name' => 'Pengguna Pengujian',
                     'username' => strtoupper($username),
+                    'email' => $email,
                     'password' => $password,
                     'password_confirmation' => $password,
                     'role' => $role->value,
@@ -38,7 +45,8 @@ class CreatorUserTest extends TestCase
 
             $response->assertCreated();
             $response->assertJsonPath('data.username', $username);
-            $response->assertJsonPath('data.email', null);
+            $response->assertJsonPath('data.email', $email);
+            $response->assertJsonPath('data.email_verified_at', null);
             $response->assertJsonPath('data.role', $role->value);
             $response->assertJsonPath('data.status_aktif', true);
             $response->assertJsonMissingPath('data.password');
@@ -47,12 +55,28 @@ class CreatorUserTest extends TestCase
             $createdUser = User::where('username', $username)->firstOrFail();
 
             $this->assertSame($role, $createdUser->role);
-            $this->assertNull($createdUser->email);
+            $this->assertSame($email, $createdUser->email);
+            $this->assertNull($createdUser->email_verified_at);
+            Notification::assertSentTo($createdUser, VerifyEmail::class);
             $this->assertTrue($createdUser->status_aktif);
             $this->assertTrue(Hash::check($password, $createdUser->password));
         }
 
         $this->assertDatabaseCount('users', 3); // 1 admin + 2 created users
+
+        // Tanpa email ditolak
+        $this->actingAs($admin, 'web')
+            ->postJson('/api/users', [
+                'name' => 'Tanpa Email',
+                'username' => 'operator.tanpa.email',
+                'password' => $password,
+                'password_confirmation' => $password,
+                'role' => UserRole::OPERATOR->value,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('email');
+
+        $this->assertDatabaseCount('users', 3);
     }
 
     public function test_admin_cannot_create_another_admin_through_the_endpoint(): void

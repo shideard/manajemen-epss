@@ -27,6 +27,7 @@ class PasswordPolicyTest extends TestCase
             ->postJson('/api/users', [
                 'name' => 'Pengguna Pengujian',
                 'username' => 'operator.password',
+                'email' => 'operator.password@contoh.go.id',
                 'password' => $password,
                 'password_confirmation' => $password,
                 'role' => UserRole::OPERATOR->value,
@@ -89,6 +90,7 @@ class PasswordPolicyTest extends TestCase
         $this->artisan('epss:create-super-admin')
             ->expectsQuestion('Nama administrator', 'Admin Pengujian')
             ->expectsQuestion('Username administrator', 'admin.password')
+            ->expectsQuestion('Email administrator', 'admin.password@contoh.go.id')
             ->expectsQuestion('Password administrator', $password)
             ->expectsQuestion('Ulangi password', $password)
             ->assertExitCode(1);
