@@ -158,6 +158,10 @@ Route::middleware(['auth:sanctum', EnforceSessionAge::class, 'active', RecordUse
         )->whereUuid('rencanaKegiatan')
         ->name('rencana-kegiatan.indikator.sync');
 
+        Route::get('/periode-evaluasi/{periode}/rencana-kegiatan-lengkap', \App\Http\Controllers\RencanaKegiatanLengkapController::class
+        )->whereUuid('periode')
+        ->name('periode-evaluasi.rencana-kegiatan-lengkap');
+
         Route::get('/periode-evaluasi/{periode}/indikator', PeriodeIndikatorController::class
         )->whereUuid('periode')
         ->name('periode-evaluasi.indikator.index');

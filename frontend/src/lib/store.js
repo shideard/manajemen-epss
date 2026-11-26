@@ -425,25 +425,24 @@ export function useDetailKegiatan(id) {
   return { kegiatan: data ?? null, ...state }
 }
 
-// Semua rencana kegiatan satu periode, lengkap dengan indikatorIds & jumlahBerkas.
-// Daftar API dipaginasi 5 dan tanpa indikator/jumlah dokumen, jadi tiap kegiatan diambil detail + dokumennya.
-// ponytail: 1 + N/5 + 2N request; minta backend menambah indikator & dokumen_count di GET /rencana-kegiatan kalau mulai lambat
+// Semua rencana kegiatan satu periode lengkap dengan indikator, output, dan dokumen (semua versi) dalam satu request.
+// Isi tiap item = GET /rencana-kegiatan/{id} ditambah 'dokumen' = GET /rencana-kegiatan/{id}/dokumen-bukti
+const ambilKegiatanLengkap = async (periodeId) =>
+  ((await api(`/api/periode-evaluasi/${encodeURIComponent(periodeId)}/rencana-kegiatan-lengkap`)).data ?? []).map(({ dokumen = [], ...detail }) => ({
+    kegiatan: mapRencanaKegiatan(detail),
+    dokumen,
+  }))
+
+// Semua rencana kegiatan satu periode, lengkap dengan indikatorIds & jumlahBerkas
 export function useSemuaKegiatan(periodeId) {
-  const ambil = useCallback(async () => {
-    const ids = []
-    for (let page = 1, last = 1; page <= last; page += 1) {
-      const res = await api(`/api/rencana-kegiatan?periode_id=${periodeId}&page=${page}`)
-      ids.push(...(res.data ?? []).map((k) => k.id))
-      last = res.meta?.last_page ?? 1
-    }
-    return Promise.all(
-      ids.map(async (id) => {
-        const [detail, dokumen] = await Promise.all([api(`/api/rencana-kegiatan/${id}`), api(`/api/rencana-kegiatan/${id}/dokumen-bukti`)])
-        const dokumenBukti = (dokumen.data ?? []).map(mapDokumen)
-        return { ...mapRencanaKegiatan(detail.data), dokumenBukti, jumlahBerkas: dokumenBukti.length }
+  const ambil = useCallback(
+    async () =>
+      (await ambilKegiatanLengkap(periodeId)).map(({ kegiatan, dokumen }) => {
+        const dokumenBukti = dokumen.map(mapDokumen)
+        return { ...kegiatan, dokumenBukti, jumlahBerkas: dokumenBukti.length }
       }),
-    )
-  }, [periodeId])
+    [periodeId],
+  )
   const { data, ...state } = useMuat(periodeId, ambil)
   return { kegiatan: data ?? EMPTY_LIST, ...state }
 }
@@ -468,20 +467,14 @@ export function useSemuaDokumen(periodeIds) {
   const key = Array.isArray(periodeIds) ? [...periodeIds].sort().join(',') : ''
   const ambil = useCallback(async () => {
     const ids = key.split(',').filter(Boolean)
-    const perPeriode = await Promise.all(ids.map(async (periodeId) => {
-      const daftar = await apiAll(`/api/rencana-kegiatan?periode_id=${encodeURIComponent(periodeId)}`)
-      return Promise.all(daftar.map(async ({ id }) => {
-        const [detail, response] = await Promise.all([
-          api(`/api/rencana-kegiatan/${id}`),
-          api(`/api/rencana-kegiatan/${id}/dokumen-bukti`),
-        ])
-        const kegiatan = mapRencanaKegiatan(detail.data)
+    const perPeriode = await Promise.all(ids.map(async (periodeId) =>
+      (await ambilKegiatanLengkap(periodeId)).map(({ kegiatan, dokumen }) => {
         const indikator = kegiatan.indikator.map((item) => ({
           ...item,
           id: String(item.kode),
           nomor: Number(item.kode),
         }))
-        return (response.data ?? [])
+        return dokumen
           .filter((document) => document.is_current)
           .map((document) => ({
             ...mapDokumen(document),
@@ -492,8 +485,8 @@ export function useSemuaDokumen(periodeIds) {
             kegiatan: [kegiatan],
             indikator,
           }))
-      }))
-    }))
+      }),
+    ))
     return perPeriode.flat(2).sort((a, b) => b.tanggal.localeCompare(a.tanggal))
   }, [key])
   const { data, ...state } = useMuat(key, ambil)
