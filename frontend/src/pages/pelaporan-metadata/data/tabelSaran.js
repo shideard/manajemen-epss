@@ -77,6 +77,8 @@ export const TABEL_SARAN = {
     jenis: 'tunggal',
     // Mayoritas kegiatan kompilasi justru TIDAK melakukan uji coba.
     Kompilasi: { modus: 'Tidak', arahCentang: false, k: 31, n: 32, opd: 26 },
+    // Survei: 8/10, 4 OPD — lolos threshold (n>=5, OPD>=3, pangsa 0.8>=0.6).
+    Survei: { modus: 'Tidak', arahCentang: false, k: 8, n: 10, opd: 4 },
   },
   'blok6.pelatihanPetugas': {
     jenis: 'tunggal',
