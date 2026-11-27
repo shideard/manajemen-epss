@@ -179,6 +179,7 @@ function StepBlok7Pengolahan({ formData, updateBlok7, caraPengumpulan, onTerapka
                   className="size-4 rounded text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('unitAnalisis', opt)} />
               </label>
             ))}
           </div>

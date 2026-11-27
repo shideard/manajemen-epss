@@ -99,6 +99,7 @@ function StepBlok6Pengumpulan({ formData, updateBlok6, caraPengumpulan, onTerapk
                   className="size-4 text-grey-300 focus:ring-lime-300"
                 />
                 <span>{opt}</span>
+                <SaranPill saran={saranUntuk('pilotSurvey', opt)} />
               </label>
             ))}
           </div>

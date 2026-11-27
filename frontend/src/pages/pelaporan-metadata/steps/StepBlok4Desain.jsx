@@ -136,6 +136,7 @@ function StepBlok4Desain({ formData, updateBlok4, caraPengumpulan, onTerapkanRek
                     className="size-4 text-grey-300 focus:ring-lime-300"
                   />
                   <span>{opt}</span>
+                  <SaranPill saran={saranUntuk('frekuensiPenyelenggaraan', opt)} />
                 </label>
               ))}
             </div>
