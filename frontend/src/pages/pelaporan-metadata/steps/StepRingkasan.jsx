@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { CheckCircle2, Sparkles, Building, User, Calendar, Sliders, Database, Layers, Send, Printer } from 'lucide-react'
 import { JADWAL_GRUP, formatBulanTahun } from '../metadataData'
 
@@ -43,6 +44,27 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
     })
     .filter(Boolean)
     .join(', ')
+
+  const judulCetak = `Ringkasan Metadata - ${halamanAwal.judulKegiatan || 'Kegiatan'}${halamanAwal.tahun ? ` ${halamanAwal.tahun}` : ''}`.replace(
+    /\s+/g,
+    ' ',
+  )
+
+  // Browser memakai document.title sebagai nama file PDF, jadi judul halaman
+  // diganti selama Ringkasan terbuka dan dikembalikan saat pindah langkah.
+  useEffect(() => {
+    const judulAwal = document.title
+    document.title = judulCetak
+    return () => {
+      document.title = judulAwal
+    }
+  }, [judulCetak])
+
+  // Turunkan lagi untuk jaga-jaga kalau halaman lain mengubah judul saat dialog cetak
+  const unduhPdf = () => {
+    document.title = judulCetak
+    window.print()
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -262,7 +284,7 @@ function StepRingkasan({ formData, onSaveDraft, onSubmitForm, isSubmitting }) {
         <div data-cetak-sembunyi className="flex items-center gap-3 shrink-0">
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={unduhPdf}
             className="flex items-center gap-1.5 rounded-full border border-grey-75 bg-white px-5 py-2.5 text-[13px] font-bold text-grey-300 hover:bg-grey2-75 transition"
           >
             <Printer size={16} />

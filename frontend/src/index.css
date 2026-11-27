@@ -257,14 +257,12 @@
     display: none !important;
   }
 
-  /* Kerangka AppLayout: sidebar fixed + topbar dilepas, isi jadi satu kolom penuh.
-     Sidebar.jsx merender dua saudara: placeholder berlebar sidebar (aria-hidden)
-     dan <aside id="sidebar">. Tombol menu + Topbar = anak pertama <main>. */
-  body > #root > div > div > div[aria-hidden] {
-    display: none !important;
-  }
+  /* Semua elemen UI web (sidebar, placeholder sidebar, tombol menu, Topbar,
+     tombol aksi wizard) sudah ditandai data-cetak-sembunyi di komponennya,
+     jadi tidak perlu selektor posisi DOM yang rapuh terhadap perubahan struktur. */
 
-  main > div > div:first-child {
+  /* Tombol Keluar di halaman "bare" (posisi fixed di pojok) */
+  body > #root > div > main > button[aria-label] {
     display: none !important;
   }
 
@@ -272,11 +270,18 @@
     padding: 0 !important;
   }
 
-  /* Animasi masuk blok halaman bisa membuat isi hilang/terpotong saat dicetak */
+  /* Animasi masuk blok halaman memakai properti CSS terpisah (translate/scale),
+     bukan transform, jadi semuanya harus dinetralkan saat mencetak. fill-mode
+     "backwards" membuat elemen transparan sampai animasinya jalan — di PDF
+     hasilnya halaman kosong. */
+  .stagger,
   .stagger > *,
   .stagger > * > * {
     animation: none !important;
     opacity: 1 !important;
+    translate: none !important;
+    scale: none !important;
+    rotate: none !important;
     transform: none !important;
   }
 

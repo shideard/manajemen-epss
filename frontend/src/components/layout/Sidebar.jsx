@@ -136,7 +136,7 @@ function Sidebar({ user, onLogout, ringkas: tetapRingkas, open, onClose }) {
     {open && <div onClick={onClose} aria-hidden className="fixed inset-0 z-30 bg-grey-500/40 lg:hidden" />}
     {/* Saat tertutup di layar kecil: geser keluar + invisible, jadi tidak bisa difokus keyboard */}
     {/* Penahan tempat di layar besar, karena sidebar-nya fixed agar bisa melebar di atas konten */}
-    <div aria-hidden className={`hidden shrink-0 transition-[width] duration-300 ease-out-quint lg:block ${tetapRingkas ? 'w-[88px]' : 'w-[242px]'}`} />
+    <div data-cetak-sembunyi aria-hidden className={`hidden shrink-0 transition-[width] duration-300 ease-out-quint lg:block ${tetapRingkas ? 'w-[88px]' : 'w-[242px]'}`} />
     <aside
       id="sidebar"
       onKeyDown={(e) => e.key === 'Escape' && onClose()}

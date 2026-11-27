@@ -80,7 +80,7 @@ function AppLayout({ bare = false }) {
     <div className="flex min-h-screen bg-grey2-100">
       <Sidebar user={user} onLogout={logout} ringkas={ringkas} open={menuMobile} onClose={() => setMenuMobile(false)} />
       <main className="min-w-0 flex-1 px-4 pt-6.5 pb-24 font-sans sm:px-6 lg:px-10">
-        <div className="flex items-start gap-2">
+        <div data-cetak-sembunyi className="flex items-start gap-2">
           {/* Di bawah lg sidebar disembunyikan dan dibuka sebagai laci lewat tombol ini */}
           <button
             type="button"
